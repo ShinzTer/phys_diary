@@ -220,14 +220,14 @@ export default function UserManagement() {
             <div className="flex justify-between items-center">
               <CardTitle className="text-lg">System Users</CardTitle>
               <Select
-                value={roleFilter}
-                onValueChange={setRoleFilter}
+                value={roleFilter || "all"}
+                onValueChange={(value) => setRoleFilter(value === "all" ? "" : value)}
               >
                 <SelectTrigger className="w-[150px]">
                   <SelectValue placeholder="All roles" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All roles</SelectItem>
+                  <SelectItem value="all">All roles</SelectItem>
                   <SelectItem value="admin">Administrators</SelectItem>
                   <SelectItem value="teacher">Teachers</SelectItem>
                   <SelectItem value="student">Students</SelectItem>

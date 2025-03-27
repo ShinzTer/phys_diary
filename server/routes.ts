@@ -12,6 +12,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // User management endpoints (admin only)
   app.get("/api/users", async (req, res) => {
     try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      // Check if user is admin
+      if (req.user?.role !== "admin" && req.user?.role !== "teacher") {
+        return res.status(403).json({ message: "Access denied. Admin or teacher role required." });
+      }
+      
       const users = await storage.getUsersByRole(req.query.role as string || "");
       // Remove password field from each user
       const safeUsers = users.map(user => {
@@ -52,9 +61,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Faculty management endpoints (admin only)
+  // Faculty management endpoints
   app.get("/api/faculties", async (req, res) => {
     try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      // Check if user is admin or teacher
+      if (req.user?.role !== "admin" && req.user?.role !== "teacher") {
+        return res.status(403).json({ message: "Access denied. Admin or teacher role required." });
+      }
+      
       const faculties = await storage.getAllFaculties();
       res.json(faculties);
     } catch (error) {
@@ -102,9 +120,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Group management endpoints (admin only)
+  // Group management endpoints
   app.get("/api/groups", async (req, res) => {
     try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      // Check if user is admin or teacher
+      if (req.user?.role !== "admin" && req.user?.role !== "teacher") {
+        return res.status(403).json({ message: "Access denied. Admin or teacher role required." });
+      }
+      
       const facultyId = req.query.facultyId ? parseInt(req.query.facultyId as string) : undefined;
       const groups = facultyId 
         ? await storage.getGroupsByFaculty(facultyId)

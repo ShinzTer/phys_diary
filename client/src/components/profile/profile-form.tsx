@@ -45,7 +45,7 @@ export function ProfileForm({ userId, isEditable = true }: ProfileFormProps) {
 
   // Fetch user profile data
   const { data: user, isLoading, error } = useQuery<Omit<User, "password">>({
-    queryKey: [`/api/users/${userId}`],
+    queryKey: [`/api/profile/${userId}`],
   });
 
   // Create form with react-hook-form
@@ -94,11 +94,11 @@ export function ProfileForm({ userId, isEditable = true }: ProfileFormProps) {
   // Create mutation for updating profile
   const updateProfileMutation = useMutation({
     mutationFn: async (data: ProfileFormValues) => {
-      const res = await apiRequest("PUT", `/api/users/${userId}`, data);
+      const res = await apiRequest("PUT", `/api/profile/${userId}`, data);
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/users/${userId}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/profile/${userId}`] });
       toast({
         title: "Profile updated",
         description: "Your profile has been updated successfully.",
