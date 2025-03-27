@@ -29,6 +29,9 @@ async function comparePasswords(supplied: string, stored: string) {
 }
 
 export async function setupAuth(app: Express) {
+  // Initialize database and create default users if needed
+  await storage.initializeDatabase();
+  
   // For development, we'll use a simple session secret
   // In production, this should come from environment variables
   const sessionSecret = process.env.SESSION_SECRET || "dev_session_secret";
@@ -117,12 +120,12 @@ export async function setupAuth(app: Express) {
   });
 
   app.post("/api/login", (req, res, next) => {
-    passport.authenticate("local", (err, user, info) => {
+    passport.authenticate("local", (err: Error | null, user: SelectUser | false, info: { message: string } | undefined) => {
       if (err) return next(err);
       if (!user) {
         return res.status(401).json({ message: info?.message || "Authentication failed" });
       }
-      req.login(user, (err) => {
+      req.login(user, (err: Error | null) => {
         if (err) return next(err);
         // Don't send the password hash back to the client
         const { password, ...userWithoutPassword } = user;

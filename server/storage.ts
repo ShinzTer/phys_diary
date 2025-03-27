@@ -3,17 +3,22 @@ import {
   type Faculty, type InsertFaculty,
   type Group, type InsertGroup,
   type Test, type InsertTest,
-  type Sample, type InsertSample
+  type Sample, type InsertSample,
+  type UserRole,
+  users, faculties, groups, tests, samples
 } from "@shared/schema";
-import createMemoryStore from "memorystore";
+import { db } from "./db";
+import { eq, and } from "drizzle-orm";
 import session from "express-session";
+import connectPg from "connect-pg-simple";
+import { pool } from "./db";
 
 // Storage interface for database operations
 export interface IStorage {
   // User operations
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
-  getUsersByRole(role: string): Promise<User[]>;
+  getUsersByRole(role: UserRole): Promise<User[]>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: number, userData: Partial<User>): Promise<User | undefined>;
   deleteUser(id: number): Promise<boolean>;
@@ -48,65 +53,51 @@ export interface IStorage {
   deleteSample(id: number): Promise<boolean>;
 
   // Session store
-  sessionStore: any;
+  sessionStore: session.Store;
+  
+  // Initialization
+  initializeDatabase(): Promise<void>;
 }
 
-// In-memory implementation of the storage interface
-export class MemStorage implements IStorage {
-  private users: User[] = [];
-  private faculties: Faculty[] = [];
-  private groups: Group[] = [];
-  private tests: Test[] = [];
-  private samples: Sample[] = [];
-  private nextId = {
-    users: 1,
-    faculties: 1,
-    groups: 1,
-    tests: 1,
-    samples: 1
-  };
-  sessionStore: any;
+// PostgreSQL implementation of the storage interface
+export class DatabaseStorage implements IStorage {
+  sessionStore: session.Store;
 
   constructor() {
-    const MemoryStore = createMemoryStore(session);
-    this.sessionStore = new MemoryStore({
-      checkPeriod: 86400000 // prune expired entries every 24h
+    const PostgresStore = connectPg(session);
+    this.sessionStore = new PostgresStore({
+      pool,
+      createTableIfMissing: true,
+      tableName: 'session'
     });
-
-    // Seed default users
-    this.seedInitialData();
   }
 
-  private seedInitialData() {
-    // Create admin user if it doesn't exist
-    const adminExists = this.users.find(u => u.username === 'admin');
-    if (!adminExists) {
-      this.createUser({
+  async initializeDatabase(): Promise<void> {
+    // Check if we have any users, if not, create default users
+    const existingUsers = await db.select().from(users);
+    
+    if (existingUsers.length === 0) {
+      // Create default admin user
+      await this.createUser({
         username: 'admin',
-        password: 'admin123', // This would be hashed in a real app
-        role: 'admin',
+        password: 'admin123', // This would be hashed in auth.ts
+        role: 'admin' as const,
         fullName: 'System Administrator',
       });
-    }
-
-    // Create teacher user if it doesn't exist
-    const teacherExists = this.users.find(u => u.username === 'teacher');
-    if (!teacherExists) {
-      this.createUser({
+      
+      // Create default teacher user
+      await this.createUser({
         username: 'teacher',
         password: 'teacher123',
-        role: 'teacher',
+        role: 'teacher' as const,
         fullName: 'John Smith',
       });
-    }
-
-    // Create student user if it doesn't exist
-    const studentExists = this.users.find(u => u.username === 'student');
-    if (!studentExists) {
-      this.createUser({
+      
+      // Create default student user
+      await this.createUser({
         username: 'student',
         password: 'student123',
-        role: 'student',
+        role: 'student' as const,
         fullName: 'Alex Johnson',
       });
     }
@@ -114,197 +105,163 @@ export class MemStorage implements IStorage {
 
   // User operations
   async getUser(id: number): Promise<User | undefined> {
-    return this.users.find(u => u.id === id);
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    return this.users.find(u => u.username === username);
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user;
   }
 
-  async getUsersByRole(role: string): Promise<User[]> {
-    return this.users.filter(u => u.role === role);
+  async getUsersByRole(role: UserRole): Promise<User[]> {
+    return await db.select().from(users).where(eq(users.role, role));
   }
 
   async createUser(userData: InsertUser): Promise<User> {
-    const user: User = {
-      id: this.nextId.users++,
-      ...userData as any,
-      createdAt: new Date(),
+    // Ensure role is one of the allowed UserRole values
+    const validatedData = {
+      ...userData,
+      role: userData.role as UserRole
     };
-    this.users.push(user);
+    const [user] = await db.insert(users).values([validatedData]).returning();
     return user;
   }
 
   async updateUser(id: number, userData: Partial<User>): Promise<User | undefined> {
-    const userIndex = this.users.findIndex(u => u.id === id);
-    if (userIndex === -1) return undefined;
-    
-    this.users[userIndex] = {
-      ...this.users[userIndex],
-      ...userData,
-    };
-    
-    return this.users[userIndex];
+    const [updatedUser] = await db
+      .update(users)
+      .set(userData)
+      .where(eq(users.id, id))
+      .returning();
+    return updatedUser;
   }
 
   async deleteUser(id: number): Promise<boolean> {
-    const initialLength = this.users.length;
-    this.users = this.users.filter(u => u.id !== id);
-    return this.users.length !== initialLength;
+    const result = await db.delete(users).where(eq(users.id, id));
+    return result.rowCount !== null && result.rowCount > 0;
   }
 
   // Faculty operations
   async getAllFaculties(): Promise<Faculty[]> {
-    return this.faculties;
+    return await db.select().from(faculties);
   }
 
   async getFaculty(id: number): Promise<Faculty | undefined> {
-    return this.faculties.find(f => f.id === id);
+    const [faculty] = await db.select().from(faculties).where(eq(faculties.id, id));
+    return faculty;
   }
 
   async createFaculty(facultyData: InsertFaculty): Promise<Faculty> {
-    const faculty: Faculty = {
-      id: this.nextId.faculties++,
-      ...facultyData as any,
-      createdAt: new Date(),
-    };
-    this.faculties.push(faculty);
+    const [faculty] = await db.insert(faculties).values([facultyData]).returning();
     return faculty;
   }
 
   async updateFaculty(id: number, facultyData: Partial<Faculty>): Promise<Faculty | undefined> {
-    const facultyIndex = this.faculties.findIndex(f => f.id === id);
-    if (facultyIndex === -1) return undefined;
-    
-    this.faculties[facultyIndex] = {
-      ...this.faculties[facultyIndex],
-      ...facultyData,
-    };
-    
-    return this.faculties[facultyIndex];
+    const [updatedFaculty] = await db
+      .update(faculties)
+      .set(facultyData)
+      .where(eq(faculties.id, id))
+      .returning();
+    return updatedFaculty;
   }
 
   async deleteFaculty(id: number): Promise<boolean> {
-    const initialLength = this.faculties.length;
-    this.faculties = this.faculties.filter(f => f.id !== id);
-    return this.faculties.length !== initialLength;
+    const result = await db.delete(faculties).where(eq(faculties.id, id));
+    return result.rowCount !== null && result.rowCount > 0;
   }
 
   // Group operations
   async getAllGroups(): Promise<Group[]> {
-    return this.groups;
+    return await db.select().from(groups);
   }
 
   async getGroupsByFaculty(facultyId: number): Promise<Group[]> {
-    return this.groups.filter(g => g.facultyId === facultyId);
+    return await db.select().from(groups).where(eq(groups.facultyId, facultyId));
   }
 
   async getGroup(id: number): Promise<Group | undefined> {
-    return this.groups.find(g => g.id === id);
+    const [group] = await db.select().from(groups).where(eq(groups.id, id));
+    return group;
   }
 
   async createGroup(groupData: InsertGroup): Promise<Group> {
-    const group: Group = {
-      id: this.nextId.groups++,
-      ...groupData as any,
-      createdAt: new Date(),
-    };
-    this.groups.push(group);
+    const [group] = await db.insert(groups).values([groupData]).returning();
     return group;
   }
 
   async updateGroup(id: number, groupData: Partial<Group>): Promise<Group | undefined> {
-    const groupIndex = this.groups.findIndex(g => g.id === id);
-    if (groupIndex === -1) return undefined;
-    
-    this.groups[groupIndex] = {
-      ...this.groups[groupIndex],
-      ...groupData,
-    };
-    
-    return this.groups[groupIndex];
+    const [updatedGroup] = await db
+      .update(groups)
+      .set(groupData)
+      .where(eq(groups.id, id))
+      .returning();
+    return updatedGroup;
   }
 
   async deleteGroup(id: number): Promise<boolean> {
-    const initialLength = this.groups.length;
-    this.groups = this.groups.filter(g => g.id !== id);
-    return this.groups.length !== initialLength;
+    const result = await db.delete(groups).where(eq(groups.id, id));
+    return result.rowCount !== null && result.rowCount > 0;
   }
 
   // Test operations
   async getTestsByUser(userId: number): Promise<Test[]> {
-    return this.tests.filter(t => t.userId === userId);
+    return await db.select().from(tests).where(eq(tests.userId, userId));
   }
 
   async getTest(id: number): Promise<Test | undefined> {
-    return this.tests.find(t => t.id === id);
+    const [test] = await db.select().from(tests).where(eq(tests.id, id));
+    return test;
   }
 
   async createTest(testData: InsertTest): Promise<Test> {
-    const test: Test = {
-      id: this.nextId.tests++,
-      ...testData as any,
-      createdAt: new Date(),
-    };
-    this.tests.push(test);
+    const [test] = await db.insert(tests).values([testData]).returning();
     return test;
   }
 
   async updateTest(id: number, testData: Partial<Test>): Promise<Test | undefined> {
-    const testIndex = this.tests.findIndex(t => t.id === id);
-    if (testIndex === -1) return undefined;
-    
-    this.tests[testIndex] = {
-      ...this.tests[testIndex],
-      ...testData,
-    };
-    
-    return this.tests[testIndex];
+    const [updatedTest] = await db
+      .update(tests)
+      .set(testData)
+      .where(eq(tests.id, id))
+      .returning();
+    return updatedTest;
   }
 
   async deleteTest(id: number): Promise<boolean> {
-    const initialLength = this.tests.length;
-    this.tests = this.tests.filter(t => t.id !== id);
-    return this.tests.length !== initialLength;
+    const result = await db.delete(tests).where(eq(tests.id, id));
+    return result.rowCount !== null && result.rowCount > 0;
   }
 
   // Sample operations
   async getSamplesByUser(userId: number): Promise<Sample[]> {
-    return this.samples.filter(s => s.userId === userId);
+    return await db.select().from(samples).where(eq(samples.userId, userId));
   }
 
   async getSample(id: number): Promise<Sample | undefined> {
-    return this.samples.find(s => s.id === id);
+    const [sample] = await db.select().from(samples).where(eq(samples.id, id));
+    return sample;
   }
 
   async createSample(sampleData: InsertSample): Promise<Sample> {
-    const sample: Sample = {
-      id: this.nextId.samples++,
-      ...sampleData as any,
-      createdAt: new Date(),
-    };
-    this.samples.push(sample);
+    const [sample] = await db.insert(samples).values([sampleData]).returning();
     return sample;
   }
 
   async updateSample(id: number, sampleData: Partial<Sample>): Promise<Sample | undefined> {
-    const sampleIndex = this.samples.findIndex(s => s.id === id);
-    if (sampleIndex === -1) return undefined;
-    
-    this.samples[sampleIndex] = {
-      ...this.samples[sampleIndex],
-      ...sampleData,
-    };
-    
-    return this.samples[sampleIndex];
+    const [updatedSample] = await db
+      .update(samples)
+      .set(sampleData)
+      .where(eq(samples.id, id))
+      .returning();
+    return updatedSample;
   }
 
   async deleteSample(id: number): Promise<boolean> {
-    const initialLength = this.samples.length;
-    this.samples = this.samples.filter(s => s.id !== id);
-    return this.samples.length !== initialLength;
+    const result = await db.delete(samples).where(eq(samples.id, id));
+    return result.rowCount !== null && result.rowCount > 0;
   }
 }
 
-// Use memory storage for development
-export const storage = new MemStorage();
+// Use database storage
+export const storage = new DatabaseStorage();
