@@ -248,7 +248,7 @@ export default function SampleForm() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="" disabled>Select a sample type</SelectItem>
+                          <SelectItem value="_none" disabled>Select a sample type</SelectItem>
                           {SAMPLE_TYPES.map(type => (
                             <SelectItem key={type} value={type}>
                               {formatSampleType(type)}

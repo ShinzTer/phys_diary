@@ -265,9 +265,9 @@ export default function TestForm() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="" disabled>Select a test type</SelectItem>
+                          <SelectItem value="_none" disabled>Select a test type</SelectItem>
                           {/* Physical Tests Section */}
-                          <SelectItem value="" disabled className="font-bold text-primary">
+                          <SelectItem value="_header_physical" disabled className="font-bold text-primary">
                             Physical Tests
                           </SelectItem>
                           {TEST_TYPES.map(type => (
@@ -277,7 +277,7 @@ export default function TestForm() {
                           ))}
                           
                           {/* Control Exercises Section */}
-                          <SelectItem value="" disabled className="font-bold text-primary">
+                          <SelectItem value="_header_control" disabled className="font-bold text-primary">
                             Control Exercises
                           </SelectItem>
                           {CONTROL_EXERCISE_TYPES.map(type => (

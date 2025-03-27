@@ -7,6 +7,9 @@ import {
 } from "@shared/schema";
 import createMemoryStore from "memorystore";
 import session from "express-session";
+import { db, pool } from "./db";
+import { eq, and } from "drizzle-orm";
+import connectPg from "connect-pg-simple";
 
 // Storage interface for database operations
 export interface IStorage {
@@ -48,228 +51,194 @@ export interface IStorage {
   deleteSample(id: number): Promise<boolean>;
 
   // Session store
-  sessionStore: session.SessionStore;
+  sessionStore: any;
 }
 
-// In-memory implementation of storage
-export class MemStorage implements IStorage {
-  private users: Map<number, User>;
-  private faculties: Map<number, Faculty>;
-  private groups: Map<number, Group>;
-  private tests: Map<number, Test>;
-  private samples: Map<number, Sample>;
-  
-  private userIdCounter: number;
-  private facultyIdCounter: number;
-  private groupIdCounter: number;
-  private testIdCounter: number;
-  private sampleIdCounter: number;
-  
-  sessionStore: session.SessionStore;
+// PostgreSQL implementation of storage
+export class DatabaseStorage implements IStorage {
+  sessionStore: any;
   
   constructor() {
-    this.users = new Map();
-    this.faculties = new Map();
-    this.groups = new Map();
-    this.tests = new Map();
-    this.samples = new Map();
+    const PostgresSessionStore = connectPg(session);
     
-    this.userIdCounter = 1;
-    this.facultyIdCounter = 1;
-    this.groupIdCounter = 1;
-    this.testIdCounter = 1;
-    this.sampleIdCounter = 1;
-    
-    const MemoryStore = createMemoryStore(session);
-    this.sessionStore = new MemoryStore({
-      checkPeriod: 86400000, // 24 hours
+    this.sessionStore = new PostgresSessionStore({
+      pool,
+      createTableIfMissing: true
     });
     
-    // Initialize with admin user
-    this.createUser({
-      username: "admin",
-      password: "admin123", // In production, this would be hashed
-      role: "admin",
-      fullName: "System Administrator"
-    });
+    // Seed database with default users if they don't exist
+    this.seedDatabase();
+  }
+  
+  private async seedDatabase() {
+    // Check if admin user exists
+    const adminExists = await this.getUserByUsername("admin");
+    if (!adminExists) {
+      await this.createUser({
+        username: "admin",
+        password: "admin123", // In production, this would be hashed
+        role: "admin",
+        fullName: "System Administrator"
+      });
+    }
     
-    // Initialize with a teacher
-    this.createUser({
-      username: "teacher",
-      password: "teacher123", // In production, this would be hashed
-      role: "teacher",
-      fullName: "John Smith"
-    });
+    // Check if teacher user exists
+    const teacherExists = await this.getUserByUsername("teacher");
+    if (!teacherExists) {
+      await this.createUser({
+        username: "teacher",
+        password: "teacher123", // In production, this would be hashed
+        role: "teacher",
+        fullName: "John Smith"
+      });
+    }
     
-    // Initialize with a student
-    this.createUser({
-      username: "student",
-      password: "student123", // In production, this would be hashed
-      role: "student",
-      fullName: "Alex Johnson"
-    });
+    // Check if student user exists
+    const studentExists = await this.getUserByUsername("student");
+    if (!studentExists) {
+      await this.createUser({
+        username: "student",
+        password: "student123", // In production, this would be hashed
+        role: "student",
+        fullName: "Alex Johnson"
+      });
+    }
   }
 
   // User operations
   async getUser(id: number): Promise<User | undefined> {
-    return this.users.get(id);
+    const result = await db.select().from(users).where(eq(users.id, id));
+    return result.length > 0 ? result[0] : undefined;
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    for (const user of this.users.values()) {
-      if (user.username === username) {
-        return user;
-      }
-    }
-    return undefined;
+    const result = await db.select().from(users).where(eq(users.username, username));
+    return result.length > 0 ? result[0] : undefined;
   }
 
   async getUsersByRole(role: string): Promise<User[]> {
-    return Array.from(this.users.values()).filter(user => user.role === role);
+    return await db.select().from(users).where(eq(users.role, role as any));
   }
 
   async createUser(userData: InsertUser): Promise<User> {
-    const id = this.userIdCounter++;
-    const createdAt = new Date();
-    const user: User = { ...userData, id, createdAt };
-    this.users.set(id, user);
-    return user;
+    const result = await db.insert(users).values(userData as any).returning();
+    return result[0];
   }
 
   async updateUser(id: number, userData: Partial<User>): Promise<User | undefined> {
-    const user = this.users.get(id);
-    if (!user) return undefined;
-    
-    const updatedUser = { ...user, ...userData };
-    this.users.set(id, updatedUser);
-    return updatedUser;
+    const result = await db.update(users).set(userData as any).where(eq(users.id, id)).returning();
+    return result.length > 0 ? result[0] : undefined;
   }
 
   async deleteUser(id: number): Promise<boolean> {
-    return this.users.delete(id);
+    const result = await db.delete(users).where(eq(users.id, id)).returning();
+    return result.length > 0;
   }
   
   // Faculty operations
   async getAllFaculties(): Promise<Faculty[]> {
-    return Array.from(this.faculties.values());
+    return await db.select().from(faculties);
   }
   
   async getFaculty(id: number): Promise<Faculty | undefined> {
-    return this.faculties.get(id);
+    const result = await db.select().from(faculties).where(eq(faculties.id, id));
+    return result.length > 0 ? result[0] : undefined;
   }
   
   async createFaculty(facultyData: InsertFaculty): Promise<Faculty> {
-    const id = this.facultyIdCounter++;
-    const faculty: Faculty = { ...facultyData, id };
-    this.faculties.set(id, faculty);
-    return faculty;
+    const result = await db.insert(faculties).values(facultyData as any).returning();
+    return result[0];
   }
   
   async updateFaculty(id: number, facultyData: Partial<Faculty>): Promise<Faculty | undefined> {
-    const faculty = this.faculties.get(id);
-    if (!faculty) return undefined;
-    
-    const updatedFaculty = { ...faculty, ...facultyData };
-    this.faculties.set(id, updatedFaculty);
-    return updatedFaculty;
+    const result = await db.update(faculties).set(facultyData as any).where(eq(faculties.id, id)).returning();
+    return result.length > 0 ? result[0] : undefined;
   }
   
   async deleteFaculty(id: number): Promise<boolean> {
-    return this.faculties.delete(id);
+    const result = await db.delete(faculties).where(eq(faculties.id, id)).returning();
+    return result.length > 0;
   }
   
   // Group operations
   async getAllGroups(): Promise<Group[]> {
-    return Array.from(this.groups.values());
+    return await db.select().from(groups);
   }
   
   async getGroupsByFaculty(facultyId: number): Promise<Group[]> {
-    return Array.from(this.groups.values()).filter(group => group.facultyId === facultyId);
+    return await db.select().from(groups).where(eq(groups.facultyId, facultyId));
   }
   
   async getGroup(id: number): Promise<Group | undefined> {
-    return this.groups.get(id);
+    const result = await db.select().from(groups).where(eq(groups.id, id));
+    return result.length > 0 ? result[0] : undefined;
   }
   
   async createGroup(groupData: InsertGroup): Promise<Group> {
-    const id = this.groupIdCounter++;
-    const group: Group = { ...groupData, id };
-    this.groups.set(id, group);
-    return group;
+    const result = await db.insert(groups).values(groupData as any).returning();
+    return result[0];
   }
   
   async updateGroup(id: number, groupData: Partial<Group>): Promise<Group | undefined> {
-    const group = this.groups.get(id);
-    if (!group) return undefined;
-    
-    const updatedGroup = { ...group, ...groupData };
-    this.groups.set(id, updatedGroup);
-    return updatedGroup;
+    const result = await db.update(groups).set(groupData as any).where(eq(groups.id, id)).returning();
+    return result.length > 0 ? result[0] : undefined;
   }
   
   async deleteGroup(id: number): Promise<boolean> {
-    return this.groups.delete(id);
+    const result = await db.delete(groups).where(eq(groups.id, id)).returning();
+    return result.length > 0;
   }
   
   // Test operations
   async getTestsByUser(userId: number): Promise<Test[]> {
-    return Array.from(this.tests.values()).filter(test => test.userId === userId);
+    return await db.select().from(tests).where(eq(tests.userId, userId));
   }
   
   async getTest(id: number): Promise<Test | undefined> {
-    return this.tests.get(id);
+    const result = await db.select().from(tests).where(eq(tests.id, id));
+    return result.length > 0 ? result[0] : undefined;
   }
   
   async createTest(testData: InsertTest): Promise<Test> {
-    const id = this.testIdCounter++;
-    const date = new Date();
-    const test: Test = { ...testData, id, date };
-    this.tests.set(id, test);
-    return test;
+    const result = await db.insert(tests).values(testData as any).returning();
+    return result[0];
   }
   
   async updateTest(id: number, testData: Partial<Test>): Promise<Test | undefined> {
-    const test = this.tests.get(id);
-    if (!test) return undefined;
-    
-    const updatedTest = { ...test, ...testData };
-    this.tests.set(id, updatedTest);
-    return updatedTest;
+    const result = await db.update(tests).set(testData as any).where(eq(tests.id, id)).returning();
+    return result.length > 0 ? result[0] : undefined;
   }
   
   async deleteTest(id: number): Promise<boolean> {
-    return this.tests.delete(id);
+    const result = await db.delete(tests).where(eq(tests.id, id)).returning();
+    return result.length > 0;
   }
   
   // Sample operations
   async getSamplesByUser(userId: number): Promise<Sample[]> {
-    return Array.from(this.samples.values()).filter(sample => sample.userId === userId);
+    return await db.select().from(samples).where(eq(samples.userId, userId));
   }
   
   async getSample(id: number): Promise<Sample | undefined> {
-    return this.samples.get(id);
+    const result = await db.select().from(samples).where(eq(samples.id, id));
+    return result.length > 0 ? result[0] : undefined;
   }
   
   async createSample(sampleData: InsertSample): Promise<Sample> {
-    const id = this.sampleIdCounter++;
-    const date = new Date();
-    const sample: Sample = { ...sampleData, id, date };
-    this.samples.set(id, sample);
-    return sample;
+    const result = await db.insert(samples).values(sampleData as any).returning();
+    return result[0];
   }
   
   async updateSample(id: number, sampleData: Partial<Sample>): Promise<Sample | undefined> {
-    const sample = this.samples.get(id);
-    if (!sample) return undefined;
-    
-    const updatedSample = { ...sample, ...sampleData };
-    this.samples.set(id, updatedSample);
-    return updatedSample;
+    const result = await db.update(samples).set(sampleData as any).where(eq(samples.id, id)).returning();
+    return result.length > 0 ? result[0] : undefined;
   }
   
   async deleteSample(id: number): Promise<boolean> {
-    return this.samples.delete(id);
+    const result = await db.delete(samples).where(eq(samples.id, id)).returning();
+    return result.length > 0;
   }
 }
 
-export const storage = new MemStorage();
+// Use memory storage for development or database storage in production
+export const storage = new DatabaseStorage();
