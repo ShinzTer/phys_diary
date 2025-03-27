@@ -1,15 +1,12 @@
 import { 
-  users, type User, type InsertUser,
-  faculties, type Faculty, type InsertFaculty,
-  groups, type Group, type InsertGroup,
-  tests, type Test, type InsertTest,
-  samples, type Sample, type InsertSample
+  type User, type InsertUser,
+  type Faculty, type InsertFaculty,
+  type Group, type InsertGroup,
+  type Test, type InsertTest,
+  type Sample, type InsertSample
 } from "@shared/schema";
 import createMemoryStore from "memorystore";
 import session from "express-session";
-import { db, pool } from "./db";
-import { eq, and } from "drizzle-orm";
-import connectPg from "connect-pg-simple";
 
 // Storage interface for database operations
 export interface IStorage {
@@ -54,191 +51,260 @@ export interface IStorage {
   sessionStore: any;
 }
 
-// PostgreSQL implementation of storage
-export class DatabaseStorage implements IStorage {
+// In-memory implementation of the storage interface
+export class MemStorage implements IStorage {
+  private users: User[] = [];
+  private faculties: Faculty[] = [];
+  private groups: Group[] = [];
+  private tests: Test[] = [];
+  private samples: Sample[] = [];
+  private nextId = {
+    users: 1,
+    faculties: 1,
+    groups: 1,
+    tests: 1,
+    samples: 1
+  };
   sessionStore: any;
-  
+
   constructor() {
-    const PostgresSessionStore = connectPg(session);
-    
-    this.sessionStore = new PostgresSessionStore({
-      pool,
-      createTableIfMissing: true
+    const MemoryStore = createMemoryStore(session);
+    this.sessionStore = new MemoryStore({
+      checkPeriod: 86400000 // prune expired entries every 24h
     });
-    
-    // Seed database with default users if they don't exist
-    this.seedDatabase();
+
+    // Seed default users
+    this.seedInitialData();
   }
-  
-  private async seedDatabase() {
-    // Check if admin user exists
-    const adminExists = await this.getUserByUsername("admin");
+
+  private seedInitialData() {
+    // Create admin user if it doesn't exist
+    const adminExists = this.users.find(u => u.username === 'admin');
     if (!adminExists) {
-      await this.createUser({
-        username: "admin",
-        password: "admin123", // In production, this would be hashed
-        role: "admin",
-        fullName: "System Administrator"
+      this.createUser({
+        username: 'admin',
+        password: 'admin123', // This would be hashed in a real app
+        role: 'admin',
+        fullName: 'System Administrator',
       });
     }
-    
-    // Check if teacher user exists
-    const teacherExists = await this.getUserByUsername("teacher");
+
+    // Create teacher user if it doesn't exist
+    const teacherExists = this.users.find(u => u.username === 'teacher');
     if (!teacherExists) {
-      await this.createUser({
-        username: "teacher",
-        password: "teacher123", // In production, this would be hashed
-        role: "teacher",
-        fullName: "John Smith"
+      this.createUser({
+        username: 'teacher',
+        password: 'teacher123',
+        role: 'teacher',
+        fullName: 'John Smith',
       });
     }
-    
-    // Check if student user exists
-    const studentExists = await this.getUserByUsername("student");
+
+    // Create student user if it doesn't exist
+    const studentExists = this.users.find(u => u.username === 'student');
     if (!studentExists) {
-      await this.createUser({
-        username: "student",
-        password: "student123", // In production, this would be hashed
-        role: "student",
-        fullName: "Alex Johnson"
+      this.createUser({
+        username: 'student',
+        password: 'student123',
+        role: 'student',
+        fullName: 'Alex Johnson',
       });
     }
   }
 
   // User operations
   async getUser(id: number): Promise<User | undefined> {
-    const result = await db.select().from(users).where(eq(users.id, id));
-    return result.length > 0 ? result[0] : undefined;
+    return this.users.find(u => u.id === id);
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    const result = await db.select().from(users).where(eq(users.username, username));
-    return result.length > 0 ? result[0] : undefined;
+    return this.users.find(u => u.username === username);
   }
 
   async getUsersByRole(role: string): Promise<User[]> {
-    return await db.select().from(users).where(eq(users.role, role as any));
+    return this.users.filter(u => u.role === role);
   }
 
   async createUser(userData: InsertUser): Promise<User> {
-    const result = await db.insert(users).values(userData as any).returning();
-    return result[0];
+    const user: User = {
+      id: this.nextId.users++,
+      ...userData as any,
+      createdAt: new Date(),
+    };
+    this.users.push(user);
+    return user;
   }
 
   async updateUser(id: number, userData: Partial<User>): Promise<User | undefined> {
-    const result = await db.update(users).set(userData as any).where(eq(users.id, id)).returning();
-    return result.length > 0 ? result[0] : undefined;
+    const userIndex = this.users.findIndex(u => u.id === id);
+    if (userIndex === -1) return undefined;
+    
+    this.users[userIndex] = {
+      ...this.users[userIndex],
+      ...userData,
+    };
+    
+    return this.users[userIndex];
   }
 
   async deleteUser(id: number): Promise<boolean> {
-    const result = await db.delete(users).where(eq(users.id, id)).returning();
-    return result.length > 0;
+    const initialLength = this.users.length;
+    this.users = this.users.filter(u => u.id !== id);
+    return this.users.length !== initialLength;
   }
-  
+
   // Faculty operations
   async getAllFaculties(): Promise<Faculty[]> {
-    return await db.select().from(faculties);
+    return this.faculties;
   }
-  
+
   async getFaculty(id: number): Promise<Faculty | undefined> {
-    const result = await db.select().from(faculties).where(eq(faculties.id, id));
-    return result.length > 0 ? result[0] : undefined;
+    return this.faculties.find(f => f.id === id);
   }
-  
+
   async createFaculty(facultyData: InsertFaculty): Promise<Faculty> {
-    const result = await db.insert(faculties).values(facultyData as any).returning();
-    return result[0];
+    const faculty: Faculty = {
+      id: this.nextId.faculties++,
+      ...facultyData as any,
+      createdAt: new Date(),
+    };
+    this.faculties.push(faculty);
+    return faculty;
   }
-  
+
   async updateFaculty(id: number, facultyData: Partial<Faculty>): Promise<Faculty | undefined> {
-    const result = await db.update(faculties).set(facultyData as any).where(eq(faculties.id, id)).returning();
-    return result.length > 0 ? result[0] : undefined;
+    const facultyIndex = this.faculties.findIndex(f => f.id === id);
+    if (facultyIndex === -1) return undefined;
+    
+    this.faculties[facultyIndex] = {
+      ...this.faculties[facultyIndex],
+      ...facultyData,
+    };
+    
+    return this.faculties[facultyIndex];
   }
-  
+
   async deleteFaculty(id: number): Promise<boolean> {
-    const result = await db.delete(faculties).where(eq(faculties.id, id)).returning();
-    return result.length > 0;
+    const initialLength = this.faculties.length;
+    this.faculties = this.faculties.filter(f => f.id !== id);
+    return this.faculties.length !== initialLength;
   }
-  
+
   // Group operations
   async getAllGroups(): Promise<Group[]> {
-    return await db.select().from(groups);
+    return this.groups;
   }
-  
+
   async getGroupsByFaculty(facultyId: number): Promise<Group[]> {
-    return await db.select().from(groups).where(eq(groups.facultyId, facultyId));
+    return this.groups.filter(g => g.facultyId === facultyId);
   }
-  
+
   async getGroup(id: number): Promise<Group | undefined> {
-    const result = await db.select().from(groups).where(eq(groups.id, id));
-    return result.length > 0 ? result[0] : undefined;
+    return this.groups.find(g => g.id === id);
   }
-  
+
   async createGroup(groupData: InsertGroup): Promise<Group> {
-    const result = await db.insert(groups).values(groupData as any).returning();
-    return result[0];
+    const group: Group = {
+      id: this.nextId.groups++,
+      ...groupData as any,
+      createdAt: new Date(),
+    };
+    this.groups.push(group);
+    return group;
   }
-  
+
   async updateGroup(id: number, groupData: Partial<Group>): Promise<Group | undefined> {
-    const result = await db.update(groups).set(groupData as any).where(eq(groups.id, id)).returning();
-    return result.length > 0 ? result[0] : undefined;
+    const groupIndex = this.groups.findIndex(g => g.id === id);
+    if (groupIndex === -1) return undefined;
+    
+    this.groups[groupIndex] = {
+      ...this.groups[groupIndex],
+      ...groupData,
+    };
+    
+    return this.groups[groupIndex];
   }
-  
+
   async deleteGroup(id: number): Promise<boolean> {
-    const result = await db.delete(groups).where(eq(groups.id, id)).returning();
-    return result.length > 0;
+    const initialLength = this.groups.length;
+    this.groups = this.groups.filter(g => g.id !== id);
+    return this.groups.length !== initialLength;
   }
-  
+
   // Test operations
   async getTestsByUser(userId: number): Promise<Test[]> {
-    return await db.select().from(tests).where(eq(tests.userId, userId));
+    return this.tests.filter(t => t.userId === userId);
   }
-  
+
   async getTest(id: number): Promise<Test | undefined> {
-    const result = await db.select().from(tests).where(eq(tests.id, id));
-    return result.length > 0 ? result[0] : undefined;
+    return this.tests.find(t => t.id === id);
   }
-  
+
   async createTest(testData: InsertTest): Promise<Test> {
-    const result = await db.insert(tests).values(testData as any).returning();
-    return result[0];
+    const test: Test = {
+      id: this.nextId.tests++,
+      ...testData as any,
+      createdAt: new Date(),
+    };
+    this.tests.push(test);
+    return test;
   }
-  
+
   async updateTest(id: number, testData: Partial<Test>): Promise<Test | undefined> {
-    const result = await db.update(tests).set(testData as any).where(eq(tests.id, id)).returning();
-    return result.length > 0 ? result[0] : undefined;
+    const testIndex = this.tests.findIndex(t => t.id === id);
+    if (testIndex === -1) return undefined;
+    
+    this.tests[testIndex] = {
+      ...this.tests[testIndex],
+      ...testData,
+    };
+    
+    return this.tests[testIndex];
   }
-  
+
   async deleteTest(id: number): Promise<boolean> {
-    const result = await db.delete(tests).where(eq(tests.id, id)).returning();
-    return result.length > 0;
+    const initialLength = this.tests.length;
+    this.tests = this.tests.filter(t => t.id !== id);
+    return this.tests.length !== initialLength;
   }
-  
+
   // Sample operations
   async getSamplesByUser(userId: number): Promise<Sample[]> {
-    return await db.select().from(samples).where(eq(samples.userId, userId));
+    return this.samples.filter(s => s.userId === userId);
   }
-  
+
   async getSample(id: number): Promise<Sample | undefined> {
-    const result = await db.select().from(samples).where(eq(samples.id, id));
-    return result.length > 0 ? result[0] : undefined;
+    return this.samples.find(s => s.id === id);
   }
-  
+
   async createSample(sampleData: InsertSample): Promise<Sample> {
-    const result = await db.insert(samples).values(sampleData as any).returning();
-    return result[0];
+    const sample: Sample = {
+      id: this.nextId.samples++,
+      ...sampleData as any,
+      createdAt: new Date(),
+    };
+    this.samples.push(sample);
+    return sample;
   }
-  
+
   async updateSample(id: number, sampleData: Partial<Sample>): Promise<Sample | undefined> {
-    const result = await db.update(samples).set(sampleData as any).where(eq(samples.id, id)).returning();
-    return result.length > 0 ? result[0] : undefined;
+    const sampleIndex = this.samples.findIndex(s => s.id === id);
+    if (sampleIndex === -1) return undefined;
+    
+    this.samples[sampleIndex] = {
+      ...this.samples[sampleIndex],
+      ...sampleData,
+    };
+    
+    return this.samples[sampleIndex];
   }
-  
+
   async deleteSample(id: number): Promise<boolean> {
-    const result = await db.delete(samples).where(eq(samples.id, id)).returning();
-    return result.length > 0;
+    const initialLength = this.samples.length;
+    this.samples = this.samples.filter(s => s.id !== id);
+    return this.samples.length !== initialLength;
   }
 }
 
-// Use memory storage for development or database storage in production
-export const storage = new DatabaseStorage();
+// Use memory storage for development
+export const storage = new MemStorage();
