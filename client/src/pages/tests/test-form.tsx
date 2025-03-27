@@ -265,11 +265,14 @@ export default function TestForm() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="_none" disabled>Select a test type</SelectItem>
+                          {/* Category headers and section dividers */}
+                          <div className="px-2 py-1.5 text-sm font-semibold text-muted-foreground">
+                            Select a test type
+                          </div>
                           {/* Physical Tests Section */}
-                          <SelectItem value="_header_physical" disabled className="font-bold text-primary">
+                          <div className="px-2 py-1.5 text-sm font-semibold text-primary">
                             Physical Tests
-                          </SelectItem>
+                          </div>
                           {TEST_TYPES.map(type => (
                             <SelectItem key={type} value={type}>
                               {formatTestType(type)}
@@ -277,9 +280,9 @@ export default function TestForm() {
                           ))}
                           
                           {/* Control Exercises Section */}
-                          <SelectItem value="_header_control" disabled className="font-bold text-primary">
+                          <div className="px-2 py-1.5 text-sm font-semibold text-primary">
                             Control Exercises
-                          </SelectItem>
+                          </div>
                           {CONTROL_EXERCISE_TYPES.map(type => (
                             <SelectItem key={type} value={type}>
                               {formatTestType(type)}

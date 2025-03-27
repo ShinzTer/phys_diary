@@ -248,7 +248,9 @@ export default function SampleForm() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="_none" disabled>Select a sample type</SelectItem>
+                          <div className="px-2 py-1.5 text-sm font-semibold text-muted-foreground">
+                            Select a sample type
+                          </div>
                           {SAMPLE_TYPES.map(type => (
                             <SelectItem key={type} value={type}>
                               {formatSampleType(type)}
