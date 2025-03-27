@@ -1,43 +1,51 @@
-import { pgTable, text, serial, integer, boolean, date, timestamp, json } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, date, doublePrecision } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-// User, Role, and Auth schemas
+export type UserRole = "admin" | "teacher" | "student";
+
+// Users
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
-  role: text("role", { enum: ["admin", "teacher", "student"] }).notNull(),
-  // Profile information
-  fullName: text("full_name"),
-  gender: text("gender", { enum: ["male", "female", "other"] }),
+  role: text("role").$type<UserRole>().notNull().default("student"),
+  fullName: text("full_name").notNull(),
+  gender: text("gender"),
   dateOfBirth: date("date_of_birth"),
   placeOfBirth: text("place_of_birth"),
   address: text("address"),
   nationality: text("nationality"),
-  schoolGraduated: text("school_graduated"),
-  facultyId: integer("faculty_id").references(() => faculties.id),
-  groupId: integer("group_id").references(() => groups.id),
-  medicalGroup: text("medical_group", { enum: ["basic", "preparatory", "special"] }),
-  medicalDiagnosis: text("medical_diagnosis"),
+  previousSchool: text("previous_school"),
+  facultyId: integer("faculty_id"),
+  groupId: integer("group_id"),
+  medicalGroup: text("medical_group").default("basic"),
+  diagnosis: text("diagnosis"),
   previousIllnesses: text("previous_illnesses"),
   educationalDepartment: text("educational_department"),
-  activeSports: text("active_sports"),
+  currentSports: text("current_sports"),
   previousSports: text("previous_sports"),
   additionalInfo: text("additional_info"),
-  visualSettings: json("visual_settings").default({}),
+  visualSettings: text("visual_settings").default("{}"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-export const insertUserSchema = createInsertSchema(users).omit({
-  id: true,
-  createdAt: true
+export const insertUserSchema = createInsertSchema(users).pick({
+  username: true,
+  password: true,
+  role: true,
+  fullName: true,
 });
 
-export type InsertUser = z.infer<typeof insertUserSchema>;
-export type User = typeof users.$inferSelect;
+export const userProfileSchema = createInsertSchema(users).omit({
+  id: true,
+  password: true,
+  role: true,
+  username: true,
+  createdAt: true,
+});
 
-// Faculty schema
+// Faculties
 export const faculties = pgTable("faculties", {
   id: serial("id").primaryKey(),
   name: text("name").notNull().unique(),
@@ -45,130 +53,118 @@ export const faculties = pgTable("faculties", {
 });
 
 export const insertFacultySchema = createInsertSchema(faculties).omit({
-  id: true
+  id: true,
 });
+
+// Groups
+export const groups = pgTable("groups", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  facultyId: integer("faculty_id").notNull(),
+  year: integer("year").notNull(),
+});
+
+export const insertGroupSchema = createInsertSchema(groups).omit({
+  id: true,
+});
+
+// Tests
+export const tests = pgTable("tests", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  testType: text("test_type").notNull(), // pushups, situps, tapping, etc.
+  result: text("result").notNull(), // Store as text for flexibility, we'll parse on the client
+  date: timestamp("date").defaultNow(),
+  assessedBy: integer("assessed_by"), // Teacher ID
+  grade: text("grade"), // A, B, C, etc. or numeric
+  notes: text("notes"),
+});
+
+export const insertTestSchema = createInsertSchema(tests).omit({
+  id: true,
+  date: true,
+});
+
+// Samples (physical measurements)
+export const samples = pgTable("samples", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  sampleType: text("sample_type").notNull(), // height, weight, lung capacity, etc.
+  value: text("value").notNull(), // Store as text for flexibility, will parse on client
+  date: timestamp("date").defaultNow(),
+  recordedBy: integer("recorded_by"), // Teacher or student ID
+  notes: text("notes"),
+});
+
+export const insertSampleSchema = createInsertSchema(samples).omit({
+  id: true,
+  date: true,
+});
+
+// Test Types Reference
+export const TEST_TYPES = [
+  "pushups",
+  "abs",
+  "tapping",
+  "running_in_place",
+  "semi_squat",
+  "pullups",
+  "plank",
+  "forward_bend",
+  "long_jump"
+] as const;
+
+// Sample Types Reference
+export const SAMPLE_TYPES = [
+  "body_length",
+  "body_weight",
+  "quetelet_index",
+  "chest_circumference",
+  "waist_circumference",
+  "posture",
+  "vital_lung_capacity",
+  "hand_strength",
+  "orthostatic_test",
+  "barbell_test",
+  "genchi_test",
+  "martinet_kushelevsky_test",
+  "heart_rate",
+  "blood_pressure", 
+  "pulse_pressure"
+] as const;
+
+// Control Exercise Types Reference
+export const CONTROL_EXERCISE_TYPES = [
+  "basketball",
+  "volleyball",
+  "swimming",
+  "running"
+] as const;
+
+// Medical Group Types
+export const MEDICAL_GROUP_TYPES = [
+  "basic",
+  "preparatory", 
+  "special"
+] as const;
+
+// Types for TypeScript
+export type InsertUser = z.infer<typeof insertUserSchema>;
+export type User = typeof users.$inferSelect;
 
 export type InsertFaculty = z.infer<typeof insertFacultySchema>;
 export type Faculty = typeof faculties.$inferSelect;
 
-// Group schema
-export const groups = pgTable("groups", {
-  id: serial("id").primaryKey(),
-  name: text("name").notNull(),
-  facultyId: integer("faculty_id").references(() => faculties.id).notNull(),
-  year: integer("year"),
-});
-
-export const insertGroupSchema = createInsertSchema(groups).omit({
-  id: true
-});
-
 export type InsertGroup = z.infer<typeof insertGroupSchema>;
 export type Group = typeof groups.$inferSelect;
-
-// Test schema
-export const tests = pgTable("tests", {
-  id: serial("id").primaryKey(),
-  name: text("name").notNull(),
-  description: text("description"),
-  unit: text("unit").notNull(),
-  category: text("category").notNull(),
-});
-
-export const insertTestSchema = createInsertSchema(tests).omit({
-  id: true
-});
 
 export type InsertTest = z.infer<typeof insertTestSchema>;
 export type Test = typeof tests.$inferSelect;
 
-// Sample schema (physical measurements)
-export const samples = pgTable("samples", {
-  id: serial("id").primaryKey(),
-  name: text("name").notNull(),
-  description: text("description"),
-  unit: text("unit").notNull(),
-  category: text("category").notNull(),
-});
-
-export const insertSampleSchema = createInsertSchema(samples).omit({
-  id: true
-});
-
 export type InsertSample = z.infer<typeof insertSampleSchema>;
 export type Sample = typeof samples.$inferSelect;
 
-// Control Exercise schema
-export const controlExercises = pgTable("control_exercises", {
-  id: serial("id").primaryKey(),
-  name: text("name").notNull(),
-  description: text("description"),
-  category: text("category").notNull(),
-});
-
-export const insertControlExerciseSchema = createInsertSchema(controlExercises).omit({
-  id: true
-});
-
-export type InsertControlExercise = z.infer<typeof insertControlExerciseSchema>;
-export type ControlExercise = typeof controlExercises.$inferSelect;
-
-// Test Results schema
-export const testResults = pgTable("test_results", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").references(() => users.id).notNull(),
-  testId: integer("test_id").references(() => tests.id).notNull(),
-  value: text("value").notNull(),
-  assessment: text("assessment", { enum: ["excellent", "good", "satisfactory", "poor"] }),
-  comments: text("comments"),
-  assessedBy: integer("assessed_by").references(() => users.id),
-  assessedAt: timestamp("assessed_at").defaultNow(),
-});
-
-export const insertTestResultSchema = createInsertSchema(testResults).omit({
-  id: true,
-  assessedAt: true
-});
-
-export type InsertTestResult = z.infer<typeof insertTestResultSchema>;
-export type TestResult = typeof testResults.$inferSelect;
-
-// Sample Results schema
-export const sampleResults = pgTable("sample_results", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").references(() => users.id).notNull(),
-  sampleId: integer("sample_id").references(() => samples.id).notNull(),
-  value: text("value").notNull(),
-  assessment: text("assessment", { enum: ["excellent", "good", "satisfactory", "poor"] }),
-  comments: text("comments"),
-  assessedBy: integer("assessed_by").references(() => users.id),
-  assessedAt: timestamp("assessed_at").defaultNow(),
-});
-
-export const insertSampleResultSchema = createInsertSchema(sampleResults).omit({
-  id: true,
-  assessedAt: true
-});
-
-export type InsertSampleResult = z.infer<typeof insertSampleResultSchema>;
-export type SampleResult = typeof sampleResults.$inferSelect;
-
-// Control Exercise Results schema
-export const controlExerciseResults = pgTable("control_exercise_results", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").references(() => users.id).notNull(),
-  exerciseId: integer("exercise_id").references(() => controlExercises.id).notNull(),
-  value: text("value").notNull(),
-  assessment: text("assessment", { enum: ["excellent", "good", "satisfactory", "poor"] }),
-  comments: text("comments"),
-  assessedBy: integer("assessed_by").references(() => users.id),
-  assessedAt: timestamp("assessed_at").defaultNow(),
-});
-
-export const insertControlExerciseResultSchema = createInsertSchema(controlExerciseResults).omit({
-  id: true,
-  assessedAt: true
-});
-
-export type InsertControlExerciseResult = z.infer<typeof insertControlExerciseResultSchema>;
-export type ControlExerciseResult = typeof controlExerciseResults.$inferSelect;
+export type TestType = typeof TEST_TYPES[number];
+export type SampleType = typeof SAMPLE_TYPES[number];
+export type ControlExerciseType = typeof CONTROL_EXERCISE_TYPES[number];
+export type MedicalGroupType = typeof MEDICAL_GROUP_TYPES[number];

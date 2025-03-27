@@ -1,11 +1,13 @@
+import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
-import { Sidebar } from "@/components/layout/sidebar";
-import { MobileNav } from "@/components/layout/mobile-nav";
+import Sidebar from "@/components/layout/sidebar";
+import MobileNav from "@/components/layout/mobile-nav";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ClipboardList, FileBarChart, Activity, Users, BookOpen, Dumbbell } from "lucide-react";
 
 export default function Dashboard() {
   const { user } = useAuth();
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   if (!user) return null;
 
@@ -13,7 +15,7 @@ export default function Dashboard() {
     <div className="min-h-screen flex flex-col md:flex-row bg-gray-100">
       {/* Sidebar for desktop */}
       <div className="hidden md:block h-screen">
-        <Sidebar />
+        <Sidebar isMobileSidebarOpen={isMobileSidebarOpen} />
       </div>
       
       {/* Mobile navigation */}

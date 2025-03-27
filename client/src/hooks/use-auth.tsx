@@ -4,20 +4,36 @@ import {
   useMutation,
   UseMutationResult,
 } from "@tanstack/react-query";
-import { insertUserSchema, User as SelectUser, InsertUser } from "@shared/schema";
-import { getQueryFn, apiRequest, queryClient } from "@/lib/queryClient";
+import { insertUserSchema, User } from "@shared/schema";
+import { getQueryFn, apiRequest, queryClient } from "../lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { z } from "zod";
+
+type UserWithoutPassword = Omit<User, "password">;
 
 type AuthContextType = {
-  user: Omit<SelectUser, "password"> | null;
+  user: UserWithoutPassword | null;
   isLoading: boolean;
   error: Error | null;
-  loginMutation: UseMutationResult<Omit<SelectUser, "password">, Error, LoginData>;
+  loginMutation: UseMutationResult<UserWithoutPassword, Error, LoginData>;
   logoutMutation: UseMutationResult<void, Error, void>;
-  registerMutation: UseMutationResult<Omit<SelectUser, "password">, Error, InsertUser>;
+  registerMutation: UseMutationResult<UserWithoutPassword, Error, RegisterData>;
 };
 
-type LoginData = Pick<InsertUser, "username" | "password">;
+const loginSchema = z.object({
+  username: z.string().min(1, "Username is required"),
+  password: z.string().min(1, "Password is required"),
+});
+
+const registerSchema = insertUserSchema.extend({
+  confirmPassword: z.string().min(1, "Confirm password is required"),
+}).refine(data => data.password === data.confirmPassword, {
+  message: "Passwords do not match",
+  path: ["confirmPassword"],
+});
+
+type LoginData = z.infer<typeof loginSchema>;
+type RegisterData = z.infer<typeof registerSchema>;
 
 export const AuthContext = createContext<AuthContextType | null>(null);
 
@@ -27,7 +43,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     data: user,
     error,
     isLoading,
-  } = useQuery<Omit<SelectUser, "password"> | null>({
+  } = useQuery<UserWithoutPassword, Error>({
     queryKey: ["/api/user"],
     queryFn: getQueryFn({ on401: "returnNull" }),
   });
@@ -37,7 +53,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const res = await apiRequest("POST", "/api/login", credentials);
       return await res.json();
     },
-    onSuccess: (user: Omit<SelectUser, "password">) => {
+    onSuccess: (user: UserWithoutPassword) => {
       queryClient.setQueryData(["/api/user"], user);
       toast({
         title: "Login successful",
@@ -54,15 +70,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   });
 
   const registerMutation = useMutation({
-    mutationFn: async (credentials: InsertUser) => {
-      const res = await apiRequest("POST", "/api/register", credentials);
+    mutationFn: async (credentials: RegisterData) => {
+      // Remove confirmPassword before sending to API
+      const { confirmPassword, ...userData } = credentials;
+      const res = await apiRequest("POST", "/api/register", userData);
       return await res.json();
     },
-    onSuccess: (user: Omit<SelectUser, "password">) => {
+    onSuccess: (user: UserWithoutPassword) => {
       queryClient.setQueryData(["/api/user"], user);
       toast({
         title: "Registration successful",
-        description: "Your account has been created successfully!",
+        description: `Welcome, ${user.fullName || user.username}!`,
       });
     },
     onError: (error: Error) => {
@@ -82,7 +100,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       queryClient.setQueryData(["/api/user"], null);
       toast({
         title: "Logged out",
-        description: "You have been logged out successfully.",
+        description: "You have been successfully logged out.",
       });
     },
     onError: (error: Error) => {

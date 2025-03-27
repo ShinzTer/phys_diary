@@ -1,50 +1,58 @@
-import { useState } from "react";
-import { Sidebar } from "./sidebar";
-import { Menu, X } from "lucide-react";
+import { Link, useLocation } from "wouter";
+import { cn } from "@/lib/utils";
+import { Home, Users, Activity, User } from "lucide-react";
 
-export function MobileNav() {
-  const [isOpen, setIsOpen] = useState(false);
+export default function MobileNav() {
+  const [location] = useLocation();
 
-  const toggleMenu = () => {
-    setIsOpen(!isOpen);
-  };
-
-  const closeMenu = () => {
-    setIsOpen(false);
+  // Check if the current path matches the given path
+  const isActive = (path: string) => {
+    return location === path || location.startsWith(`${path}/`);
   };
 
   return (
-    <>
-      {/* Mobile Header */}
-      <div className="md:hidden w-full bg-gray-800 text-white px-4 py-3 flex items-center justify-between">
-        <h1 className="text-xl font-bold">PhysEd Control</h1>
-        <button 
-          onClick={toggleMenu} 
-          className="text-white focus:outline-none"
-          aria-label="Toggle menu"
-        >
-          <Menu className="h-6 w-6" />
-        </button>
+    <nav className="md:hidden bg-white border-t shadow-lg fixed bottom-0 w-full z-10">
+      <div className="flex justify-around">
+        <Link href="/">
+          <a className={cn(
+            "flex flex-col items-center py-2 px-4",
+            isActive("/") ? "text-primary" : "text-gray-500"
+          )}>
+            <Home size={20} />
+            <span className="text-xs mt-1">Dashboard</span>
+          </a>
+        </Link>
+        
+        <Link href="/students">
+          <a className={cn(
+            "flex flex-col items-center py-2 px-4",
+            isActive("/students") ? "text-primary" : "text-gray-500"
+          )}>
+            <Users size={20} />
+            <span className="text-xs mt-1">Students</span>
+          </a>
+        </Link>
+        
+        <Link href="/tests">
+          <a className={cn(
+            "flex flex-col items-center py-2 px-4",
+            isActive("/tests") || isActive("/samples") ? "text-primary" : "text-gray-500"
+          )}>
+            <Activity size={20} />
+            <span className="text-xs mt-1">Tests</span>
+          </a>
+        </Link>
+        
+        <Link href="/profile">
+          <a className={cn(
+            "flex flex-col items-center py-2 px-4",
+            isActive("/profile") ? "text-primary" : "text-gray-500"
+          )}>
+            <User size={20} />
+            <span className="text-xs mt-1">Profile</span>
+          </a>
+        </Link>
       </div>
-      
-      {/* Mobile Menu Overlay */}
-      {isOpen && (
-        <div className="fixed inset-0 bg-gray-800 z-50 flex flex-col md:hidden">
-          <div className="flex justify-between items-center p-4 border-b border-gray-700">
-            <h1 className="text-xl font-bold text-white">PhysEd Control</h1>
-            <button 
-              onClick={closeMenu} 
-              className="text-white focus:outline-none"
-              aria-label="Close menu"
-            >
-              <X className="h-6 w-6" />
-            </button>
-          </div>
-          <div className="overflow-y-auto flex-1">
-            <Sidebar isMobile={true} onLinkClick={closeMenu} />
-          </div>
-        </div>
-      )}
-    </>
+    </nav>
   );
 }
