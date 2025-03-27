@@ -1,9 +1,7 @@
-import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { Link } from "wouter";
-import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Bell, Menu, ChevronDown } from "lucide-react";
+import { Menu, ChevronDown } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,7 +17,6 @@ type HeaderProps = {
 
 export default function Header({ toggleSidebar }: HeaderProps) {
   const { user, logoutMutation } = useAuth();
-  const [notifications] = useState(3); // Would be fetched from the API in a real app
 
   const handleLogout = () => {
     logoutMutation.mutate();
@@ -51,19 +48,8 @@ export default function Header({ toggleSidebar }: HeaderProps) {
           </Link>
         </div>
         
-        <div className="flex items-center space-x-4">
-          <div className="relative">
-            <Button variant="ghost" size="icon" className="relative hover:bg-primary-light rounded-full">
-              <Bell className="h-5 w-5" />
-              {notifications > 0 && (
-                <span className="absolute top-1 right-1 bg-accent text-neutral-dark text-xs rounded-full w-4 h-4 flex items-center justify-center">
-                  {notifications}
-                </span>
-              )}
-            </Button>
-          </div>
-          
-          <div className="hidden md:flex items-center space-x-2">
+        <div className="flex items-center">
+          <div className="hidden md:flex items-center">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="flex items-center space-x-2 hover:bg-primary-light px-2 py-1 rounded-md">

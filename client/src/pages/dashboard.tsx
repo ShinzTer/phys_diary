@@ -1,38 +1,27 @@
-import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
-import Sidebar from "@/components/layout/sidebar";
-import MobileNav from "@/components/layout/mobile-nav";
+import MainLayout from "@/components/layout/main-layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ClipboardList, FileBarChart, Activity, Users, BookOpen, Dumbbell } from "lucide-react";
 
 export default function Dashboard() {
   const { user } = useAuth();
-  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   if (!user) return null;
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row bg-gray-100">
-      {/* Sidebar for desktop */}
-      <div className="hidden md:block h-screen">
-        <Sidebar isMobileSidebarOpen={isMobileSidebarOpen} />
-      </div>
-      
-      {/* Mobile navigation */}
-      <MobileNav />
-      
-      {/* Main content */}
-      <main className="flex-1 p-6 overflow-y-auto">
-        <div className="max-w-6xl mx-auto">
-          <h1 className="text-2xl font-bold mb-6">Welcome, {user.fullName || user.username}</h1>
-          
-          {/* Dashboard content based on role */}
-          {user.role === "admin" && <AdminDashboard />}
-          {user.role === "teacher" && <TeacherDashboard />}
-          {user.role === "student" && <StudentDashboard />}
+    <MainLayout>
+      <div className="container mx-auto px-4 py-6">
+        <div className="mb-6">
+          <h2 className="text-2xl font-semibold">Dashboard</h2>
+          <p className="text-gray-500">Welcome, {user.fullName || user.username}</p>
         </div>
-      </main>
-    </div>
+        
+        {/* Dashboard content based on role */}
+        {user.role === "admin" && <AdminDashboard />}
+        {user.role === "teacher" && <TeacherDashboard />}
+        {user.role === "student" && <StudentDashboard />}
+      </div>
+    </MainLayout>
   );
 }
 
