@@ -33,7 +33,7 @@ import { format } from "date-fns";
 export default function Samples() {
   const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
-  const [sampleTypeFilter, setSampleTypeFilter] = useState<string>("");
+  const [sampleTypeFilter, setSampleTypeFilter] = useState<string>("all");
   
   // Fetch samples for current user (if student) or all samples (if teacher/admin)
   const { data: samples, isLoading } = useQuery({
@@ -44,7 +44,7 @@ export default function Samples() {
   const filteredSamples = samples?.filter(sample => {
     const matchesSearch = sample.sampleType.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          sample.value.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesType = !sampleTypeFilter || sample.sampleType === sampleTypeFilter;
+    const matchesType = sampleTypeFilter === "all" || sample.sampleType === sampleTypeFilter;
     
     return matchesSearch && matchesType;
   });
@@ -96,7 +96,7 @@ export default function Samples() {
                     <SelectValue placeholder="All sample types" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All sample types</SelectItem>
+                    <SelectItem value="all">All sample types</SelectItem>
                     {SAMPLE_TYPES.map(type => (
                       <SelectItem key={type} value={type}>
                         {formatSampleType(type)}

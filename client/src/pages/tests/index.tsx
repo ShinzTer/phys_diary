@@ -37,7 +37,7 @@ export default function Tests() {
   const { user } = useAuth();
   const [, navigate] = useLocation();
   const [searchTerm, setSearchTerm] = useState("");
-  const [testTypeFilter, setTestTypeFilter] = useState<string>("");
+  const [testTypeFilter, setTestTypeFilter] = useState<string>("all");
   const [activeTab, setActiveTab] = useState<string>("tests");
   
   // Fetch tests for current user (if student) or all tests (if teacher/admin)
@@ -52,7 +52,7 @@ export default function Tests() {
   const filteredTests = tests?.filter(test => {
     const matchesSearch = test.testType.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          test.result.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesType = !testTypeFilter || test.testType === testTypeFilter;
+    const matchesType = testTypeFilter === "all" || test.testType === testTypeFilter;
     
     // For the tabs
     const isPhysicalTest = TEST_TYPES.includes(test.testType as any);
@@ -138,7 +138,7 @@ export default function Tests() {
                     <SelectValue placeholder="All test types" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All test types</SelectItem>
+                    <SelectItem value="all">All test types</SelectItem>
                     {allTestTypes.map(type => (
                       <SelectItem key={type} value={type}>
                         {formatTestType(type)}
