@@ -217,7 +217,7 @@ export default function GroupManagement() {
 
   // Get faculty name by ID
   const getFacultyName = (facultyId: number) => {
-    const faculty = faculties?.find(f => f.id === facultyId);
+    const faculty = faculties?.find(f => f.faculty_id === facultyId);
     return faculty ? faculty.name : "Unknown Faculty";
   };
 
@@ -273,7 +273,7 @@ export default function GroupManagement() {
                 <SelectContent>
                   <SelectItem value="">All faculties</SelectItem>
                   {faculties?.map(faculty => (
-                    <SelectItem key={faculty.faculty_id} value={faculty.faculty_id.toString()}>
+                    <SelectItem key={faculty.faculty.faculty_id} value={faculty.faculty.faculty_id.toString()}>
                       {faculty.name}
                     </SelectItem>
                   ))}
@@ -406,7 +406,7 @@ export default function GroupManagement() {
                         </FormControl>
                         <SelectContent>
                           {faculties?.map(faculty => (
-                            <SelectItem key={faculty.id} value={faculty.id.toString()}>
+                            <SelectItem key={faculty.faculty_id} value={faculty.faculty_id.toString()}>
                               {faculty.name}
                             </SelectItem>
                           ))}
@@ -501,7 +501,7 @@ export default function GroupManagement() {
                         </FormControl>
                         <SelectContent>
                           {faculties?.map(faculty => (
-                            <SelectItem key={faculty.id} value={faculty.id.toString()}>
+                            <SelectItem key={faculty.faculty_id} value={faculty.faculty_id.toString()}>
                               {faculty.name}
                             </SelectItem>
                           ))}
