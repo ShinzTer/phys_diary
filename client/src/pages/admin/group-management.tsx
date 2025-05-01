@@ -273,7 +273,7 @@ export default function GroupManagement() {
                 <SelectContent>
                   <SelectItem value="">All faculties</SelectItem>
                   {faculties?.map(faculty => (
-                    <SelectItem key={faculty.id} value={faculty.id.toString()}>
+                    <SelectItem key={faculty.faculty_id} value={faculty.faculty_id.toString()}>
                       {faculty.name}
                     </SelectItem>
                   ))}
