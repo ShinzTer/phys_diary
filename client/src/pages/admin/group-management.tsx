@@ -273,14 +273,14 @@ export default function GroupManagement() {
   };
 
   // Filter groups based on search term and faculty filter with defensive programming
-  const filteredGroups = groups?.filter((group) => {
+  const filteredGroups = Array.isArray(groups) 
+  ? groups?.filter((group) => {
       const matchesSearch = group.name?.toLowerCase().includes(searchTerm.toLowerCase()) || false;
       const matchesFaculty = facultyFilter === "all" || 
         (group.facultyId && group.facultyId.toString() === facultyFilter);
       return matchesSearch && matchesFaculty;
-  });
-
-  console.log(filteredGroups);
+    })
+  : [];
 
   const isLoading = isLoadingGroups || isLoadingFaculties || isLoadingTeachers;
 

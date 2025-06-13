@@ -284,7 +284,7 @@ export async function setupAuth(app: Express) {
   });
 
   // Middleware to check for admin role - only for user management routes
-  app.use(["/api/admin", "/api/users/manage", "/api/faculties", "/api/groups"], (req, res, next) => {
+  app.use(["/api/admin", "/api/users/manage"], (req, res, next) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Not authenticated" });
     }

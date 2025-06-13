@@ -92,6 +92,7 @@ export default function Settings() {
   const { data: userData, isLoading } = useQuery<UserData>({
     queryKey: [`/api/profile/${user?.id}`],
   });
+ 
 
   // Parse visual settings from user data or use defaults
   const defaultVisualSettings: VisualSettingsValues = {
@@ -192,6 +193,7 @@ export default function Settings() {
 
   // Handle visual settings form submission
   function onVisualSettingsSubmit(data: VisualSettingsValues) {
+     localStorage.setItem("visualSettings", JSON.stringify(data));
     updateVisualSettingsMutation.mutate(data);
   }
 

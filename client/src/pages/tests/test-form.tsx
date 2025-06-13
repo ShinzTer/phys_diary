@@ -99,8 +99,8 @@ export default function TestForm() {
   });
   
   // Fetch students for teacher/admin to select a student
-  const { data: students = [] } = useQuery<Student[]>({
-    queryKey: ["/api/users?role=student"],
+  const { data: students = [], isLoading: isLoadingStudents } = useQuery<Student[]>({
+    queryKey: ["/api/student/users"],
     enabled: user?.role !== "student"
   });
   
@@ -150,10 +150,21 @@ export default function TestForm() {
 
   // Get formatted test type display name
   const formatTestType = (type: string) => {
-    return type.split('_').map(word => 
+    const ret = type.split('_').map(word => 
       word.charAt(0).toUpperCase() + word.slice(1)
     ).join(' ');
+   
+    return ret;
   };
+const formatTestType2 = (type: string) => {
+  return type.split('_').map((word, index) => {
+    // Первое слово оставляем в lowercase, остальные с заглавной буквы
+    if (index === 0) {
+      return word.toLowerCase();
+    }
+    return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+  }).join('');
+};
 
   // Create test mutation
   const createTestMutation = useMutation({
@@ -183,7 +194,7 @@ export default function TestForm() {
       
       // Add the specific test type value
       testData[data.testType] = parseFloat(data.result) || data.result;
-      
+     
       await apiRequest("POST", "/api/physical-tests", testData);
     },
     onSuccess: () => {
@@ -264,7 +275,7 @@ export default function TestForm() {
     }
   }
 
-  if (isEdit && isLoadingTest) {
+  if (isEdit && isLoadingTest && isLoadingStudents) {
     return (
       <MainLayout>
         <div className="flex items-center justify-center min-h-screen">
@@ -372,7 +383,7 @@ export default function TestForm() {
                             Physical Tests
                           </div>
                           {TEST_TYPES.map(type => (
-                            <SelectItem key={type} value={type}>
+                            <SelectItem key={type} value={formatTestType2(type)}>
                               {formatTestType(type)}
                             </SelectItem>
                           ))}

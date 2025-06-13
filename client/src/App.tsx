@@ -25,63 +25,63 @@ function Router() {
   return (
     <Switch>
       <Route path="/auth" component={AuthPage} />
-      
+
       {/* Dashboard routes */}
       <ProtectedRoute path="/" component={Dashboard} />
-      
+
       {/* Profile routes */}
       <ProtectedRoute path="/profile" component={Profile} />
       <ProtectedRoute path="/profile/edit" component={EditProfile} />
-      
+
       {/* Student routes */}
-      <ProtectedRoute 
-        path="/students" 
-        component={Students} 
-        allowedRoles={["admin", "teacher"]} 
+      <ProtectedRoute
+        path="/students"
+        component={Students}
+        allowedRoles={["admin", "teacher"]}
       />
-      <ProtectedRoute 
-        path="/students/:id" 
-        component={StudentDetail} 
-        allowedRoles={["admin", "teacher"]} 
+      <ProtectedRoute
+        path="/students/:id"
+        component={StudentDetail}
+        allowedRoles={["admin", "teacher"]}
       />
-      
+
       {/* Test routes */}
       <ProtectedRoute path="/tests" component={Tests} />
       <ProtectedRoute path="/tests/new" component={TestForm} />
       <ProtectedRoute path="/tests/edit/:id" component={TestForm} />
-      
+
       {/* Sample routes */}
       <ProtectedRoute path="/samples" component={Samples} />
       <ProtectedRoute path="/samples/new" component={SampleForm} />
       <ProtectedRoute path="/samples/edit/:id" component={SampleForm} />
-      
+
       {/* Admin routes */}
-      <ProtectedRoute 
-        path="/admin/users" 
-        component={UserManagement} 
-        allowedRoles={["admin"]} 
+      <ProtectedRoute
+        path="/admin/users"
+        component={UserManagement}
+        allowedRoles={["admin"]}
       />
-      <ProtectedRoute 
-        path="/admin/faculties" 
-        component={FacultyManagement} 
-        allowedRoles={["admin"]} 
+      <ProtectedRoute
+        path="/admin/faculties"
+        component={FacultyManagement}
+        allowedRoles={["admin"]}
       />
-      <ProtectedRoute 
-        path="/admin/groups" 
-        component={GroupManagement} 
-        allowedRoles={["admin"]} 
+      <ProtectedRoute
+        path="/admin/groups"
+        component={GroupManagement}
+        allowedRoles={["admin"]}
       />
-      
+
       {/* Report routes */}
-      <ProtectedRoute 
-        path="/reports" 
-        component={Reports} 
-        allowedRoles={["admin", "teacher"]} 
+      <ProtectedRoute
+        path="/reports"
+        component={Reports}
+        allowedRoles={["admin", "teacher"]}
       />
-      
+
       {/* Settings route */}
       <ProtectedRoute path="/settings" component={Settings} />
-      
+
       {/* Fallback to 404 */}
       <Route component={NotFound} />
     </Switch>

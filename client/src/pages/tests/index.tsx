@@ -30,7 +30,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Search, SlidersHorizontal, Plus, Pencil, MoreHorizontal, ArrowUpDown, Star } from "lucide-react";
-import { TEST_TYPES, CONTROL_EXERCISE_TYPES } from "@shared/schema";
+import { TEST_TYPES, CONTROL_EXERCISE_TYPES, TEST_TYPES_CAMEL, CONTROL_EXERCISE_TYPES_CAMEL } from "@shared/schema";
 import { format } from "date-fns";
 
 interface PhysicalTest {
@@ -51,10 +51,37 @@ export default function Tests() {
   const [testTypeFilter, setTestTypeFilter] = useState<string>("all");
   const [activeTab, setActiveTab] = useState<string>("tests");
   
-  // Fetch tests for current user (if student) or all tests (if teacher/admin)
-  const { data: tests, isLoading } = useQuery<PhysicalTest[]>({
-    queryKey: [user?.role === "student" ? `/api/physical-tests/${user.id}` : "/api/physical-tests"],
+const { data: testsRaw, isLoading } = useQuery<PhysicalTest[]>({
+  queryKey: [user?.role === "student" ? `/api/physical-tests/${user.id}` : "/api/tests/all"],
+});
+
+const formatTestType2 = (type: string) => {
+  return type.split('_').map((word, index) => {
+    // Первое слово оставляем в lowercase, остальные с заглавной буквы
+    if (index === 0) {
+      return word.toLowerCase();
+    }
+    return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+  }).join('');
+};
+
+const tests: PhysicalTest[] | undefined  = testsRaw?.flatMap((entry) => {
+  const { id, student_id, date, grade, notes, ...testValues } = entry;
+
+  return Object.entries(testValues).flatMap(([test_type, value]) => {
+    if (value == null) return []; 
+    return [{
+      id,
+      student_id,
+      test_type,
+      value: String(value),
+      grade,
+      notes,
+      date,
+      created_at: date,
+    }];
   });
+});
 
   // Combine test types and control exercise types for filtering
   const allTestTypes = [...TEST_TYPES, ...CONTROL_EXERCISE_TYPES];
@@ -65,9 +92,8 @@ export default function Tests() {
                          test.value.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesType = testTypeFilter === "all" || test.test_type === testTypeFilter;
     
-    // For the tabs
-    const isPhysicalTest = TEST_TYPES.includes(test.test_type as any);
-    const isControlExercise = CONTROL_EXERCISE_TYPES.includes(test.test_type as any);
+    const isPhysicalTest = TEST_TYPES_CAMEL.includes(test.test_type as any);
+    const isControlExercise = CONTROL_EXERCISE_TYPES_CAMEL.includes(test.test_type as any);
     
     if (activeTab === "tests" && !isPhysicalTest) return false;
     if (activeTab === "exercises" && !isControlExercise) return false;
@@ -151,7 +177,7 @@ export default function Tests() {
                   <SelectContent>
                     <SelectItem value="all">All test types</SelectItem>
                     {allTestTypes.map(type => (
-                      <SelectItem key={type} value={type}>
+                      <SelectItem key={type} value={formatTestType2(type)}>
                         {formatTestType(type)}
                       </SelectItem>
                     ))}

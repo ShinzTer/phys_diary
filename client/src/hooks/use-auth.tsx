@@ -59,12 +59,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!baseUser) return null;
 
       // Fetch full name based on role
-      if (baseUser.role === "student" || baseUser.role === "teacher") {
-        const profileRes = await apiRequest("GET", `/api/${baseUser.role}/profile`);
-        const profile = await profileRes.json() as { fullName: string };
-        return { ...baseUser, fullName: profile.fullName };
-      }
-
+      // if (baseUser.role === "student" || baseUser.role === "teacher") {
+      //   console.log(baseUser)
+      //   const profileRes = await apiRequest("GET", `/api/${baseUser.role}/profile`);
+      //   const profile = await profileRes.json() as { fullName: string };
+      //   return { ...baseUser, fullName: profile.fullName };
+      // }
+      
       return baseUser;
     },
   });

@@ -28,7 +28,6 @@ import { z } from "zod";
 import { parse } from "csv-parse";
 import fileUpload from "express-fileupload";
 import { eq } from "drizzle-orm";
-import { teacher, student } from "./shared/schema.ts";
 
 // Remove the custom interface since we're using the built-in Express types
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -86,6 +85,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const role = req.query.role ? req.query.role as UserRole : undefined;
       const users = role ? await storage.getUsersByRole(role) : [];
+      // Remove password field from each user
+      const safeUsers = users.map(user => {
+        const { password, ...userWithoutPassword } = user;
+        return userWithoutPassword;
+      });
+      res.json(safeUsers);
+    } catch (error) {
+      res.status(500).json({ message: "Error fetching users" });
+    }
+  });
+
+    app.get("/api/student/users", async (req, res) => {
+    try {
+     
+      const users = await storage.getUsersByRole('student');
+    
       // Remove password field from each user
       const safeUsers = users.map(user => {
         const { password, ...userWithoutPassword } = user;
@@ -220,6 +235,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Allow access if forRegistration query param is true
       const forRegistration = req.query.forRegistration === 'true';
+   
       if (!forRegistration) {
       // Check if user is admin or teacher
       if (req.user?.role !== "admin" && req.user?.role !== "teacher") {
@@ -231,7 +247,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const groups = facultyId 
         ? await storage.getGroupsByFaculty(facultyId)
         : await storage.getAllGroups();
-      res.json({ data: groups });
+      res.json(groups);
     } catch (error) {
       res.status(500).json({ message: "Error fetching groups" });
     }
@@ -357,7 +373,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const profileData = await storage.getStudentProfile(studentId);
-      const user = await storage.getUser(student.userId);
+      const user = await storage.getUser(student.userId!);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
@@ -433,7 +449,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const studentProfileData = studentProfileSchema.parse(req.body);
       const profileData = await storage.updateStudentProfile(studentId, studentProfileData);
 
-      const user = await storage.getUser(student.userId);
+      const user = await storage.getUser(student.userId!);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
@@ -527,26 +543,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!req.isAuthenticated()) {
         return res.status(401).json({ message: "Not authenticated" });
       }
-
+      console.log(req.user);
       const studentId = parseInt(req.params.studentId);
-      
-      // Log the request details for debugging
-      console.log('Physical tests request:', {
-        requestedStudentId: studentId,
-        userRole: req.user?.role,
-        userStudentId: req.user?.studentId,
-        user: req.user
-      });
-      
-      // If not an admin or teacher, only allow access to own tests
-      if (req.user?.role !== "admin" && req.user?.role !== "teacher") {
-        if (req.user?.studentId === undefined || req.user.studentId !== studentId) {
-          return res.status(403).json({ 
-            message: "Access denied",
-            details: "Students can only access their own test records"
-          });
-        }
-      }
       
       const tests = await storage.getPhysicalTestsByStudent(studentId);
       
@@ -563,14 +561,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!req.isAuthenticated()) {
         return res.status(401).json({ message: "Not authenticated" });
       }
-
+    
       const testData = insertPhysicalTestsSchema.parse(req.body);
       
       // If student, can only create tests for themselves
       if (req.user?.role === "student" && testData.studentId !== req.user.studentId) {
         return res.status(403).json({ message: "Access denied" });
       }
-      
       const test = await storage.createPhysicalTest(testData);
       res.status(201).json(test);
     } catch (error) {
@@ -616,15 +613,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const studentId = parseInt(req.params.studentId);
       
-      // If not an admin or teacher, only allow access to own physical states
-      if (req.user?.role !== "admin" && req.user?.role !== "teacher" && req.user?.studentId !== studentId) {
-        return res.status(403).json({ message: "Access denied" });
-      }
-      
       const states = await storage.getPhysicalStatesByStudent(studentId);
       res.json(states);
     } catch (error) {
       res.status(500).json({ message: "Error fetching physical states" });
+    }
+  });
+
+  app.get("/api/samples/all", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      if (req.user?.role !== "admin" && req.user?.role !== "teacher" ) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const states = await storage.getPhysicalStates();
+      
+      res.json(states);
+    } catch (error) {
+      res.status(500).json({ message: "Error fetching physical states" });
+    }
+  });
+
+
+    app.get("/api/tests/all", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      if (req.user?.role !== "admin" && req.user?.role !== "teacher" ) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const states = await storage.getPhysicalTests();
+     
+      res.json(states);
+    } catch (error) {
+      res.status(500).json({ message: "Error fetching physical tests" });
     }
   });
 

@@ -8,32 +8,32 @@ import { z } from "zod";
 import { SAMPLE_TYPES } from "@shared/schema";
 import MainLayout from "@/components/layout/main-layout";
 import { useLocation, useParams } from "wouter";
-import { 
-  Form, 
-  FormControl, 
-  FormDescription, 
-  FormField, 
-  FormItem, 
-  FormLabel, 
-  FormMessage 
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
 } from "@/components/ui/form";
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardFooter, 
-  CardHeader, 
-  CardTitle 
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { 
+import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue
+  SelectValue,
 } from "@/components/ui/select";
 import { Loader2, Save, ArrowLeft } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
@@ -69,43 +69,47 @@ export default function SampleForm() {
   const { toast } = useToast();
   const isEdit = !!params.id;
   const sampleId = isEdit && params.id ? parseInt(params.id) : undefined;
-  
+
   // Fetch students for teacher/admin to select a student
-  const { data: students = [] } = useQuery<Student[]>({
-    queryKey: ["/api/users?role=student"],
-    enabled: user?.role !== "student"
+  const { data: students = [], isLoading: isLoadingStudents } = useQuery<
+    Student[]
+  >({
+    queryKey: ["/api/student/users"],
+    enabled: user?.role !== "student",
   });
-  
+
   // Fetch specific sample data when editing
-  const { data: sampleData, isLoading: isLoadingSample } = useQuery<SampleData>({
-    queryKey: [`/api/physical-states/${sampleId}`],
-    enabled: !!isEdit && !!sampleId
-  });
-  
+  const { data: sampleData, isLoading: isLoadingSample } = useQuery<SampleData>(
+    {
+      queryKey: [`/api/physical-states/${sampleId}`],
+      enabled: !!isEdit && !!sampleId,
+    }
+  );
+
   // Setup form with default values
   const form = useForm<SampleFormValues>({
     resolver: zodResolver(sampleFormSchema),
     defaultValues: {
-      userId: user?.role === "student" ? (user.studentId || 0) : 0,
+      userId: user?.role === "student" ? user.id || 0 : 0,
       sampleType: "",
       value: "",
-      notes: ""
-    }
+      notes: "",
+    },
   });
 
   // Update form when edit data is loaded
   useEffect(() => {
     if (isEdit && sampleData) {
-      const sampleType = Object.keys(sampleData).find(key => 
+      const sampleType = Object.keys(sampleData).find((key) =>
         SAMPLE_TYPES.includes(key as any)
       );
-      
+
       if (sampleType) {
         form.reset({
           userId: sampleData.studentId,
           sampleType: sampleType,
           value: sampleData[sampleType]?.toString() || "",
-          notes: sampleData.notes || ""
+          notes: sampleData.notes || "",
         });
       }
     }
@@ -113,9 +117,10 @@ export default function SampleForm() {
 
   // Get formatted sample type display name
   const formatSampleType = (type: string) => {
-    return type.split('_').map(word => 
-      word.charAt(0).toUpperCase() + word.slice(1)
-    ).join(' ');
+    return type
+      .split("_")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
   };
 
   // Create sample mutation
@@ -123,63 +128,68 @@ export default function SampleForm() {
     mutationFn: async (data: SampleFormValues) => {
       // Create an empty state data object
       const stateData: SampleData = {
-        studentId: user?.role === "student" ? (user.studentId || 0) : data.userId,
-        date: new Date().toISOString().split('T')[0],
-        notes: data.notes || null
+        studentId: user?.role === "student" ? user.id || 0 : data.userId,
+        date: new Date().toISOString().split("T")[0],
+        notes: data.notes || null,
       };
-      
+
       // Add the specific sample type value
       stateData[data.sampleType] = parseFloat(data.value) || data.value;
-      
+
       await apiRequest("POST", "/api/physical-states", stateData);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/physical-states/${user?.studentId || user?.id}`] });
+      queryClient.invalidateQueries({
+        queryKey: [`/api/physical-states/${user?.id || user?.id}`],
+      });
       queryClient.invalidateQueries({ queryKey: ["/api/physical-states"] });
       toast({
         title: "Sample recorded",
-        description: "Your physical measurement has been successfully recorded."
+        description:
+          "Your physical measurement has been successfully recorded.",
       });
-      navigate('/samples');
+      navigate("/samples");
     },
     onError: (error) => {
       toast({
         title: "Error",
         description: error.message || "Failed to record sample",
-        variant: "destructive"
+        variant: "destructive",
       });
-    }
+    },
   });
-  
+
   // Update sample mutation
   const updateSampleMutation = useMutation({
     mutationFn: async (data: SampleFormValues) => {
       const stateData: SampleData = {
-        studentId: user?.role === "student" ? (user.studentId || 0) : data.userId,
-        date: new Date().toISOString().split('T')[0],
-        notes: data.notes || null
+        studentId: user?.role === "student" ? user.id || 0 : data.userId,
+        date: new Date().toISOString().split("T")[0],
+        notes: data.notes || null,
       };
-      
+
       stateData[data.sampleType] = parseFloat(data.value) || data.value;
-      
+
       await apiRequest("PUT", `/api/physical-states/${sampleId}`, stateData);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/physical-states/${user?.studentId || user?.id}`] });
+      queryClient.invalidateQueries({
+        queryKey: [`/api/physical-states/${user?.id || user?.id}`],
+      });
       queryClient.invalidateQueries({ queryKey: ["/api/physical-states"] });
       toast({
         title: "Sample updated",
-        description: "The physical measurement has been successfully updated."
+        description: "The physical measurement has been successfully updated.",
       });
-      navigate('/samples');
+      navigate("/samples");
     },
     onError: (error) => {
       toast({
         title: "Error",
         description: error.message || "Failed to update sample",
-        variant: "destructive"
+        variant: "destructive",
       });
-    }
+    },
   });
 
   // Handle form submission
@@ -205,29 +215,35 @@ export default function SampleForm() {
     <MainLayout>
       <div className="container mx-auto px-4 py-6">
         <div className="flex items-center mb-6">
-          <Button variant="ghost" onClick={() => navigate('/samples')} className="mr-2">
+          <Button
+            variant="ghost"
+            onClick={() => navigate("/samples")}
+            className="mr-2"
+          >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back
           </Button>
           <div>
-            <h2 className="text-2xl font-semibold">{isEdit ? "Edit Sample" : "Record New Sample"}</h2>
+            <h2 className="text-2xl font-semibold">
+              {isEdit ? "Edit Sample" : "Record New Sample"}
+            </h2>
             <p className="text-gray-500">
-              {isEdit 
-                ? "Update physical measurement information" 
-                : "Record a new physical measurement or health indicator"
-              }
+              {isEdit
+                ? "Update physical measurement information"
+                : "Record a new physical measurement or health indicator"}
             </p>
           </div>
         </div>
 
         <Card className="max-w-2xl mx-auto">
           <CardHeader>
-            <CardTitle>{isEdit ? "Edit Sample" : "Record New Sample"}</CardTitle>
+            <CardTitle>
+              {isEdit ? "Edit Sample" : "Record New Sample"}
+            </CardTitle>
             <CardDescription>
-              {isEdit 
-                ? "Make changes to the sample record" 
-                : "Fill in the details for the new physical measurement"
-              }
+              {isEdit
+                ? "Make changes to the sample record"
+                : "Fill in the details for the new physical measurement"}
             </CardDescription>
           </CardHeader>
           <Form {...form}>
@@ -241,8 +257,10 @@ export default function SampleForm() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Student</FormLabel>
-                        <Select 
-                          onValueChange={(value) => field.onChange(parseInt(value))} 
+                        <Select
+                          onValueChange={(value) =>
+                            field.onChange(parseInt(value))
+                          }
                           defaultValue={field.value.toString()}
                           disabled={isEdit}
                         >
@@ -252,15 +270,19 @@ export default function SampleForm() {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {students?.map(student => (
-                              <SelectItem key={student.id} value={student.id.toString()}>
+                            {students?.map((student) => (
+                              <SelectItem
+                                key={student.id}
+                                value={student.id.toString()}
+                              >
                                 {student.fullName || student.username}
                               </SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
                         <FormDescription>
-                          Select the student for whom this measurement is being recorded
+                          Select the student for whom this measurement is being
+                          recorded
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -275,8 +297,8 @@ export default function SampleForm() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Sample Type</FormLabel>
-                      <Select 
-                        onValueChange={field.onChange} 
+                      <Select
+                        onValueChange={field.onChange}
                         defaultValue={field.value}
                       >
                         <FormControl>
@@ -288,7 +310,7 @@ export default function SampleForm() {
                           <div className="px-2 py-1.5 text-sm font-semibold text-muted-foreground">
                             Select a sample type
                           </div>
-                          {SAMPLE_TYPES.map(type => (
+                          {SAMPLE_TYPES.map((type) => (
                             <SelectItem key={type} value={type}>
                               {formatSampleType(type)}
                             </SelectItem>
@@ -308,10 +330,14 @@ export default function SampleForm() {
                     <FormItem>
                       <FormLabel>Value</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter measurement value" {...field} />
+                        <Input
+                          placeholder="Enter measurement value"
+                          {...field}
+                        />
                       </FormControl>
                       <FormDescription>
-                        Enter the measurement value with appropriate units (e.g., "180 cm", "75 kg")
+                        Enter the measurement value with appropriate units
+                        (e.g., "180 cm", "75 kg")
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -326,10 +352,10 @@ export default function SampleForm() {
                     <FormItem>
                       <FormLabel>Notes</FormLabel>
                       <FormControl>
-                        <Textarea 
-                          placeholder="Additional notes about the measurement" 
-                          className="resize-none" 
-                          {...field} 
+                        <Textarea
+                          placeholder="Additional notes about the measurement"
+                          className="resize-none"
+                          {...field}
                         />
                       </FormControl>
                       <FormMessage />
@@ -338,18 +364,22 @@ export default function SampleForm() {
                 />
               </CardContent>
               <CardFooter className="flex justify-between">
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={() => navigate('/samples')}
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => navigate("/samples")}
                 >
                   Cancel
                 </Button>
-                <Button 
-                  type="submit" 
-                  disabled={createSampleMutation.isPending || updateSampleMutation.isPending}
+                <Button
+                  type="submit"
+                  disabled={
+                    createSampleMutation.isPending ||
+                    updateSampleMutation.isPending
+                  }
                 >
-                  {createSampleMutation.isPending || updateSampleMutation.isPending ? (
+                  {createSampleMutation.isPending ||
+                  updateSampleMutation.isPending ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       {isEdit ? "Updating..." : "Saving..."}

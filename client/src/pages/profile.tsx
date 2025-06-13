@@ -31,15 +31,26 @@ export default function ProfilePage() {
   }, [user, navigate]);
 
   // First get the teacher/student record by userId
-  const { data: userRecord, isLoading: isLoadingRecord, error: recordError } = useQuery<UserRecord>({
+  const {
+    data: userRecord,
+    isLoading: isLoadingRecord,
+    error: recordError,
+  } = useQuery<UserRecord>({
     queryKey: [`/api/users/${user?.id}/record`],
     queryFn: getQueryFn({ on401: "throw" }),
     enabled: !!user && (user.role === "teacher" || user.role === "student"),
   });
-
-  // Then get the profile using the teacherId/studentId from the record
-  const { data: profile, isLoading: isLoadingProfile, error: profileError } = useQuery<ProfileResponse>({
-    queryKey: [`/api/profile/${user?.role}/${userRecord?.teacherId || userRecord?.studentId}`],
+  
+  const {
+    data: profile,
+    isLoading: isLoadingProfile,
+    error: profileError,
+  } = useQuery<ProfileResponse>({
+    queryKey: [
+      `/api/profile/${user?.role}/${
+        userRecord?.teacherId || userRecord?.studentId
+      }`,
+    ],
     queryFn: getQueryFn({ on401: "throw" }),
     enabled: !!userRecord && (!!userRecord.teacherId || !!userRecord.studentId),
   });
@@ -60,7 +71,9 @@ export default function ProfilePage() {
     return (
       <MainLayout>
         <div className="flex items-center justify-center h-full">
-          <div className="text-red-500">Error loading user record: {(recordError as Error).message}</div>
+          <div className="text-red-500">
+            Error loading user record: {(recordError as Error).message}
+          </div>
         </div>
       </MainLayout>
     );
@@ -70,7 +83,9 @@ export default function ProfilePage() {
     return (
       <MainLayout>
         <div className="flex items-center justify-center h-full">
-          <div className="text-red-500">Error loading profile: {(profileError as Error).message}</div>
+          <div className="text-red-500">
+            Error loading profile: {(profileError as Error).message}
+          </div>
         </div>
       </MainLayout>
     );
@@ -99,7 +114,9 @@ export default function ProfilePage() {
         <div className="grid gap-6">
           {profile.role === "teacher" ? (
             <div>
-              <h2 className="text-xl font-semibold mb-4">Teacher Information</h2>
+              <h2 className="text-xl font-semibold mb-4">
+                Teacher Information
+              </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-gray-500">Full Name</p>
@@ -107,29 +124,41 @@ export default function ProfilePage() {
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Position</p>
-                  <p className="text-lg">{(profile.profile as Teacher).position}</p>
+                  <p className="text-lg">
+                    {(profile.profile as Teacher).position}
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Phone</p>
                   <p className="text-lg">{profile.profile.phone}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Educational Department</p>
-                  <p className="text-lg">{profile.profile.educationalDepartment || "-"}</p>
+                  <p className="text-sm text-gray-500">
+                    Educational Department
+                  </p>
+                  <p className="text-lg">
+                    {profile.profile.educationalDepartment || "-"}
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Nationality</p>
-                  <p className="text-lg">{profile.profile.nationality || "-"}</p>
+                  <p className="text-lg">
+                    {profile.profile.nationality || "-"}
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Date of Birth</p>
-                  <p className="text-lg">{profile.profile.dateOfBirth || "-"}</p>
+                  <p className="text-lg">
+                    {profile.profile.dateOfBirth || "-"}
+                  </p>
                 </div>
               </div>
             </div>
           ) : (
             <div>
-              <h2 className="text-xl font-semibold mb-4">Student Information</h2>
+              <h2 className="text-xl font-semibold mb-4">
+                Student Information
+              </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-gray-500">Full Name</p>
@@ -137,23 +166,33 @@ export default function ProfilePage() {
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Medical Group</p>
-                  <p className="text-lg">{(profile.profile as Student).medicalGroup}</p>
+                  <p className="text-lg">
+                    {(profile.profile as Student).medicalGroup}
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Phone</p>
                   <p className="text-lg">{profile.profile.phone}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Educational Department</p>
-                  <p className="text-lg">{profile.profile.educationalDepartment || "-"}</p>
+                  <p className="text-sm text-gray-500">
+                    Educational Department
+                  </p>
+                  <p className="text-lg">
+                    {profile.profile.educationalDepartment || "-"}
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Nationality</p>
-                  <p className="text-lg">{profile.profile.nationality || "-"}</p>
+                  <p className="text-lg">
+                    {profile.profile.nationality || "-"}
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Date of Birth</p>
-                  <p className="text-lg">{profile.profile.dateOfBirth || "-"}</p>
+                  <p className="text-lg">
+                    {profile.profile.dateOfBirth || "-"}
+                  </p>
                 </div>
               </div>
             </div>

@@ -70,7 +70,7 @@ export const period = pgTable("period", {
 // Physical state table
 export const physical_state = pgTable("physical_state", {
   stateId: serial("state_id").primaryKey(),
-  studentId: integer("student_id").notNull().references(() => student.studentId),
+  studentId: integer("student_id").notNull().references(() => users.id),
   date: date("date").notNull(),
   height: integer("height"),
   weight: integer("weight"),
@@ -91,11 +91,11 @@ export const physical_state = pgTable("physical_state", {
 // Physical tests table
 export const physical_tests = pgTable("physical_tests", {
   testId: serial("test_id").primaryKey(),
-  studentId: integer("student_id").notNull().references(() => student.studentId),
+  studentId: integer("student_id").notNull().references(() => users.id),
   date: date("date").notNull(),
   pushUps: integer("push_ups"),
   legHold: integer("leg_hold"),
-  tappingTest: integer("tapping_test"),
+  tappingTest: integer("tapping_test"),   
   runningInPlace: integer("running_in_place"),
   halfSquat: integer("half_squat"),
   pullUps: integer("pull_ups"),
@@ -179,9 +179,7 @@ export type User = {
   username: string;
   password: string;
   role: UserRole;
-  visualSettings?: string;
-  studentId?: number;
-  teacherId?: number;
+  visualSettings?: string | null;
 };
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -241,6 +239,19 @@ export const TEST_TYPES = [
   "long_jump"
 ] as const;
 
+// Physical Test types
+export const TEST_TYPES_CAMEL = [
+  "pushUps",
+  "pullUps",
+  "tappingTest",
+  "runningInPlace",
+  "halfSquat",
+  "plank",
+  "forwardBend",
+  "longJump"
+] as const;
+
+
 // Control exercise types
 export const CONTROL_EXERCISE_TYPES = [
   "basketball_freethrow",
@@ -252,6 +263,18 @@ export const CONTROL_EXERCISE_TYPES = [
   "swimming_100m",
   "running_100m",
   "running_500m_1000m"
+] as const;
+
+export const CONTROL_EXERCISE_TYPES_CAMEL = [
+  "basketballFreethrow",
+  "basketballDribble",
+  "volleyballPass",
+  "volleyballServe",
+  "swimming25m",
+  "swimming50m",
+  "swimming100m",
+  "running100m",
+  "running500m1000m"
 ] as const;
 
 // Sample types (physical measurements)

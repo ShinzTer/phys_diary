@@ -33,7 +33,7 @@ import {
 } from "@shared/schema";
 
 import { db } from "./db";
-import { eq, and } from "drizzle-orm";
+import { eq, and, desc } from "drizzle-orm";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
 import { pool } from "./db";
@@ -234,7 +234,7 @@ export class Storage implements IStorage {
   }
 
   // User operations
-  async getUser(id: number): Promise<User | undefined> {
+  async getUser(id: number): Promise<(User & { teacher_id?: number, student_id?: number }) | undefined> {
     // First get the user
     const [user] = await this.db.select().from(users).where(eq(users.id, id));
     if (!user) return undefined;
@@ -478,6 +478,14 @@ export class Storage implements IStorage {
     return await this.db.select().from(physical_state).where(eq(physical_state.studentId, studentId));
   }
 
+    async getPhysicalStates(): Promise<PhysicalState[]> {
+    return await this.db.select().from(physical_state).orderBy(desc(physical_state.stateId));
+  }
+
+      async getPhysicalTests(): Promise<PhysicalTest[]> {
+    return await this.db.select().from(physical_tests).orderBy(desc(physical_tests.testId));
+  }
+
   async getPhysicalState(id: number): Promise<PhysicalState | undefined> {
     const [physicalStateRecord] = await this.db.select().from(physical_state).where(eq(physical_state.stateId, id));
     return physicalStateRecord;
@@ -513,6 +521,8 @@ export class Storage implements IStorage {
   }
 
   async createPhysicalTest(physicalTestData: InsertPhysicalTest): Promise<PhysicalTest> {
+   
+   
     const [physicalTestRecord] = await this.db.insert(physical_tests).values(physicalTestData).returning();
     return physicalTestRecord;
   }
@@ -665,11 +675,11 @@ export class Storage implements IStorage {
 
     const profile: TeacherProfile = {
       fullName: teacherData.fullName,
-      position: teacherData.position,
+      position: teacherData.position || "",
       dateOfBirth: teacherData.dateOfBirth || undefined,
       educationalDepartment: teacherData.educationalDepartment || undefined,
       nationality: teacherData.nationality || undefined,
-      phone: teacherData.phone,
+      phone: teacherData.phone || "",
     };
 
     return profile;

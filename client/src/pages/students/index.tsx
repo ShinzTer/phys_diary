@@ -80,14 +80,15 @@ export default function Students() {
   const [searchTerm, setSearchTerm] = useState("");
   const [medicalGroupFilter, setMedicalGroupFilter] = useState<string>("all");
   
-  const { data: students = [], isLoading } = useQuery<Student[]>({
-    queryKey: ["/api/users?role=student"],
+  const { data: students = [], isLoading: isLoadingStudents } = useQuery<Student[]>({
+    queryKey: ["/api/students"],
+    enabled: user?.role !== "student"
   });
 
   const { data: faculties = [], isLoading: isLoadingFaculties } = useQuery<Faculty[]>({
     queryKey: ["/api/faculties"],
   });
-
+  console.log(faculties)
   const { data: groups = [], isLoading: isLoadingGroups } = useQuery<Group[]>({
     queryKey: ["/api/groups"],
   });
@@ -119,13 +120,13 @@ export default function Students() {
   // Get faculty and group names
   const getFacultyName = (facultyId?: number) => {
     if (!facultyId) return "Not Assigned";
-    const faculty = faculties.find((f: Faculty) => f.id === facultyId);
+    const faculty = faculties.find((f: Faculty) => f.facultyId === facultyId);
     return faculty ? faculty.name : "Not Found";
   };
 
   const getGroupName = (groupId?: number) => {
     if (!groupId) return "Not Assigned";
-    const group = groups.find((g: Group) => g.id === groupId);
+    const group = groups.data.find((g: Group) => g.groupId === groupId);
     return group ? group.name : "Not Found";
   };
 
@@ -181,7 +182,7 @@ export default function Students() {
           </div>
         </div>
 
-        {isLoading || isLoadingFaculties || isLoadingGroups ? (
+        {isLoadingStudents || isLoadingFaculties || isLoadingGroups ? (
           <div className="flex justify-center items-center h-64">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>

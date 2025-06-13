@@ -29,33 +29,35 @@ import {
   FileText
 } from "lucide-react";
 import { format } from "date-fns";
+import { Faculty, Group, PhysicalTest, Student } from "@shared/schema";
+import { PhysicalSample } from "@/lib/types";
 
 export default function StudentDetail() {
   const { user } = useAuth();
   const params = useParams();
   const [, navigate] = useLocation();
-  const studentId = parseInt(params.id);
+  const studentId = parseInt(params.id  || "");
   
-  const { data: student, isLoading: isLoadingStudent } = useQuery({
+  const { data: student, isLoading: isLoadingStudent } = useQuery<Student & {username: string, facultyId ?: number, groupId ?: number}>({
     queryKey: [`/api/profile/${studentId}`],
     enabled: !!studentId,
   });
 
-  const { data: tests, isLoading: isLoadingTests } = useQuery({
+  const { data: tests, isLoading: isLoadingTests } = useQuery<PhysicalTest[]>({
     queryKey: [`/api/tests/${studentId}`],
     enabled: !!studentId,
   });
 
-  const { data: samples, isLoading: isLoadingSamples } = useQuery({
+  const { data: samples, isLoading: isLoadingSamples } = useQuery<PhysicalSample[]>({
     queryKey: [`/api/samples/${studentId}`],
     enabled: !!studentId,
   });
 
-  const { data: faculties } = useQuery({
+  const { data: faculties } = useQuery<Faculty[]>({
     queryKey: ["/api/faculties"],
   });
 
-  const { data: groups } = useQuery({
+  const { data: groups } = useQuery<Group[]>({
     queryKey: ["/api/groups"],
   });
 
@@ -64,14 +66,14 @@ export default function StudentDetail() {
   // Helper function to get faculty name
   const getFacultyName = (facultyId?: number) => {
     if (!facultyId || !faculties) return "Not Assigned";
-    const faculty = faculties.find(f => f.id === facultyId);
+    const faculty = faculties?.find(f => f.facultyId === facultyId);
     return faculty ? faculty.name : "Not Found";
   };
 
   // Helper function to get group name
   const getGroupName = (groupId?: number) => {
     if (!groupId || !groups) return "Not Assigned";
-    const group = groups.find(g => g.id === groupId);
+    const group = groups.find(g => g.groupId === groupId);
     return group ? group.name : "Not Found";
   };
 
@@ -191,13 +193,13 @@ export default function StudentDetail() {
                 </div>
                 
                 <div className="pt-4 space-y-3">
-                  <Link href={`/tests/${student.id}`}>
+                  <Link href={`/tests/${student.studentId}`}>
                     <Button variant="outline" className="w-full">
                       <Activity className="mr-2 h-4 w-4" />
                       View Tests
                     </Button>
                   </Link>
-                  <Link href={`/reports?userId=${student.id}`}>
+                  <Link href={`/reports?userId=${student.studentId}`}>
                     <Button variant="outline" className="w-full">
                       <FileText className="mr-2 h-4 w-4" />
                       Generate Report
@@ -292,7 +294,7 @@ export default function StudentDetail() {
                       <GraduationCap className="h-5 w-5 text-gray-400 mr-3 mt-0.5" />
                       <div>
                         <p className="text-sm text-gray-500">Previous School</p>
-                        <p className="font-medium">{student.previousSchool || "Not specified"}</p>
+                        <p className="font-medium">{student.schoolGraduated || "Not specified"}</p>
                       </div>
                     </div>
                     
@@ -339,7 +341,7 @@ export default function StudentDetail() {
                         <Heart className="h-5 w-5 text-gray-400 mr-3 mt-0.5" />
                         <div>
                           <p className="text-sm text-gray-500">Diagnosis</p>
-                          <p className="font-medium">{student.diagnosis || "Not specified"}</p>
+                          <p className="font-medium">{student.medicalDiagnosis || "Not specified"}</p>
                         </div>
                       </div>
                     )}
@@ -360,7 +362,7 @@ export default function StudentDetail() {
                       <Activity className="h-5 w-5 text-gray-400 mr-3 mt-0.5" />
                       <div>
                         <p className="text-sm text-gray-500">Currently Engaged In</p>
-                        <p className="font-medium">{student.currentSports || "Not specified"}</p>
+                        <p className="font-medium">{student.activeSports || "Not specified"}</p>
                       </div>
                     </div>
                     

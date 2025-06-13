@@ -45,13 +45,34 @@ export default function Samples() {
   const [searchTerm, setSearchTerm] = useState("");
   const [sampleTypeFilter, setSampleTypeFilter] = useState<string>("all");
   
-  // Fetch samples for current user (if student) or all samples (if teacher/admin)
-  const { data: samples, isLoading } = useQuery<PhysicalState[]>({
-    queryKey: [user?.role === "student" ? `/api/physical-states/${user.id}` : "/api/physical-states"],
-  });
-  
+ const { data: rawSamples, isLoading } = useQuery<any[]>({
+  queryKey: [user?.role === "student" ? `/api/physical-states/${user.id}` : "/api/samples/all"],
+});
+
+const transformedSamples: PhysicalState[] = rawSamples?.flatMap((sample) => {
+  const {
+    id: stateId,
+    studentId,
+    date,
+    created_at,
+    ...measurements
+  } = sample;
+
+  return Object.entries(measurements)
+    .filter(([key, value]) => SAMPLE_TYPES.includes(key) && value !== null)
+    .map(([sample_type, value]) => ({
+      id: `${stateId}-${sample_type}`, // id уникальный (можно string)
+      student_id: studentId,
+      sample_type,
+      value: String(value),
+      date,
+      created_at,
+    }));
+}) ?? [];
+
+
   // Filter samples based on search term and sample type
-  const filteredSamples = samples?.filter((sample: PhysicalState) => {
+  const filteredSamples = transformedSamples?.filter((sample: PhysicalState) => {
     const matchesSearch = sample.sample_type.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          sample.value.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesType = sampleTypeFilter === "all" || sample.sample_type === sampleTypeFilter;

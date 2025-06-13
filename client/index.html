@@ -7,5 +7,30 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <script>
+  try {
+    const settings = JSON.parse(localStorage.getItem("visualSettings"));
+    if (settings) {
+      const html = document.documentElement;
+
+      if (settings.theme === "dark") {
+        html.classList.add("dark");
+      } else if (settings.theme === "system") {
+        const isDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+        if (isDark) html.classList.add("dark");
+      }
+
+      if (settings.reduceMotion) {
+        html.classList.add("motion-reduce");
+      }
+
+      if (settings.contrastMode === "high") {
+        html.classList.add("high-contrast");
+      }
+    }
+  } catch (e) {
+    console.warn("Failed to apply theme early");
+  }
+</script>
   </body>
 </html>

@@ -432,7 +432,7 @@ export default function UserManagement() {
               </DialogDescription>
             </DialogHeader>
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <form  onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 overflow-y-auto max-h-80">
                 <FormField
                   control={form.control}
                   name="role"
