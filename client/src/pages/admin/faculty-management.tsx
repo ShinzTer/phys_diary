@@ -62,16 +62,22 @@ const facultyFormSchema = z.object({
 
 type FacultyFormValues = z.infer<typeof facultyFormSchema>;
 
+interface Faculty {
+  facultyId: number;
+  name: string;
+  description?: string;
+}
+
 export default function FacultyManagement() {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [selectedFaculty, setSelectedFaculty] = useState<any>(null);
+  const [selectedFaculty, setSelectedFaculty] = useState<Faculty | null>(null);
   
   // Fetch all faculties
-  const { data: faculties, isLoading } = useQuery({
+  const { data: faculties = [], isLoading } = useQuery<Faculty[]>({
     queryKey: ["/api/faculties"],
   });
 
@@ -166,11 +172,11 @@ export default function FacultyManagement() {
 
   function onEditSubmit(data: FacultyFormValues) {
     if (selectedFaculty) {
-      updateFacultyMutation.mutate({ id: selectedFaculty.id, data });
+      updateFacultyMutation.mutate({ id: selectedFaculty.facultyId, data });
     }
   }
 
-  function handleEditFaculty(faculty: any) {
+  function handleEditFaculty(faculty: Faculty) {
     setSelectedFaculty(faculty);
     editForm.reset({
       name: faculty.name,
@@ -179,19 +185,19 @@ export default function FacultyManagement() {
     setIsEditDialogOpen(true);
   }
 
-  function handleDeleteFaculty(faculty: any) {
+  function handleDeleteFaculty(faculty: Faculty) {
     setSelectedFaculty(faculty);
     setIsDeleteDialogOpen(true);
   }
 
   function confirmDelete() {
     if (selectedFaculty) {
-      deleteFacultyMutation.mutate(selectedFaculty.id);
+      deleteFacultyMutation.mutate(selectedFaculty.facultyId);
     }
   }
 
   // Filter faculties based on search term
-  const filteredFaculties = faculties?.filter(faculty => 
+  const filteredFaculties = faculties.filter((faculty: Faculty) => 
     faculty.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (faculty.description && faculty.description.toLowerCase().includes(searchTerm.toLowerCase()))
   );
@@ -255,10 +261,10 @@ export default function FacultyManagement() {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-200">
-                        {filteredFaculties.map((faculty) => (
-                          <tr key={faculty.id}>
+                        {filteredFaculties.map((faculty: Faculty) => (
+                          <tr key={faculty.facultyId}>
                             <td className="px-4 py-4 whitespace-nowrap">
-                              {faculty.id}
+                              {faculty.facultyId}
                             </td>
                             <td className="px-4 py-4 whitespace-nowrap font-medium">
                               <div className="flex items-center">

@@ -33,6 +33,17 @@ import { Loader2, Search, SlidersHorizontal, Plus, Pencil, MoreHorizontal, Arrow
 import { TEST_TYPES, CONTROL_EXERCISE_TYPES } from "@shared/schema";
 import { format } from "date-fns";
 
+interface PhysicalTest {
+  id: number;
+  student_id: number;
+  test_type: string;
+  value: string;
+  grade?: string;
+  notes?: string;
+  date: string;
+  created_at: string;
+}
+
 export default function Tests() {
   const { user } = useAuth();
   const [, navigate] = useLocation();
@@ -41,22 +52,22 @@ export default function Tests() {
   const [activeTab, setActiveTab] = useState<string>("tests");
   
   // Fetch tests for current user (if student) or all tests (if teacher/admin)
-  const { data: tests, isLoading: isLoadingTests } = useQuery({
-    queryKey: [user?.role === "student" ? `/api/tests/${user.id}` : "/api/tests"],
+  const { data: tests, isLoading } = useQuery<PhysicalTest[]>({
+    queryKey: [user?.role === "student" ? `/api/physical-tests/${user.id}` : "/api/physical-tests"],
   });
 
   // Combine test types and control exercise types for filtering
   const allTestTypes = [...TEST_TYPES, ...CONTROL_EXERCISE_TYPES];
   
   // Filter tests based on search term and test type
-  const filteredTests = tests?.filter(test => {
-    const matchesSearch = test.testType.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         test.result.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesType = testTypeFilter === "all" || test.testType === testTypeFilter;
+  const filteredTests = tests?.filter((test: PhysicalTest) => {
+    const matchesSearch = test.test_type.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         test.value.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesType = testTypeFilter === "all" || test.test_type === testTypeFilter;
     
     // For the tabs
-    const isPhysicalTest = TEST_TYPES.includes(test.testType as any);
-    const isControlExercise = CONTROL_EXERCISE_TYPES.includes(test.testType as any);
+    const isPhysicalTest = TEST_TYPES.includes(test.test_type as any);
+    const isControlExercise = CONTROL_EXERCISE_TYPES.includes(test.test_type as any);
     
     if (activeTab === "tests" && !isPhysicalTest) return false;
     if (activeTab === "exercises" && !isControlExercise) return false;
@@ -156,7 +167,7 @@ export default function Tests() {
             </Tabs>
           </CardHeader>
           <CardContent>
-            {isLoadingTests ? (
+            {isLoading ? (
               <div className="flex justify-center items-center h-64">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
               </div>
@@ -199,10 +210,10 @@ export default function Tests() {
                         {filteredTests?.map((test) => (
                           <tr key={test.id}>
                             <td className="px-4 py-4 whitespace-nowrap font-medium">
-                              {formatTestType(test.testType)}
+                              {formatTestType(test.test_type)}
                             </td>
                             <td className="px-4 py-4 whitespace-nowrap">
-                              {test.result}
+                              {test.value}
                             </td>
                             <td className="px-4 py-4 whitespace-nowrap text-sm">
                               {test.date ? format(new Date(test.date), 'MMM d, yyyy') : '-'}

@@ -7,20 +7,44 @@ async function throwIfResNotOk(res: Response) {
   }
 }
 
-export async function apiRequest(
-  method: string,
-  url: string,
-  data?: unknown | undefined,
-): Promise<Response> {
-  const res = await fetch(url, {
+export async function apiRequest(method: string, path: string, data?: any) {
+  const options: RequestInit = {
     method,
-    headers: data ? { "Content-Type": "application/json" } : {},
-    body: data ? JSON.stringify(data) : undefined,
-    credentials: "include",
-  });
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+  };
 
-  await throwIfResNotOk(res);
-  return res;
+  if (data && method !== 'GET') {
+    options.body = JSON.stringify(data);
+  }
+
+  // Handle query parameters for GET requests
+  let url = path;
+  if (method === 'GET' && data) {
+    const params = new URLSearchParams();
+    Object.entries(data).forEach(([key, value]) => {
+      params.append(key, String(value));
+    });
+    url = `${path}?${params.toString()}`;
+  }
+
+  const response = await fetch(url, options);
+  
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ message: 'An error occurred' }));
+    throw new Error(error.message || 'An error occurred');
+  }
+
+  // Check if the response has content
+  const contentType = response.headers.get('content-type');
+  if (contentType && contentType.includes('application/json')) {
+    return response.json();
+  }
+  
+  // For non-JSON responses (like 204 No Content or plain text)
+  return null;
 }
 
 type UnauthorizedBehavior = "returnNull" | "throw";
@@ -44,7 +68,10 @@ export const getQueryFn: <T>(options: {
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      queryFn: getQueryFn({ on401: "throw" }),
+      queryFn: async ({ queryKey }) => {
+        const [url, params] = queryKey;
+        return await apiRequest('GET', url as string, params);
+      },
       refetchInterval: false,
       refetchOnWindowFocus: false,
       staleTime: Infinity,

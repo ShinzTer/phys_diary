@@ -232,7 +232,7 @@ export class MemStorage implements IStorage {
       ...userData,
       student_id: null,
       teacher_id: null,
-      created_at: new Date().toISOString()
+      createdAt: new Date()
     };
     this.users.push(user);
     return user;
@@ -258,21 +258,20 @@ export class MemStorage implements IStorage {
   }
 
   async getFaculty(id: number): Promise<Faculty | undefined> {
-    return this.faculties.find(faculty => faculty.faculty_id === id);
+    return this.faculties.find(faculty => faculty.facultyId === id);
   }
 
   async createFaculty(facultyData: InsertFaculty): Promise<Faculty> {
     const faculty: Faculty = {
-      faculty_id: this.nextFacultyId++,
-      ...facultyData,
-      created_at: new Date().toISOString()
+      facultyId: this.nextFacultyId++,
+      ...facultyData
     };
     this.faculties.push(faculty);
     return faculty;
   }
 
   async updateFaculty(id: number, facultyData: Partial<Faculty>): Promise<Faculty | undefined> {
-    const index = this.faculties.findIndex(faculty => faculty.faculty_id === id);
+    const index = this.faculties.findIndex(faculty => faculty.facultyId === id);
     if (index === -1) return undefined;
     
     this.faculties[index] = { ...this.faculties[index], ...facultyData };
@@ -281,7 +280,7 @@ export class MemStorage implements IStorage {
 
   async deleteFaculty(id: number): Promise<boolean> {
     const initialLength = this.faculties.length;
-    this.faculties = this.faculties.filter(faculty => faculty.faculty_id !== id);
+    this.faculties = this.faculties.filter(faculty => faculty.facultyId !== id);
     return initialLength > this.faculties.length;
   }
 
@@ -303,8 +302,7 @@ export class MemStorage implements IStorage {
   async createGroup(groupData: InsertGroup): Promise<Group> {
     const group: Group = {
       group_id: this.nextGroupId++,
-      ...groupData,
-      created_at: new Date().toISOString()
+      ...groupData
     };
     this.groups.push(group);
     return group;
@@ -336,8 +334,7 @@ export class MemStorage implements IStorage {
   async createTeacher(teacherData: InsertTeacher): Promise<Teacher> {
     const teacher: Teacher = {
       teacher_id: this.nextTeacherId++,
-      ...teacherData,
-      created_at: new Date().toISOString()
+      ...teacherData
     };
     this.teachers.push(teacher);
     return teacher;

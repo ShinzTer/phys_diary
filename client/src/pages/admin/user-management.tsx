@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { queryClient } from "@/lib/queryClient";
@@ -66,15 +66,61 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2, Search, Plus, Edit, Trash2, MoreHorizontal, User, UserPlus, Users, Shield } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
+interface User {
+  id: number;
+  username: string;
+  role: "admin" | "teacher" | "student";
+  fullName?: string;
+  facultyId?: number;
+  groupId?: number;
+}
+
+interface Group {
+  groupId: number;
+  name: string;
+  facultyId: number;
+}
+
+interface QueryResponse<T> {
+  data: T[];
+  error?: string;
+}
+
 // User creation form schema
-const userFormSchema = z.object({
+const baseUserSchema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters"),
   password: z.string().min(6, "Password must be at least 6 characters"),
   role: z.enum(["admin", "teacher", "student"]),
+});
+
+const studentUserSchema = baseUserSchema.extend({
+  fullName: z.string().min(1, "Full name is required"),
+  gender: z.enum(["male", "female", "other"], {
+    required_error: "Gender is required",
+  }),
+  dateOfBirth: z.string().min(1, "Date of birth is required"),
+  phone: z.string()
+    .regex(/^\+375\d{9}$/, "Phone number must be in format: +375*********"),
+  medicalGroup: z.enum(["basic", "preparatory", "special"], {
+    required_error: "Medical group is required",
+  }),
+  groupId: z.number({
+    required_error: "Group is required",
+  }),
+});
+
+const teacherUserSchema = baseUserSchema.extend({
+  fullName: z.string().min(1, "Full name is required"),
+  position: z.string().min(1, "Position is required"),
+  phone: z.string()
+    .regex(/^\+375\d{9}$/, "Phone number must be in format: +375*********"),
+});
+
+const adminUserSchema = baseUserSchema.extend({
   fullName: z.string().min(1, "Full name is required"),
 });
 
-type UserFormValues = z.infer<typeof userFormSchema>;
+type UserFormValues = z.infer<typeof studentUserSchema> | z.infer<typeof teacherUserSchema> | z.infer<typeof adminUserSchema>;
 
 export default function UserManagement() {
   const { user } = useAuth();
@@ -84,11 +130,22 @@ export default function UserManagement() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState<any>(null);
+  const [selectedRole, setSelectedRole] = useState<"admin" | "teacher" | "student">("student");
   
   // Fetch all users
-  const { data: users, isLoading } = useQuery({
+  const { data: usersResponse, isLoading } = useQuery<QueryResponse<User>>({
     queryKey: ["/api/users"],
   });
+
+  const users = usersResponse?.data || [];
+
+  // Fetch all groups for student creation
+  const { data: groupsResponse } = useQuery<QueryResponse<Group>>({
+    queryKey: ["/api/groups", { forRegistration: true }],
+    enabled: selectedRole === "student",
+  });
+
+  const groups = groupsResponse?.data || [];
 
   // Create user mutation
   const createUserMutation = useMutation({
@@ -137,14 +194,30 @@ export default function UserManagement() {
 
   // User creation form
   const form = useForm<UserFormValues>({
-    resolver: zodResolver(userFormSchema),
+    resolver: zodResolver(
+      selectedRole === "student" 
+        ? studentUserSchema 
+        : selectedRole === "teacher" 
+          ? teacherUserSchema 
+          : adminUserSchema
+    ),
     defaultValues: {
       username: "",
       password: "",
-      role: "student",
+      role: selectedRole,
       fullName: "",
     }
   });
+
+  // Reset form when role changes
+  useEffect(() => {
+    form.reset({
+      username: "",
+      password: "",
+      role: selectedRole,
+      fullName: "",
+    });
+  }, [selectedRole, form]);
 
   function onSubmit(data: UserFormValues) {
     createUserMutation.mutate(data);
@@ -155,7 +228,7 @@ export default function UserManagement() {
   }
 
   // Filter users based on search term and role filter
-  const filteredUsers = users?.filter(u => {
+  const filteredUsers = users.filter((u: User) => {
     const matchesSearch = 
       u.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (u.fullName && u.fullName.toLowerCase().includes(searchTerm.toLowerCase()));
@@ -266,7 +339,7 @@ export default function UserManagement() {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-200">
-                        {filteredUsers.map((u) => (
+                        {filteredUsers.map((u: User) => (
                           <tr key={u.id}>
                             <td className="px-4 py-4 whitespace-nowrap">
                               <div className="flex items-center">
@@ -362,50 +435,17 @@ export default function UserManagement() {
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                 <FormField
                   control={form.control}
-                  name="fullName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Full Name</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter full name" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="username"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Username</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Choose a username" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Password</FormLabel>
-                      <FormControl>
-                        <Input type="password" placeholder="Set a password" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
                   name="role"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Role</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select 
+                        onValueChange={(value: "admin" | "teacher" | "student") => {
+                          field.onChange(value);
+                          setSelectedRole(value);
+                        }} 
+                        defaultValue={field.value}
+                      >
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select a role" />
@@ -421,6 +461,211 @@ export default function UserManagement() {
                     </FormItem>
                   )}
                 />
+
+                <FormField
+                  control={form.control}
+                  name="username"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Username</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Choose a username" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Password</FormLabel>
+                      <FormControl>
+                        <Input type="password" placeholder="Set a password" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="fullName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Full Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter full name" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {selectedRole === "student" && (
+                  <>
+                    <FormField
+                      control={form.control}
+                      name="gender"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Gender</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select gender" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="male">Male</SelectItem>
+                              <SelectItem value="female">Female</SelectItem>
+                              <SelectItem value="other">Other</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="dateOfBirth"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Date of Birth</FormLabel>
+                          <FormControl>
+                            <Input type="date" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="phone"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Phone Number</FormLabel>
+                          <FormControl>
+                            <Input 
+                              placeholder="+375291234567" 
+                              {...field}
+                              onChange={(e) => {
+                                const value = e.target.value.replace(/[^\d+]/g, '');
+                                if (!value.startsWith('+375')) {
+                                  field.onChange('+375' + value.replace(/^\+375/, ''));
+                                } else {
+                                  field.onChange(value);
+                                }
+                              }}
+                            />
+                          </FormControl>
+                          <FormDescription>Format: +375*********</FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="medicalGroup"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Medical Group</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select medical group" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="basic">Basic</SelectItem>
+                              <SelectItem value="preparatory">Preparatory</SelectItem>
+                              <SelectItem value="special">Special</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="groupId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Group</FormLabel>
+                          <Select 
+                            onValueChange={(value) => field.onChange(parseInt(value))} 
+                            defaultValue={field.value?.toString()}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select group" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {groups.map((group: Group) => (
+                                <SelectItem key={group.groupId} value={group.groupId.toString()}>
+                                  {group.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </>
+                )}
+
+                {selectedRole === "teacher" && (
+                  <>
+                    <FormField
+                      control={form.control}
+                      name="position"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Position</FormLabel>
+                          <FormControl>
+                            <Input placeholder="e.g., Senior Lecturer" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="phone"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Phone Number</FormLabel>
+                          <FormControl>
+                            <Input 
+                              placeholder="+375291234567" 
+                              {...field}
+                              onChange={(e) => {
+                                const value = e.target.value.replace(/[^\d+]/g, '');
+                                if (!value.startsWith('+375')) {
+                                  field.onChange('+375' + value.replace(/^\+375/, ''));
+                                } else {
+                                  field.onChange(value);
+                                }
+                              }}
+                            />
+                          </FormControl>
+                          <FormDescription>Format: +375*********</FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </>
+                )}
+
                 <DialogFooter>
                   <Button type="button" variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
                     Cancel

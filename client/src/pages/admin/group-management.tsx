@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
+import { useAuth } from "@/hooks/use-auth";
 import MainLayout from "@/components/layout/main-layout";
 import { 
   Card, 
@@ -60,34 +61,80 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Search, Plus, Edit, Trash2, MoreHorizontal, Briefcase, Users, Building2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import React from "react";
 
 // Group form schema
 const groupFormSchema = z.object({
   name: z.string().min(1, "Group name is required"),
   facultyId: z.string().min(1, "Faculty is required"),
-  year: z.string().min(1, "Year is required"),
+  teacherId: z.string().min(1, "Teacher is required"),
 });
 
 type GroupFormValues = z.infer<typeof groupFormSchema>;
 
+interface Faculty {
+  facultyId: number;
+  name: string;
+}
+
+interface Teacher {
+  teacherId: number;
+  fullName: string;
+}
+
+interface Group {
+  groupId: number;
+  name: string;
+  facultyId: number;
+  teacherId: number;
+}
+
 export default function GroupManagement() {
+  const { user } = useAuth();
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
-  const [facultyFilter, setFacultyFilter] = useState<string>("");
+  const [facultyFilter, setFacultyFilter] = useState<string>("all");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [selectedGroup, setSelectedGroup] = useState<any>(null);
+  const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
   
   // Fetch all groups
-  const { data: groups, isLoading: isLoadingGroups } = useQuery({
+  const { data: groups, isLoading: isLoadingGroups } = useQuery<Group[]>({
     queryKey: ["/api/groups"],
   });
 
   // Fetch all faculties for dropdown
-  const { data: faculties, isLoading: isLoadingFaculties } = useQuery({
+  const { data: faculties = [], isLoading: isLoadingFaculties, error: facultiesError } = useQuery<Faculty[]>({
     queryKey: ["/api/faculties"],
   });
+
+  // Fetch all teachers for dropdown
+  const { data: teachers = [], isLoading: isLoadingTeachers } = useQuery<Teacher[]>({
+    queryKey: ["/api/teachers"],
+  });
+
+  // Filter out any invalid faculty data
+  const validFaculties = React.useMemo(() => {
+    return faculties?.filter((faculty): faculty is Faculty => 
+      faculty !== null && 
+      faculty !== undefined && 
+      typeof faculty === 'object' &&
+      'facultyId' in faculty &&
+      'name' in faculty
+    ) ?? [];
+  }, [faculties]);
+
+  // Filter out any invalid teacher data
+  const validTeachers = React.useMemo(() => {
+    return teachers?.filter((teacher): teacher is Teacher => 
+      teacher !== null && 
+      teacher !== undefined && 
+      typeof teacher === 'object' &&
+      'teacherId' in teacher &&
+      'fullName' in teacher
+    ) ?? [];
+  }, [teachers]);
 
   // Create group mutation
   const createGroupMutation = useMutation({
@@ -95,7 +142,7 @@ export default function GroupManagement() {
       await apiRequest("POST", "/api/groups", {
         name: data.name,
         facultyId: parseInt(data.facultyId),
-        year: parseInt(data.year),
+        teacherId: parseInt(data.teacherId),
       });
     },
     onSuccess: () => {
@@ -122,7 +169,7 @@ export default function GroupManagement() {
       await apiRequest("PUT", `/api/groups/${id}`, {
         name: data.name,
         facultyId: parseInt(data.facultyId),
-        year: parseInt(data.year),
+        teacherId: parseInt(data.teacherId),
       });
     },
     onSuccess: () => {
@@ -170,7 +217,7 @@ export default function GroupManagement() {
     defaultValues: {
       name: "",
       facultyId: "",
-      year: new Date().getFullYear().toString(),
+      teacherId: "",
     }
   });
 
@@ -180,7 +227,7 @@ export default function GroupManagement() {
     defaultValues: {
       name: "",
       facultyId: "",
-      year: "",
+      teacherId: "",
     }
   });
 
@@ -190,49 +237,52 @@ export default function GroupManagement() {
 
   function onEditSubmit(data: GroupFormValues) {
     if (selectedGroup) {
-      updateGroupMutation.mutate({ id: selectedGroup.id, data });
+      updateGroupMutation.mutate({ id: selectedGroup.groupId, data });
     }
   }
 
-  function handleEditGroup(group: any) {
+  function handleEditGroup(group: Group) {
     setSelectedGroup(group);
     editForm.reset({
       name: group.name,
       facultyId: group.facultyId.toString(),
-      year: group.year.toString(),
+      teacherId: group.teacherId.toString(),
     });
     setIsEditDialogOpen(true);
   }
 
-  function handleDeleteGroup(group: any) {
+  function handleDeleteGroup(group: Group) {
     setSelectedGroup(group);
     setIsDeleteDialogOpen(true);
   }
 
   function confirmDelete() {
     if (selectedGroup) {
-      deleteGroupMutation.mutate(selectedGroup.id);
+      deleteGroupMutation.mutate(selectedGroup.groupId);
     }
   }
 
-  // Get faculty name by ID
+  // Get faculty name by ID with defensive programming
   const getFacultyName = (facultyId: number) => {
-    const faculty = faculties?.find(f => f.faculty_id === facultyId);
-    return faculty ? faculty.name : "Unknown Faculty";
+    if (!Array.isArray(faculties)) {
+      console.warn('Faculties is not an array:', faculties);
+      return "Unknown Faculty";
+    }
+    const faculty = faculties.find(f => f && f.facultyId === facultyId);
+    return faculty?.name || "Unknown Faculty";
   };
 
-  // Filter groups based on search term and faculty filter
-  const filteredGroups = groups?.filter(group => {
-    const matchesSearch = group.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFaculty = !facultyFilter || group.facultyId.toString() === facultyFilter;
-    return matchesSearch && matchesFaculty;
+  // Filter groups based on search term and faculty filter with defensive programming
+  const filteredGroups = groups?.filter((group) => {
+      const matchesSearch = group.name?.toLowerCase().includes(searchTerm.toLowerCase()) || false;
+      const matchesFaculty = facultyFilter === "all" || 
+        (group.facultyId && group.facultyId.toString() === facultyFilter);
+      return matchesSearch && matchesFaculty;
   });
 
-  // Generate array of years for the dropdown (current year - 5 to current year + 5)
-  const currentYear = new Date().getFullYear();
-  const years = Array.from({ length: 11 }, (_, i) => (currentYear - 5 + i).toString());
+  console.log(filteredGroups);
 
-  const isLoading = isLoadingGroups || isLoadingFaculties;
+  const isLoading = isLoadingGroups || isLoadingFaculties || isLoadingTeachers;
 
   return (
     <MainLayout>
@@ -263,22 +313,27 @@ export default function GroupManagement() {
           <CardHeader className="pb-3">
             <div className="flex justify-between items-center">
               <CardTitle className="text-lg">Student Groups</CardTitle>
-              <Select
-                value={facultyFilter}
-                onValueChange={setFacultyFilter}
-              >
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="All faculties" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">All faculties</SelectItem>
-                  {faculties?.map(faculty => (
-                    <SelectItem key={faculty.faculty.faculty_id} value={faculty.faculty.faculty_id.toString()}>
-                      {faculty.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="mb-4">
+                <Select
+                  value={facultyFilter}
+                  onValueChange={setFacultyFilter}
+                >
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="All faculties" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All faculties</SelectItem>
+                    {validFaculties.map((faculty) => (
+                      <SelectItem 
+                        key={faculty.facultyId} 
+                        value={String(faculty.facultyId)}
+                      >
+                        {faculty.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
             <CardDescription>
               Manage student groups in the system
@@ -307,20 +362,20 @@ export default function GroupManagement() {
                           <th className="px-4 py-3">ID</th>
                           <th className="px-4 py-3">Group Name</th>
                           <th className="px-4 py-3">Faculty</th>
-                          <th className="px-4 py-3">Year</th>
+                          <th className="px-4 py-3">Teacher</th>
                           <th className="px-4 py-3 text-right">Actions</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-200">
-                        {filteredGroups.map((group) => (
-                          <tr key={group.id}>
+                        {filteredGroups.map((group: Group) => (
+                          <tr key={group.groupId}>
                             <td className="px-4 py-4 whitespace-nowrap">
-                              {group.id}
+                              {group.groupId}
                             </td>
                             <td className="px-4 py-4 whitespace-nowrap font-medium">
-                              <div className="flex items-center">
-                                <Users className="h-4 w-4 text-primary mr-2" />
-                                {group.name}
+                              <div className="flex items-center gap-2">
+                                <Users className="h-4 w-4 text-gray-500" />
+                                <span>{group.name}</span>
                               </div>
                             </td>
                             <td className="px-4 py-4 whitespace-nowrap">
@@ -330,9 +385,10 @@ export default function GroupManagement() {
                               </div>
                             </td>
                             <td className="px-4 py-4 whitespace-nowrap">
-                              <Badge variant="outline">
-                                {group.year}
-                              </Badge>
+                              <div className="flex items-center">
+                                <Briefcase className="h-4 w-4 text-gray-500 mr-2" />
+                                {validTeachers.find(t => t.teacherId === group.teacherId)?.fullName || "Unknown Teacher"}
+                              </div>
                             </td>
                             <td className="px-4 py-4 whitespace-nowrap text-right">
                               <DropdownMenu>
@@ -370,7 +426,7 @@ export default function GroupManagement() {
 
         {/* Create Group Dialog */}
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-          <DialogContent className="sm:max-w-md">
+          <DialogContent>
             <DialogHeader>
               <DialogTitle>Create New Group</DialogTitle>
               <DialogDescription>
@@ -405,8 +461,11 @@ export default function GroupManagement() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {faculties?.map(faculty => (
-                            <SelectItem key={faculty.faculty_id} value={faculty.faculty_id.toString()}>
+                          {validFaculties.map((faculty) => (
+                            <SelectItem 
+                              key={faculty.facultyId} 
+                              value={String(faculty.facultyId)}
+                            >
                               {faculty.name}
                             </SelectItem>
                           ))}
@@ -418,27 +477,27 @@ export default function GroupManagement() {
                 />
                 <FormField
                   control={createForm.control}
-                  name="year"
+                  name="teacherId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Year</FormLabel>
+                      <FormLabel>Teacher</FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select year" />
+                            <SelectValue placeholder="Select a teacher" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {years.map(year => (
-                            <SelectItem key={year} value={year}>
-                              {year}
+                          {validTeachers.map((teacher) => (
+                            <SelectItem 
+                              key={teacher.teacherId} 
+                              value={String(teacher.teacherId)}
+                            >
+                              {teacher.fullName}
                             </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
-                      <FormDescription>
-                        The academic year for this group
-                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -465,11 +524,11 @@ export default function GroupManagement() {
 
         {/* Edit Group Dialog */}
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogContent className="sm:max-w-md">
+          <DialogContent>
             <DialogHeader>
               <DialogTitle>Edit Group</DialogTitle>
               <DialogDescription>
-                Update group information
+                Modify the group details
               </DialogDescription>
             </DialogHeader>
             <Form {...editForm}>
@@ -500,8 +559,11 @@ export default function GroupManagement() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {faculties?.map(faculty => (
-                            <SelectItem key={faculty.faculty_id} value={faculty.faculty_id.toString()}>
+                          {validFaculties.map((faculty) => (
+                            <SelectItem 
+                              key={faculty.facultyId} 
+                              value={String(faculty.facultyId)}
+                            >
                               {faculty.name}
                             </SelectItem>
                           ))}
@@ -513,27 +575,27 @@ export default function GroupManagement() {
                 />
                 <FormField
                   control={editForm.control}
-                  name="year"
+                  name="teacherId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Year</FormLabel>
+                      <FormLabel>Teacher</FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select year" />
+                            <SelectValue placeholder="Select a teacher" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {years.map(year => (
-                            <SelectItem key={year} value={year}>
-                              {year}
+                          {validTeachers.map((teacher) => (
+                            <SelectItem 
+                              key={teacher.teacherId} 
+                              value={String(teacher.teacherId)}
+                            >
+                              {teacher.fullName}
                             </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
-                      <FormDescription>
-                        The academic year for this group
-                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -559,22 +621,19 @@ export default function GroupManagement() {
         </Dialog>
 
         {/* Delete Group Dialog */}
-        <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-              <AlertDialogDescription>
-                This will permanently delete the group{' '}
-                <span className="font-semibold">{selectedGroup?.name}</span>.
-                This action cannot be undone, and may affect students assigned to this group.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction
-                onClick={confirmDelete}
-                className="bg-red-600 hover:bg-red-700"
-              >
+        <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Delete Group</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete this group? This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="button" variant="destructive" onClick={confirmDelete} disabled={deleteGroupMutation.isPending}>
                 {deleteGroupMutation.isPending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -583,10 +642,10 @@ export default function GroupManagement() {
                 ) : (
                   'Delete Group'
                 )}
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </MainLayout>
   );

@@ -1,7 +1,9 @@
-import { Express } from "express";
-import { createServer, type Server } from "http";
-import { setupAuth } from "./auth";
-import { storage } from "./mem-storage";
+import express from "express";
+import type { Request, Response, Express } from "express";
+import { createServer } from "http";
+import type { Server } from "http";
+import { setupAuth } from "./auth.js";
+import { storage } from "./storage.js";
 import { 
   insertFacultySchema, 
   insertGroupSchema, 
@@ -13,26 +15,75 @@ import {
   insertSportResultsSchema,
   insertResultSchema,
   insertUserSchema,
-  UserRole
-} from "@shared/schema";
+  studentProfileSchema,
+  teacherProfileSchema,
+  UserRole,
+  type User,
+  type Student,
+  type Teacher,
+  type InsertStudent,
+  type InsertUser
+} from "../shared/schema.js";
 import { z } from "zod";
+import { parse } from "csv-parse";
+import fileUpload from "express-fileupload";
+import { eq } from "drizzle-orm";
+import { teacher, student } from "./shared/schema.ts";
 
+// Remove the custom interface since we're using the built-in Express types
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Add file upload middleware
+  app.use(fileUpload());
+
   // Setup authentication endpoints (/api/register, /api/login, /api/logout, /api/user)
   await setupAuth(app);
 
-  // User management endpoints (admin only)
-  app.get("/api/users", async (req, res) => {
+  // Get user record with associated teacher/student ID
+  app.get("/api/users/:id/record", async (req, res) => {
     try {
       if (!req.isAuthenticated()) {
         return res.status(401).json({ message: "Not authenticated" });
       }
-      
-      // Check if user is admin
-      if (req.user?.role !== "admin" && req.user?.role !== "teacher") {
-        return res.status(403).json({ message: "Access denied. Admin or teacher role required." });
+
+      const userId = parseInt(req.params.id);
+
+      // Users can only access their own record unless they're an admin
+      if (req.user?.role !== "admin" && req.user?.id !== userId) {
+        return res.status(403).json({ message: "Access denied" });
       }
-      
+
+      // Get the user record
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Get the associated teacher/student record
+      let record = {};
+      if (user.role === "teacher") {
+        const teachers = await storage.getAllTeachers();
+        const teacherRecord = teachers.find(t => t.userId === userId);
+        if (teacherRecord) {
+          record = { teacherId: teacherRecord.teacherId };
+        }
+      } else if (user.role === "student") {
+        const students = await storage.getAllStudents();
+        const studentRecord = students.find(s => s.userId === userId);
+        if (studentRecord) {
+          record = { studentId: studentRecord.studentId };
+        }
+      }
+
+      res.json(record);
+    } catch (error) {
+      console.error("Error fetching user record:", error);
+      res.status(500).json({ message: "Error fetching user record" });
+    }
+  });
+
+  // User management endpoints (admin only)
+  app.get("/api/users/manage", async (req, res) => {
+    try {
       const role = req.query.role ? req.query.role as UserRole : undefined;
       const users = role ? await storage.getUsersByRole(role) : [];
       // Remove password field from each user
@@ -46,18 +97,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/users/:id", async (req, res) => {
+  app.put("/api/users/manage/:id", async (req, res) => {
     try {
-      if (!req.isAuthenticated()) {
-        return res.status(401).json({ message: "Not authenticated" });
-      }
-      
-      // Only admins or the user themselves can update a user
       const id = parseInt(req.params.id);
-      if (req.user?.role !== "admin" && req.user?.id !== id) {
-        return res.status(403).json({ message: "Access denied" });
-      }
-      
       const userData = req.body;
       const updatedUser = await storage.updateUser(id, userData);
       if (!updatedUser) {
@@ -70,17 +112,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/users/:id", async (req, res) => {
+  app.delete("/api/users/manage/:id", async (req, res) => {
     try {
-      if (!req.isAuthenticated()) {
-        return res.status(401).json({ message: "Not authenticated" });
-      }
-      
-      // Only admins can delete users
-      if (req.user?.role !== "admin") {
-        return res.status(403).json({ message: "Access denied. Admin role required." });
-      }
-      
       const id = parseInt(req.params.id);
       const success = await storage.deleteUser(id);
       if (!success) {
@@ -185,16 +218,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Not authenticated" });
       }
       
+      // Allow access if forRegistration query param is true
+      const forRegistration = req.query.forRegistration === 'true';
+      if (!forRegistration) {
       // Check if user is admin or teacher
       if (req.user?.role !== "admin" && req.user?.role !== "teacher") {
         return res.status(403).json({ message: "Access denied. Admin or teacher role required." });
+        }
       }
       
       const facultyId = req.query.facultyId ? parseInt(req.query.facultyId as string) : undefined;
       const groups = facultyId 
         ? await storage.getGroupsByFaculty(facultyId)
         : await storage.getAllGroups();
-      res.json(groups);
+      res.json({ data: groups });
     } catch (error) {
       res.status(500).json({ message: "Error fetching groups" });
     }
@@ -235,13 +272,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const id = parseInt(req.params.id);
       const groupData = req.body;
-      const updatedGroup = await storage.updateGroup(id, groupData);
+
+      // Validate that the group exists
+      const existingGroup = await storage.getGroup(id);
+      if (!existingGroup) {
+        return res.status(404).json({ message: "Group not found" });
+      }
+
+      // If teacher is being updated, validate that the new teacher exists
+      if (groupData.teacherId) {
+        const teacher = await storage.getTeacher(parseInt(groupData.teacherId));
+        if (!teacher) {
+          return res.status(400).json({ message: "Teacher not found" });
+        }
+      }
+
+      // If faculty is being updated, validate that the new faculty exists
+      if (groupData.facultyId) {
+        const faculty = await storage.getFaculty(parseInt(groupData.facultyId));
+        if (!faculty) {
+          return res.status(400).json({ message: "Faculty not found" });
+        }
+      }
+
+      const updatedGroup = await storage.updateGroup(id, {
+        name: groupData.name,
+        teacherId: groupData.teacherId ? parseInt(groupData.teacherId) : undefined,
+        facultyId: groupData.facultyId ? parseInt(groupData.facultyId) : undefined,
+      });
+
       if (!updatedGroup) {
         return res.status(404).json({ message: "Group not found" });
       }
       res.json(updatedGroup);
     } catch (error) {
-      res.status(500).json({ message: "Error updating group" });
+      console.error("Error updating group:", error);
+      res.status(500).json({ 
+        message: "Error updating group",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
     }
   });
 
@@ -268,58 +337,161 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Profile endpoints
-  app.get("/api/profile/:id", async (req, res) => {
+  app.get("/api/profile/student/:studentId", async (req, res) => {
     try {
       if (!req.isAuthenticated()) {
         return res.status(401).json({ message: "Not authenticated" });
       }
 
-      const id = parseInt(req.params.id);
-      const user = await storage.getUser(id);
+      const studentId = parseInt(req.params.studentId);
       
+      // Get the student record to check permissions
+      const student = await storage.getStudent(studentId);
+      if (!student) {
+        return res.status(404).json({ message: "Student not found" });
+      }
+
+      // Only allow students to access their own profile unless they're an admin/teacher
+      if (req.user?.role === "student" && req.user?.id !== student.userId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const profileData = await storage.getStudentProfile(studentId);
+      const user = await storage.getUser(student.userId);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
-      
-      // If not an admin or teacher, only allow access to own profile
-      if (req.user?.role !== "admin" && req.user?.role !== "teacher" && req.user?.id !== id) {
-        return res.status(403).json({ message: "Access denied" });
-      }
-      
-      const { password, ...profile } = user;
-      res.json(profile);
+
+      // Don't send the password back to the client
+      const { password, ...userWithoutPassword } = user;
+      res.json({
+        ...userWithoutPassword,
+        profile: profileData
+      });
     } catch (error) {
-      res.status(500).json({ message: "Error fetching profile" });
+      console.error("Error fetching student profile:", error);
+      res.status(500).json({ message: "Error fetching student profile" });
     }
   });
 
-  app.put("/api/profile/:id", async (req, res) => {
+  app.get("/api/profile/teacher/:teacherId", async (req, res) => {
     try {
       if (!req.isAuthenticated()) {
         return res.status(401).json({ message: "Not authenticated" });
       }
 
-      const id = parseInt(req.params.id);
-      // Only allow users to update their own profile unless they're an admin
-      if (req.user?.role !== "admin" && req.user?.id !== id) {
+      const teacherId = parseInt(req.params.teacherId);
+      
+      // Get the teacher record to check permissions
+      const teacher = await storage.getTeacher(teacherId);
+      if (!teacher) {
+        return res.status(404).json({ message: "Teacher not found" });
+      }
+
+      // Only allow teachers to access their own profile unless they're an admin
+      if (req.user?.role === "teacher" && req.user?.id !== teacher.userId) {
         return res.status(403).json({ message: "Access denied" });
       }
 
-      // Since we don't have userProfileSchema anymore, we'll validate the data manually
-      const profileData = req.body;
-      const updatedUser = await storage.updateUser(id, profileData);
-      
-      if (!updatedUser) {
+      const profileData = await storage.getTeacherProfile(teacherId);
+      const user = await storage.getUser(teacher.userId);
+      if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
-      
-      const { password, ...updatedProfile } = updatedUser;
-      res.json(updatedProfile);
+
+      // Don't send the password back to the client
+      const { password, ...userWithoutPassword } = user;
+      res.json({
+        ...userWithoutPassword,
+        profile: profileData
+      });
     } catch (error) {
+      console.error("Error fetching teacher profile:", error);
+      res.status(500).json({ message: "Error fetching teacher profile" });
+    }
+  });
+
+  app.put("/api/profile/student/:studentId", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const studentId = parseInt(req.params.studentId);
+      
+      // Get the student record to check permissions
+      const student = await storage.getStudent(studentId);
+      if (!student) {
+        return res.status(404).json({ message: "Student not found" });
+      }
+
+      // Only allow students to update their own profile unless they're an admin/teacher
+      if (req.user?.role === "student" && req.user?.id !== student.userId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const studentProfileData = studentProfileSchema.parse(req.body);
+      const profileData = await storage.updateStudentProfile(studentId, studentProfileData);
+
+      const user = await storage.getUser(student.userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Don't send the password back to the client
+      const { password, ...userWithoutPassword } = user;
+      res.json({
+        ...userWithoutPassword,
+        profile: profileData
+      });
+    } catch (error) {
+      console.error("Error updating student profile:", error);
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid profile data", errors: error.errors });
       }
-      res.status(500).json({ message: "Error updating profile" });
+      res.status(500).json({ message: "Error updating student profile" });
+    }
+  });
+
+  app.put("/api/profile/teacher/:teacherId", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const teacherId = parseInt(req.params.teacherId);
+      
+      // Get the teacher record to check permissions
+      const teacher = await storage.getTeacher(teacherId);
+      if (!teacher) {
+        return res.status(404).json({ message: "Teacher not found" });
+      }
+
+      // Only allow teachers to update their own profile unless they're an admin
+      if (req.user?.role === "teacher" && req.user?.id !== teacher.userId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const teacherProfileData = teacherProfileSchema.parse(req.body);
+      const profileData = await storage.updateTeacherProfile(teacherId, teacherProfileData);
+
+      const user = await storage.getUser(teacher.userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Don't send the password back to the client
+      const { password, ...userWithoutPassword } = user;
+      res.json({
+        ...userWithoutPassword,
+        profile: profileData
+      });
+    } catch (error) {
+      console.error("Error updating teacher profile:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid profile data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Error updating teacher profile" });
     }
   });
 
@@ -358,15 +530,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const studentId = parseInt(req.params.studentId);
       
+      // Log the request details for debugging
+      console.log('Physical tests request:', {
+        requestedStudentId: studentId,
+        userRole: req.user?.role,
+        userStudentId: req.user?.studentId,
+        user: req.user
+      });
+      
       // If not an admin or teacher, only allow access to own tests
-      if (req.user?.role !== "admin" && req.user?.role !== "teacher" && req.user?.student_id !== studentId) {
-        return res.status(403).json({ message: "Access denied" });
+      if (req.user?.role !== "admin" && req.user?.role !== "teacher") {
+        if (req.user?.studentId === undefined || req.user.studentId !== studentId) {
+          return res.status(403).json({ 
+            message: "Access denied",
+            details: "Students can only access their own test records"
+          });
+        }
       }
       
       const tests = await storage.getPhysicalTestsByStudent(studentId);
-      res.json(tests);
+      
+      // If no tests found, return empty array instead of null
+      res.json(tests || []);
     } catch (error) {
-      res.status(500).json({ message: "Error fetching physical tests" });
+      console.error('Error fetching physical tests:', error);
+      res.status(500).json({ message: "Error fetching physical tests", error: String(error) });
     }
   });
 
@@ -379,7 +567,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const testData = insertPhysicalTestsSchema.parse(req.body);
       
       // If student, can only create tests for themselves
-      if (req.user?.role === "student" && testData.student_id !== req.user.student_id) {
+      if (req.user?.role === "student" && testData.studentId !== req.user.studentId) {
         return res.status(403).json({ message: "Access denied" });
       }
       
@@ -408,7 +596,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Students can only update their own tests
-      if (req.user?.role === "student" && existingTest.student_id !== req.user.student_id) {
+      if (req.user?.role === "student" && existingTest.studentId !== req.user.studentId) {
         return res.status(403).json({ message: "Access denied" });
       }
       
@@ -429,7 +617,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const studentId = parseInt(req.params.studentId);
       
       // If not an admin or teacher, only allow access to own physical states
-      if (req.user?.role !== "admin" && req.user?.role !== "teacher" && req.user?.student_id !== studentId) {
+      if (req.user?.role !== "admin" && req.user?.role !== "teacher" && req.user?.studentId !== studentId) {
         return res.status(403).json({ message: "Access denied" });
       }
       
@@ -449,7 +637,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const stateData = insertPhysicalStateSchema.parse(req.body);
       
       // If student, can only create physical states for themselves
-      if (req.user?.role === "student" && stateData.student_id !== req.user.student_id) {
+      if (req.user?.role === "student" && stateData.studentId !== req.user.studentId) {
         return res.status(403).json({ message: "Access denied" });
       }
       
@@ -478,7 +666,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Students can only update their own physical states
-      if (req.user?.role === "student" && existingState.student_id !== req.user.student_id) {
+      if (req.user?.role === "student" && existingState.studentId !== req.user.studentId) {
         return res.status(403).json({ message: "Access denied" });
       }
       
@@ -499,7 +687,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const studentId = parseInt(req.params.studentId);
       
       // If not an admin or teacher, only allow access to own sport results
-      if (req.user?.role !== "admin" && req.user?.role !== "teacher" && req.user?.student_id !== studentId) {
+      if (req.user?.role !== "admin" && req.user?.role !== "teacher" && req.user?.studentId !== studentId) {
         return res.status(403).json({ message: "Access denied" });
       }
       
@@ -519,7 +707,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const resultData = insertSportResultsSchema.parse(req.body);
       
       // If student, can only create sport results for themselves
-      if (req.user?.role === "student" && resultData.student_id !== req.user.student_id) {
+      if (req.user?.role === "student" && resultData.studentId !== req.user.studentId) {
         return res.status(403).json({ message: "Access denied" });
       }
       
@@ -548,7 +736,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Students can only update their own sport results
-      if (req.user?.role === "student" && existingResult.student_id !== req.user.student_id) {
+      if (req.user?.role === "student" && existingResult.studentId !== req.user.studentId) {
         return res.status(403).json({ message: "Access denied" });
       }
       
@@ -659,7 +847,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const studentId = parseInt(req.params.studentId);
       
       // If not an admin or teacher, only allow access to own results
-      if (req.user?.role !== "admin" && req.user?.role !== "teacher" && req.user?.student_id !== studentId) {
+      if (req.user?.role !== "admin" && req.user?.role !== "teacher" && req.user?.studentId !== studentId) {
         return res.status(403).json({ message: "Access denied" });
       }
       
@@ -827,7 +1015,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Check if user is admin or the teacher themselves
-      if (req.user?.role !== "admin" && req.user?.teacher_id !== parseInt(req.params.id)) {
+      if (req.user?.role !== "admin" && req.user?.teacherId !== parseInt(req.params.id)) {
         return res.status(403).json({ message: "Access denied" });
       }
       
@@ -904,14 +1092,125 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Access denied. Admin role required." });
       }
       
-      const studentData = insertStudentSchema.parse(req.body);
+      const { username, password, firstName, lastName, patronymic, facultyId, groupId } = req.body;
+
+      // First, create the student record
+      const studentData = {
+        name: [firstName, lastName, patronymic].filter(Boolean).join(" "),
+        groupId: groupId,
+      };
+
       const student = await storage.createStudent(studentData);
-      res.status(201).json(student);
+
+      if (!student) {
+        return res.status(500).json({ message: "Failed to create student record" });
+      }
+
+      // Then create the user account linked to the student
+      const userData = {
+        username,
+        password,
+        role: "student" as const,
+        studentId: student.studentId,
+        fullName: studentData.name || undefined,
+      };
+
+      const user = await storage.createUser(userData);
+
+      if (!user) {
+        // Rollback student creation if user creation fails
+        await storage.deleteStudent(student.studentId);
+        return res.status(500).json({ message: "Failed to create user account" });
+      }
+
+      // Return the created user (without password) and student data
+      const { password: _, ...userWithoutPassword } = user;
+      res.status(201).json({
+        ...userWithoutPassword,
+        student,
+      });
     } catch (error) {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid student data", errors: error.errors });
       }
       res.status(500).json({ message: "Error creating student" });
+    }
+  });
+  
+  app.post("/api/students/bulk", async (req: Request, res: Response) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      // Check if user is admin
+      if (req.user?.role !== "admin") {
+        return res.status(403).json({ message: "Access denied. Admin role required." });
+      }
+
+      if (!req.files || !req.files.file) {
+        return res.status(400).json({ message: "No file uploaded" });
+      }
+
+      const file = req.files.file as fileUpload.UploadedFile;
+      const groupId = parseInt(req.body.groupId);
+
+      if (!groupId) {
+        return res.status(400).json({ message: "Group ID is required" });
+      }
+
+      const results = [];
+      const parser = parse({ columns: true, skip_empty_lines: true });
+
+      for await (const record of parser) {
+        try {
+          // Create student
+          const fullName = [record.firstName, record.lastName, record.patronymic].filter(Boolean).join(" ");
+          if (!fullName) {
+            throw new Error("Full name is required");
+          }
+
+          const studentData: InsertStudent = {
+            fullName,
+            groupId,
+            medicalGroup: "basic" as const,
+          };
+
+          const student = await storage.createStudent(studentData);
+
+          // Create user account
+          const userData: InsertUser = {
+            username: record.username,
+            password: record.password,
+            role: "student" as const,
+          };
+
+          const user = await storage.createUser(userData);
+
+          if (!user) {
+            // Rollback student creation if user creation fails
+            await storage.deleteStudent(student.studentId);
+            throw new Error("Failed to create user account");
+          }
+
+          results.push({
+            success: true,
+            username: record.username,
+            message: "Student and user account created successfully"
+          });
+        } catch (err) {
+          results.push({
+            success: false,
+            username: record.username,
+            message: err instanceof Error ? err.message : String(err)
+          });
+        }
+      }
+
+      res.status(201).json(results);
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error(String(err));
+      res.status(500).json({ message: "Error processing file", error: error.message });
     }
   });
   
@@ -922,7 +1221,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Check if user is admin, teacher, or the student themselves
-      if (req.user?.role !== "admin" && req.user?.role !== "teacher" && req.user?.student_id !== parseInt(req.params.id)) {
+      if (req.user?.role !== "admin" && req.user?.role !== "teacher" && req.user?.studentId !== parseInt(req.params.id)) {
         return res.status(403).json({ message: "Access denied" });
       }
       

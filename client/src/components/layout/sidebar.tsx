@@ -48,23 +48,23 @@ export default function Sidebar({ isMobileSidebarOpen }: SidebarProps) {
   return (
     <aside 
       className={cn(
-        "w-64 bg-white shadow-lg h-full fixed md:relative z-20 transition-all duration-300",
+        "w-64 bg-card text-card-foreground shadow-lg h-full fixed md:relative z-20 transition-all duration-300",
         !isMobileSidebarOpen && "transform -translate-x-full md:transform-none"
       )}
     >
       <div className="flex flex-col h-full">
         {/* User info */}
-        <div className="p-4 border-b">
+        <div className="p-4 border-b border-border">
           <div className="flex items-center space-x-3">
             <Avatar className="h-10 w-10">
               <AvatarImage src="" alt={user?.fullName || user?.username} />
-              <AvatarFallback className="bg-primary text-white">
+              <AvatarFallback className="bg-primary text-primary-foreground">
                 {user?.fullName ? getInitials(user.fullName) : user?.username?.substring(0, 2).toUpperCase()}
               </AvatarFallback>
             </Avatar>
             <div>
               <p className="font-medium text-sm">{user?.fullName || user?.username}</p>
-              <p className="text-xs text-gray-500 capitalize">{user?.role}</p>
+              <p className="text-xs text-muted-foreground capitalize">{user?.role}</p>
             </div>
           </div>
         </div>
@@ -73,43 +73,46 @@ export default function Sidebar({ isMobileSidebarOpen }: SidebarProps) {
         <nav className="flex-1 overflow-y-auto py-4">
           {/* Main menu */}
           <div className="px-4 mb-2">
-            <p className="text-xs uppercase text-gray-500 font-medium">Main menu</p>
+            <p className="text-xs uppercase text-muted-foreground font-medium">Main menu</p>
           </div>
           <ul className="space-y-1">
             <li>
-              <Link href="/">
-                <a className={cn(
-                  "flex items-center space-x-3 px-4 py-3 text-sm font-medium hover:bg-gray-100 transition-colors",
-                  isActive("/") && "text-primary border-l-4 border-primary bg-blue-50"
-                )}>
-                  <Home size={18} className={isActive("/") ? "text-primary" : "text-gray-500"} />
-                  <span>Dashboard</span>
-                </a>
+              <Link 
+                to="/"
+                className={cn(
+                  "flex items-center space-x-3 px-4 py-3 text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors",
+                  isActive("/") && "text-primary border-l-4 border-primary bg-accent"
+                )}
+              >
+                <Home size={18} className={isActive("/") ? "text-primary" : "text-muted-foreground"} />
+                <span>Dashboard</span>
               </Link>
             </li>
             
             <li>
-              <Link href="/profile">
-                <a className={cn(
-                  "flex items-center space-x-3 px-4 py-3 text-sm font-medium hover:bg-gray-100 transition-colors",
-                  isActive("/profile") && "text-primary border-l-4 border-primary bg-blue-50"
-                )}>
-                  <User size={18} className={isActive("/profile") ? "text-primary" : "text-gray-500"} />
-                  <span>My Profile</span>
-                </a>
+              <Link 
+                to="/profile"
+                className={cn(
+                  "flex items-center space-x-3 px-4 py-3 text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors",
+                  isActive("/profile") && "text-primary border-l-4 border-primary bg-accent"
+                )}
+              >
+                <User size={18} className={isActive("/profile") ? "text-primary" : "text-muted-foreground"} />
+                <span>My Profile</span>
               </Link>
             </li>
             
             {(user?.role === "admin" || user?.role === "teacher") && (
               <li>
-                <Link href="/students">
-                  <a className={cn(
-                    "flex items-center space-x-3 px-4 py-3 text-sm font-medium hover:bg-gray-100 transition-colors",
-                    isActive("/students") && "text-primary border-l-4 border-primary bg-blue-50"
-                  )}>
-                    <Users size={18} className={isActive("/students") ? "text-primary" : "text-gray-500"} />
-                    <span>Students</span>
-                  </a>
+                <Link 
+                  to="/students"
+                  className={cn(
+                    "flex items-center space-x-3 px-4 py-3 text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors",
+                    isActive("/students") && "text-primary border-l-4 border-primary bg-accent"
+                  )}
+                >
+                  <Users size={18} className={isActive("/students") ? "text-primary" : "text-muted-foreground"} />
+                  <span>Students</span>
                 </Link>
               </li>
             )}
@@ -117,32 +120,34 @@ export default function Sidebar({ isMobileSidebarOpen }: SidebarProps) {
             <li>
               <Accordion type="single" collapsible className="w-full">
                 <AccordionItem value="tests" className="border-none">
-                  <AccordionTrigger className="py-3 px-4 hover:bg-gray-100 hover:no-underline text-sm font-medium">
+                  <AccordionTrigger className="py-3 px-4 hover:bg-accent hover:text-accent-foreground hover:no-underline text-sm font-medium">
                     <div className="flex items-center space-x-3">
-                      <Activity size={18} className="text-gray-500" />
+                      <Activity size={18} className="text-muted-foreground" />
                       <span>Tests & Samples</span>
                     </div>
                   </AccordionTrigger>
                   <AccordionContent className="pt-0 pb-1">
                     <ul className="pl-8">
                       <li>
-                        <Link href="/tests">
-                          <a className={cn(
-                            "flex items-center py-2 px-4 text-sm hover:bg-gray-100 transition-colors rounded-md",
-                            isActive("/tests") && "text-primary bg-blue-50"
-                          )}>
-                            Physical Tests
-                          </a>
+                        <Link 
+                          to="/tests"
+                          className={cn(
+                            "flex items-center py-2 px-4 text-sm hover:bg-accent hover:text-accent-foreground transition-colors rounded-md",
+                            isActive("/tests") && "text-primary bg-accent"
+                          )}
+                        >
+                          Physical Tests
                         </Link>
                       </li>
                       <li>
-                        <Link href="/samples">
-                          <a className={cn(
-                            "flex items-center py-2 px-4 text-sm hover:bg-gray-100 transition-colors rounded-md",
-                            isActive("/samples") && "text-primary bg-blue-50"
-                          )}>
-                            Health Samples
-                          </a>
+                        <Link 
+                          to="/samples"
+                          className={cn(
+                            "flex items-center py-2 px-4 text-sm hover:bg-accent hover:text-accent-foreground transition-colors rounded-md",
+                            isActive("/samples") && "text-primary bg-accent"
+                          )}
+                        >
+                          Health Samples
                         </Link>
                       </li>
                     </ul>
@@ -153,27 +158,29 @@ export default function Sidebar({ isMobileSidebarOpen }: SidebarProps) {
             
             {(user?.role === "admin" || user?.role === "teacher") && (
               <li>
-                <Link href="/reports">
-                  <a className={cn(
-                    "flex items-center space-x-3 px-4 py-3 text-sm font-medium hover:bg-gray-100 transition-colors",
-                    isActive("/reports") && "text-primary border-l-4 border-primary bg-blue-50"
-                  )}>
-                    <BarChart size={18} className={isActive("/reports") ? "text-primary" : "text-gray-500"} />
-                    <span>Reports</span>
-                  </a>
+                <Link 
+                  to="/reports"
+                  className={cn(
+                    "flex items-center space-x-3 px-4 py-3 text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors",
+                    isActive("/reports") && "text-primary border-l-4 border-primary bg-accent"
+                  )}
+                >
+                  <BarChart size={18} className={isActive("/reports") ? "text-primary" : "text-muted-foreground"} />
+                  <span>Reports</span>
                 </Link>
               </li>
             )}
             
             <li>
-              <Link href="/settings">
-                <a className={cn(
-                  "flex items-center space-x-3 px-4 py-3 text-sm font-medium hover:bg-gray-100 transition-colors",
-                  isActive("/settings") && "text-primary border-l-4 border-primary bg-blue-50"
-                )}>
-                  <Settings size={18} className={isActive("/settings") ? "text-primary" : "text-gray-500"} />
-                  <span>Settings</span>
-                </a>
+              <Link 
+                to="/settings"
+                className={cn(
+                  "flex items-center space-x-3 px-4 py-3 text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors",
+                  isActive("/settings") && "text-primary border-l-4 border-primary bg-accent"
+                )}
+              >
+                <Settings size={18} className={isActive("/settings") ? "text-primary" : "text-muted-foreground"} />
+                <span>Settings</span>
               </Link>
             </li>
           </ul>
@@ -182,40 +189,43 @@ export default function Sidebar({ isMobileSidebarOpen }: SidebarProps) {
           {user?.role === "admin" && (
             <>
               <div className="px-4 mb-2 mt-6">
-                <p className="text-xs uppercase text-gray-500 font-medium">Administration</p>
+                <p className="text-xs uppercase text-muted-foreground font-medium">Administration</p>
               </div>
               <ul className="space-y-1">
                 <li>
-                  <Link href="/admin/users">
-                    <a className={cn(
-                      "flex items-center space-x-3 px-4 py-3 text-sm font-medium hover:bg-gray-100 transition-colors",
-                      isActive("/admin/users") && "text-primary border-l-4 border-primary bg-blue-50"
-                    )}>
-                      <Laptop size={18} className={isActive("/admin/users") ? "text-primary" : "text-gray-500"} />
-                      <span>User Management</span>
-                    </a>
+                  <Link 
+                    to="/admin/users"
+                    className={cn(
+                      "flex items-center space-x-3 px-4 py-3 text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors",
+                      isActive("/admin/users") && "text-primary border-l-4 border-primary bg-accent"
+                    )}
+                  >
+                    <Laptop size={18} className={isActive("/admin/users") ? "text-primary" : "text-muted-foreground"} />
+                    <span>User Management</span>
                   </Link>
                 </li>
                 <li>
-                  <Link href="/admin/faculties">
-                    <a className={cn(
-                      "flex items-center space-x-3 px-4 py-3 text-sm font-medium hover:bg-gray-100 transition-colors",
-                      isActive("/admin/faculties") && "text-primary border-l-4 border-primary bg-blue-50"
-                    )}>
-                      <Building2 size={18} className={isActive("/admin/faculties") ? "text-primary" : "text-gray-500"} />
-                      <span>Faculties</span>
-                    </a>
+                  <Link 
+                    to="/admin/faculties"
+                    className={cn(
+                      "flex items-center space-x-3 px-4 py-3 text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors",
+                      isActive("/admin/faculties") && "text-primary border-l-4 border-primary bg-accent"
+                    )}
+                  >
+                    <Building2 size={18} className={isActive("/admin/faculties") ? "text-primary" : "text-muted-foreground"} />
+                    <span>Faculties</span>
                   </Link>
                 </li>
                 <li>
-                  <Link href="/admin/groups">
-                    <a className={cn(
-                      "flex items-center space-x-3 px-4 py-3 text-sm font-medium hover:bg-gray-100 transition-colors",
-                      isActive("/admin/groups") && "text-primary border-l-4 border-primary bg-blue-50"
-                    )}>
-                      <Briefcase size={18} className={isActive("/admin/groups") ? "text-primary" : "text-gray-500"} />
-                      <span>Groups</span>
-                    </a>
+                  <Link 
+                    to="/admin/groups"
+                    className={cn(
+                      "flex items-center space-x-3 px-4 py-3 text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors",
+                      isActive("/admin/groups") && "text-primary border-l-4 border-primary bg-accent"
+                    )}
+                  >
+                    <Briefcase size={18} className={isActive("/admin/groups") ? "text-primary" : "text-muted-foreground"} />
+                    <span>Groups</span>
                   </Link>
                 </li>
               </ul>
@@ -227,7 +237,7 @@ export default function Sidebar({ isMobileSidebarOpen }: SidebarProps) {
         <div className="border-t p-4">
           <button 
             onClick={handleLogout}
-            className="flex items-center space-x-3 text-sm font-medium text-gray-600 hover:text-red-500 transition-colors"
+            className="flex items-center space-x-3 text-sm font-medium text-muted-foreground hover:text-red-500 transition-colors"
           >
             <LogOut size={18} />
             <span>Log out</span>

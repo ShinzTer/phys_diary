@@ -39,6 +39,30 @@ import { Loader2, Save, ArrowLeft } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
+interface UserRecord {
+  studentId?: number;
+  teacherId?: number;
+}
+
+interface StudentProfile {
+  studentId: number;
+  fullName: string;
+}
+
+interface Student {
+  id: number;
+  username: string;
+  fullName?: string;
+}
+
+interface TestData {
+  studentId: number;
+  date: string;
+  notes: string | null;
+  grade: string | null;
+  [key: string]: any; // For dynamic test type fields
+}
+
 // Form schema for test creation/editing
 const testFormSchema = z.object({
   userId: z.number(),
@@ -56,32 +80,116 @@ export default function TestForm() {
   const params = useParams();
   const { toast } = useToast();
   const isEdit = !!params.id;
-  const testId = isEdit ? parseInt(params.id) : undefined;
+  const testId = isEdit && params.id ? parseInt(params.id) : undefined;
   
   // Get search params to check if we're in grading mode
   const [searchParams] = useLocation();
   const isGrading = searchParams.includes("grade=true");
+
+  // First get the user record to get the studentId
+  const { data: userRecord } = useQuery<UserRecord>({
+    queryKey: [`/api/users/${user?.id}/record`],
+    enabled: user?.role === "student" && !!user?.id,
+  });
+  
+  // Then fetch student profile using the studentId
+  const { data: studentProfile } = useQuery<StudentProfile>({
+    queryKey: [`/api/profile/student/${userRecord?.studentId}`],
+    enabled: !!userRecord?.studentId,
+  });
   
   // Fetch students for teacher/admin to select a student
-  const { data: students } = useQuery({
+  const { data: students = [] } = useQuery<Student[]>({
     queryKey: ["/api/users?role=student"],
     enabled: user?.role !== "student"
   });
   
   // Fetch specific test data when editing
-  const { data: testData, isLoading: isLoadingTest } = useQuery({
+  const { data: testData, isLoading: isLoadingTest } = useQuery<TestData>({
     queryKey: [`/api/tests/${testId}`],
-    enabled: isEdit
+    enabled: !!isEdit && !!testId
   });
   
+  // Setup form with default values
+  const form = useForm<TestFormValues>({
+    resolver: zodResolver(testFormSchema),
+    defaultValues: {
+      userId: 0,
+      testType: "",
+      result: "",
+      grade: "",
+      notes: ""
+    }
+  });
+
+  // Update form when student profile or edit data is loaded
+  useEffect(() => {
+    if (user?.role === "student" && studentProfile) {
+      form.setValue("userId", studentProfile.studentId);
+    }
+    
+    if (isEdit && testData) {
+      const testType = Object.keys(testData).find(key => 
+        [...TEST_TYPES, ...CONTROL_EXERCISE_TYPES].includes(key as any)
+      );
+      
+      if (testType) {
+        form.reset({
+          userId: testData.studentId,
+          testType: testType,
+          result: testData[testType]?.toString() || "",
+          grade: testData.grade || "",
+          notes: testData.notes || ""
+        });
+      }
+    }
+  }, [isEdit, testData, form, user?.role, studentProfile]);
+
+  // All test types (physical tests + control exercises)
+  const allTestTypes = [...TEST_TYPES, ...CONTROL_EXERCISE_TYPES];
+
+  // Get formatted test type display name
+  const formatTestType = (type: string) => {
+    return type.split('_').map(word => 
+      word.charAt(0).toUpperCase() + word.slice(1)
+    ).join(' ');
+  };
+
   // Create test mutation
   const createTestMutation = useMutation({
     mutationFn: async (data: TestFormValues) => {
-      await apiRequest("POST", "/api/tests", data);
+      let studentId: number;
+      
+      if (user?.role === "student") {
+        if (!studentProfile?.studentId) {
+          throw new Error("Student profile not found. Please contact your administrator.");
+        }
+        studentId = studentProfile.studentId;
+      } else {
+        studentId = data.userId;
+      }
+
+      if (!studentId) {
+        throw new Error("Student ID is required");
+      }
+
+      // Create test data object
+      const testData: TestData = {
+        studentId,
+        date: new Date().toISOString().split('T')[0],
+        notes: data.notes || null,
+        grade: data.grade || null
+      };
+      
+      // Add the specific test type value
+      testData[data.testType] = parseFloat(data.result) || data.result;
+      
+      await apiRequest("POST", "/api/physical-tests", testData);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/tests/${user?.id}`] });
-      queryClient.invalidateQueries({ queryKey: ["/api/tests"] });
+      const studentId = user?.role === "student" ? studentProfile?.studentId : form.getValues("userId");
+      queryClient.invalidateQueries({ queryKey: [`/api/physical-tests/${studentId}`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/physical-tests"] });
       toast({
         title: "Test recorded",
         description: "Your test result has been successfully recorded."
@@ -100,11 +208,36 @@ export default function TestForm() {
   // Update test mutation
   const updateTestMutation = useMutation({
     mutationFn: async (data: TestFormValues) => {
-      await apiRequest("PUT", `/api/tests/${testId}`, data);
+      let studentId: number;
+      
+      if (user?.role === "student") {
+        if (!studentProfile?.studentId) {
+          throw new Error("Student profile not found");
+        }
+        studentId = studentProfile.studentId;
+      } else {
+        studentId = data.userId;
+      }
+
+      if (!studentId) {
+        throw new Error("Student ID is required");
+      }
+
+      const testData: TestData = {
+        studentId,
+        date: new Date().toISOString().split('T')[0],
+        notes: data.notes || null,
+        grade: data.grade || null
+      };
+      
+      testData[data.testType] = parseFloat(data.result) || data.result;
+      
+      await apiRequest("PUT", `/api/physical-tests/${testId}`, testData);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/tests/${user?.id}`] });
-      queryClient.invalidateQueries({ queryKey: ["/api/tests"] });
+      const studentId = user?.role === "student" ? studentProfile?.studentId : form.getValues("userId");
+      queryClient.invalidateQueries({ queryKey: [`/api/physical-tests/${studentId}`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/physical-tests"] });
       toast({
         title: isGrading ? "Test graded" : "Test updated",
         description: isGrading 
@@ -121,41 +254,6 @@ export default function TestForm() {
       });
     }
   });
-
-  // Setup form with default values
-  const form = useForm<TestFormValues>({
-    resolver: zodResolver(testFormSchema),
-    defaultValues: {
-      userId: user?.id || 0,
-      testType: "",
-      result: "",
-      grade: "",
-      notes: ""
-    }
-  });
-
-  // Update form when edit data is loaded
-  useEffect(() => {
-    if (isEdit && testData) {
-      form.reset({
-        userId: testData.userId,
-        testType: testData.testType,
-        result: testData.result,
-        grade: testData.grade || "",
-        notes: testData.notes || ""
-      });
-    }
-  }, [isEdit, testData, form]);
-
-  // All test types (physical tests + control exercises)
-  const allTestTypes = [...TEST_TYPES, ...CONTROL_EXERCISE_TYPES];
-
-  // Get formatted test type display name
-  const formatTestType = (type: string) => {
-    return type.split('_').map(word => 
-      word.charAt(0).toUpperCase() + word.slice(1)
-    ).join(' ');
-  };
 
   // Handle form submission
   function onSubmit(data: TestFormValues) {

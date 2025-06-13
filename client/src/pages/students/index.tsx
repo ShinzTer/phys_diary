@@ -32,20 +32,63 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { MEDICAL_GROUP_TYPES } from "@shared/schema";
 
+interface Student {
+  id: number;
+  username: string;
+  fullName?: string;
+  medicalGroup?: string;
+  facultyId?: number;
+  groupId?: number;
+  diagnosis?: string;
+}
+
+interface Faculty {
+  id: number;
+  name: string;
+}
+
+interface Group {
+  id: number;
+  name: string;
+}
+
+// Add proper loading states
+const LoadingSpinner = () => (
+  <div className="loading-overlay">
+    <Loader2 className="animate-spin" />
+  </div>
+);
+
+const calculateProfileCompletion = (student: Student): number => {
+  const fields = [
+    student.fullName,
+    student.medicalGroup,
+    student.facultyId,
+    student.groupId,
+    // Only include diagnosis in calculation if medical group is special
+    student.medicalGroup === "special" ? student.diagnosis : undefined
+  ];
+
+  const filledFields = fields.filter(field => field !== undefined && field !== null).length;
+  const totalFields = student.medicalGroup === "special" ? 5 : 4;
+  
+  return Math.round((filledFields / totalFields) * 100);
+};
+
 export default function Students() {
   const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
-  const [medicalGroupFilter, setMedicalGroupFilter] = useState<string>("");
+  const [medicalGroupFilter, setMedicalGroupFilter] = useState<string>("all");
   
-  const { data: students, isLoading } = useQuery({
+  const { data: students = [], isLoading } = useQuery<Student[]>({
     queryKey: ["/api/users?role=student"],
   });
 
-  const { data: faculties, isLoading: isLoadingFaculties } = useQuery({
+  const { data: faculties = [], isLoading: isLoadingFaculties } = useQuery<Faculty[]>({
     queryKey: ["/api/faculties"],
   });
 
-  const { data: groups, isLoading: isLoadingGroups } = useQuery({
+  const { data: groups = [], isLoading: isLoadingGroups } = useQuery<Group[]>({
     queryKey: ["/api/groups"],
   });
 
@@ -61,13 +104,13 @@ export default function Students() {
   };
 
   // Filter students based on search and medical group filter
-  const filteredStudents = students?.filter(student => {
+  const filteredStudents = students.filter((student: Student) => {
     const matchesSearch = 
       student.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       student.username.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesMedicalGroup = 
-      !medicalGroupFilter || 
+      medicalGroupFilter === "all" || 
       student.medicalGroup === medicalGroupFilter;
     
     return matchesSearch && matchesMedicalGroup;
@@ -75,14 +118,14 @@ export default function Students() {
 
   // Get faculty and group names
   const getFacultyName = (facultyId?: number) => {
-    if (!facultyId || !faculties) return "Not Assigned";
-    const faculty = faculties.find(f => f.id === facultyId);
+    if (!facultyId) return "Not Assigned";
+    const faculty = faculties.find((f: Faculty) => f.id === facultyId);
     return faculty ? faculty.name : "Not Found";
   };
 
   const getGroupName = (groupId?: number) => {
-    if (!groupId || !groups) return "Not Assigned";
-    const group = groups.find(g => g.id === groupId);
+    if (!groupId) return "Not Assigned";
+    const group = groups.find((g: Group) => g.id === groupId);
     return group ? group.name : "Not Found";
   };
 
@@ -127,7 +170,7 @@ export default function Students() {
                 <SelectValue placeholder="Filter by medical group" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Medical Groups</SelectItem>
+                <SelectItem value="all">All Medical Groups</SelectItem>
                 {MEDICAL_GROUP_TYPES.map(type => (
                   <SelectItem key={type} value={type} className="capitalize">
                     {type}
@@ -153,10 +196,12 @@ export default function Students() {
                     Filters
                   </Button>
                   {user?.role === "admin" && (
-                    <Button size="sm">
-                      <UserPlus className="h-4 w-4 mr-2" />
-                      Add Student
-                    </Button>
+                    <Link href="/admin/users">
+                      <Button size="sm">
+                        <UserPlus className="h-4 w-4 mr-2" />
+                        Add Student
+                      </Button>
+                    </Link>
                   )}
                 </div>
               </div>
@@ -182,7 +227,7 @@ export default function Students() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200">
-                      {filteredStudents?.map((student) => (
+                      {filteredStudents?.map((student: Student) => (
                         <tr key={student.id}>
                           <td className="px-4 py-4 whitespace-nowrap">
                             <div className="flex items-center">
@@ -271,29 +316,4 @@ export default function Students() {
       </div>
     </MainLayout>
   );
-}
-
-// Helper function to calculate profile completion percentage
-function calculateProfileCompletion(profile: any): number {
-  if (!profile) return 0;
-
-  const fields = [
-    'fullName', 'gender', 'dateOfBirth', 'placeOfBirth', 'address', 
-    'nationality', 'previousSchool', 'facultyId', 'groupId', 
-    'medicalGroup', 'educationalDepartment', 'currentSports', 'previousSports'
-  ];
-  
-  // Add conditional fields
-  if (profile.medicalGroup === 'special' || profile.medicalGroup === 'preparatory') {
-    fields.push('diagnosis');
-  }
-
-  let completedFields = 0;
-  fields.forEach(field => {
-    if (profile[field] && profile[field] !== '') {
-      completedFields++;
-    }
-  });
-
-  return Math.round((completedFields / fields.length) * 100);
 }

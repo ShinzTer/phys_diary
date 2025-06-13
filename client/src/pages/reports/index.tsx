@@ -26,7 +26,7 @@ import {
   TabsList, 
   TabsTrigger 
 } from "@/components/ui/tabs";
-import { Loader2, FilePdf, FileText, BarChart, PieChart, Download, Calendar, Users } from "lucide-react";
+import { Loader2, FileText, BarChart, PieChart, Download, Calendar, Users } from "lucide-react";
 import { TEST_TYPES, SAMPLE_TYPES, MEDICAL_GROUP_TYPES } from "@shared/schema";
 import { format, subDays } from "date-fns";
 
@@ -46,6 +46,47 @@ import {
   Cell,
 } from "recharts";
 
+interface Faculty {
+  id: number;
+  name: string;
+  facultyId?: number;
+  faculty?: {
+    facultyId: number;
+  };
+}
+
+interface Group {
+  id: number;
+  name: string;
+  facultyId: number;
+  year: number;
+}
+
+interface Student {
+  id: number;
+  username: string;
+  fullName?: string;
+  medicalGroup?: string;
+}
+
+interface Test {
+  id: number;
+  date?: string;
+  grade?: string;
+}
+
+interface Sample {
+  id: number;
+  date?: string;
+  value: string;
+}
+
+interface UserData {
+  id: number;
+  username: string;
+  fullName?: string;
+}
+
 export default function Reports() {
   const { user } = useAuth();
   const [, navigate] = useLocation();
@@ -55,22 +96,22 @@ export default function Reports() {
   const params = new URLSearchParams(location.includes('?') ? location.substring(location.indexOf('?')) : '');
   const userIdFromUrl = params.get('userId');
   
-  const [selectedFaculty, setSelectedFaculty] = useState<string>("");
-  const [selectedGroup, setSelectedGroup] = useState<string>("");
-  const [selectedUser, setSelectedUser] = useState<string>(userIdFromUrl || "");
+  const [selectedFaculty, setSelectedFaculty] = useState<string>("all");
+  const [selectedGroup, setSelectedGroup] = useState<string>("all");
+  const [selectedUser, setSelectedUser] = useState<string>(userIdFromUrl || "all");
   const [selectedDateRange, setSelectedDateRange] = useState<string>("semester");
   const [selectedReportType, setSelectedReportType] = useState<string>("performance");
   
   // Fetch faculties for dropdown
-  const { data: faculties } = useQuery({
+  const { data: faculties } = useQuery<Faculty[]>({
     queryKey: ["/api/faculties"],
   });
 
   // Fetch groups (filtered by faculty if selected)
-  const { data: groups } = useQuery({
+  const { data: groups } = useQuery<Group[]>({
     queryKey: ["/api/groups", selectedFaculty],
     queryFn: async () => {
-      const url = selectedFaculty 
+      const url = selectedFaculty !== "all"
         ? `/api/groups?facultyId=${selectedFaculty}` 
         : "/api/groups";
       
@@ -81,12 +122,21 @@ export default function Reports() {
   });
 
   // Fetch students (filtered by group if selected)
-  const { data: students } = useQuery({
+  const { data: students } = useQuery<Student[]>({
     queryKey: ["/api/users?role=student", selectedGroup],
+    queryFn: async () => {
+      const url = selectedGroup !== "all"
+        ? `/api/users?role=student&groupId=${selectedGroup}`
+        : "/api/users?role=student";
+      
+      const res = await fetch(url, { credentials: "include" });
+      if (!res.ok) throw new Error("Failed to fetch students");
+      return res.json();
+    },
   });
 
   // Fetch all tests and samples
-  const { data: tests, isLoading: isLoadingTests } = useQuery({
+  const { data: tests, isLoading: isLoadingTests } = useQuery<Test[]>({
     queryKey: ["/api/tests", selectedUser],
     enabled: selectedUser !== "",
     queryFn: async () => {
@@ -96,7 +146,7 @@ export default function Reports() {
     },
   });
 
-  const { data: samples, isLoading: isLoadingSamples } = useQuery({
+  const { data: samples, isLoading: isLoadingSamples } = useQuery<Sample[]>({
     queryKey: ["/api/samples", selectedUser],
     enabled: selectedUser !== "",
     queryFn: async () => {
@@ -107,12 +157,12 @@ export default function Reports() {
   });
 
   // Get data for selected student
-  const { data: userData } = useQuery({
+  const { data: userData } = useQuery<UserData>({
     queryKey: [`/api/profile/${selectedUser}`],
-    enabled: selectedUser !== "",
+    enabled: selectedUser !== "" && selectedUser !== "all",
   });
 
-  const isLoading = isLoadingTests || isLoadingSamples || (selectedUser !== "" && !userData);
+  const isLoading = isLoadingTests || isLoadingSamples || (selectedUser !== "" && selectedUser !== "all" && !userData);
 
   // Format test type display name
   const formatTestType = (type: string) => {
@@ -289,12 +339,20 @@ export default function Reports() {
                     <SelectValue placeholder="All Faculties" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Faculties</SelectItem>
-                    {faculties?.map(faculty => (
-                      <SelectItem key={faculty.id} value={faculty.id.toString()}>
-                        {faculty.name}
-                      </SelectItem>
-                    ))}
+                    <SelectItem value="all">All Faculties</SelectItem>
+                    {faculties?.map(faculty => {
+                      // Handle both possible faculty ID structures and ensure we have a valid ID
+                      const facultyId = faculty.faculty?.facultyId || faculty.facultyId || faculty.id;
+                      if (!facultyId) return null; // Skip if no valid ID
+                      return (
+                        <SelectItem 
+                          key={facultyId} 
+                          value={facultyId.toString()}
+                        >
+                          {faculty.name}
+                        </SelectItem>
+                      );
+                    })}
                   </SelectContent>
                 </Select>
               </div>
@@ -309,12 +367,18 @@ export default function Reports() {
                     <SelectValue placeholder="All Groups" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Groups</SelectItem>
-                    {groups?.map(group => (
-                      <SelectItem key={group.id} value={group.id.toString()}>
-                        {group.name}
-                      </SelectItem>
-                    ))}
+                    <SelectItem value="all">All Groups</SelectItem>
+                    {groups?.map(group => {
+                      if (!group?.id) return null; // Skip if no valid ID
+                      return (
+                        <SelectItem 
+                          key={group.id} 
+                          value={group.id.toString()}
+                        >
+                          {group.name}
+                        </SelectItem>
+                      );
+                    })}
                   </SelectContent>
                 </Select>
               </div>
@@ -329,12 +393,18 @@ export default function Reports() {
                     <SelectValue placeholder="Select Student" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Select Student</SelectItem>
-                    {students?.map(student => (
-                      <SelectItem key={student.id} value={student.id.toString()}>
-                        {student.fullName || student.username}
-                      </SelectItem>
-                    ))}
+                    <SelectItem value="all">Select Student</SelectItem>
+                    {students?.map(student => {
+                      if (!student?.id) return null; // Skip if no valid ID
+                      return (
+                        <SelectItem 
+                          key={student.id} 
+                          value={student.id.toString()}
+                        >
+                          {student.fullName || student.username}
+                        </SelectItem>
+                      );
+                    })}
                   </SelectContent>
                 </Select>
               </div>

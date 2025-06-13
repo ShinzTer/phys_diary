@@ -10,9 +10,11 @@ import {
   
   // Teacher types and schema
   type Teacher, type InsertTeacher, teacher,
+  type TeacherProfile,
   
   // Student types and schema
   type Student, type InsertStudent, student,
+  type StudentProfile,
   
   // Period types and schema
   type Period, type InsertPeriod, period,
@@ -35,6 +37,20 @@ import { eq, and } from "drizzle-orm";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
 import { pool } from "./db";
+import { PgDatabase } from "drizzle-orm/pg-core";
+
+type DatabaseSchema = {
+  users: typeof users;
+  student: typeof student;
+  teacher: typeof teacher;
+  group: typeof group;
+  faculty: typeof faculty;
+  period: typeof period;
+  physical_state: typeof physical_state;
+  physical_tests: typeof physical_tests;
+  sport_results: typeof sport_results;
+  result: typeof resultTable;
+};
 
 // Storage interface for database operations
 export interface IStorage {
@@ -42,7 +58,7 @@ export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   getUsersByRole(role: UserRole): Promise<User[]>;
-  createUser(user: InsertUser): Promise<User>;
+  createUser(userData: { username: string; password: string; role?: UserRole }): Promise<User>;
   updateUser(id: number, userData: Partial<User>): Promise<User | undefined>;
   deleteUser(id: number): Promise<boolean>;
   
@@ -72,7 +88,7 @@ export interface IStorage {
   getAllStudents(): Promise<Student[]>;
   getStudentsByGroup(groupId: number): Promise<Student[]>;
   getStudent(id: number): Promise<Student | undefined>;
-  createStudent(student: InsertStudent): Promise<Student>;
+  createStudent(studentData: InsertStudent): Promise<Student>;
   updateStudent(id: number, studentData: Partial<Student>): Promise<Student | undefined>;
   deleteStudent(id: number): Promise<boolean>;
   
@@ -118,416 +134,572 @@ export interface IStorage {
   
   // Initialization
   initializeDatabase(): Promise<void>;
+
+  // Profile methods
+  getStudentProfile(studentId: number): Promise<StudentProfile | undefined>;
+  updateStudentProfile(studentId: number, data: Partial<StudentProfile>): Promise<StudentProfile>;
+  getTeacherProfile(teacherId: number): Promise<TeacherProfile | undefined>;
+  updateTeacherProfile(teacherId: number, data: Partial<TeacherProfile>): Promise<TeacherProfile>;
 }
 
 // PostgreSQL implementation of the storage interface
-export class DatabaseStorage implements IStorage {
+export class Storage implements IStorage {
+  private db: PgDatabase<any, DatabaseSchema>;
   sessionStore: session.Store;
 
-  constructor() {
+  constructor(db: PgDatabase<any, DatabaseSchema>) {
+    this.db = db;
     const PostgresStore = connectPg(session);
     this.sessionStore = new PostgresStore({
       pool,
-      createTableIfMissing: true,
-      tableName: 'session'
+      tableName: "session",
     });
   }
 
   async initializeDatabase(): Promise<void> {
+    // Create session table if it doesn't exist
+    await this.db.execute(`
+      CREATE TABLE IF NOT EXISTS "session" (
+        "sid" varchar NOT NULL COLLATE "default",
+        "sess" json NOT NULL,
+        "expire" timestamp(6) NOT NULL,
+        CONSTRAINT "session_pkey" PRIMARY KEY ("sid")
+      )
+    `);
+
     // Check if we have any users, if not, create default users
-    const existingUsers = await db.select().from(users);
+    const existingUsers = await this.db.select().from(users);
     
     if (existingUsers.length === 0) {
       // Create default faculty
-      const [newFaculty] = await db.insert(faculty).values([
-        { name: "Physical Education Faculty" }
-      ]).returning();
-      
-      // Create default teacher
-      const [newTeacher] = await db.insert(teacher).values([
-        { name: "John Smith", position: "Senior Lecturer", phone: 1234567890 }
-      ]).returning();
-      
-      // Create default group
-      const [newGroup] = await db.insert(group).values([
-        { name: "PE-101", teacher_id: newTeacher.teacher_id }
-      ]).returning();
-      
-      // Create default period
-      const [newPeriod] = await db.insert(period).values([
-        { name: "Fall 2023" }
-      ]).returning();
-      
-      // Create default student
-      const [newStudent] = await db.insert(student).values([
-        { 
-          name: "Alex Johnson", 
-          gender: "Male", 
-          birth_date: new Date(2000, 0, 1).toISOString().split('T')[0], 
-          group_id: newGroup.group_id, 
-          medical_group: "basic" 
-        }
-      ]).returning();
+      const [newFaculty] = await this.db.insert(faculty).values({
+        name: "Physical Education Faculty"
+      }).returning();
       
       // Create default admin user
-      await this.createUser({
+      const [adminUser] = await this.db.insert(users).values({
         username: 'admin',
         password: 'admin123', // This would be hashed in auth.ts
-        role: 'admin' as const,
-      });
+        role: 'admin' as UserRole,
+      }).returning();
       
-      // Create default teacher user with associated teacher_id
-      const teacherUser = await this.createUser({
+      // Create default teacher user
+      const [teacherUser] = await this.db.insert(users).values({
         username: 'teacher',
-        password: 'teacher123',
-        role: 'teacher' as const,
-      });
+        password: 'teacher123', // This would be hashed in auth.ts
+        role: 'teacher' as UserRole,
+      }).returning();
       
-      // Update teacher user to include teacher_id
-      await this.updateUser(teacherUser.id, { teacher_id: newTeacher.teacher_id });
+      // Create default teacher profile
+      const [newTeacher] = await this.db.insert(teacher).values({
+        userId: teacherUser.id,
+        fullName: "John Smith",
+        position: "Senior Lecturer",
+        dateOfBirth: "1980-01-01",
+        educationalDepartment: "Physical Education",
+        phone: "+375291234567",
+        nationality: null
+      }).returning();
       
-      // Create default student user with associated student_id
-      const studentUser = await this.createUser({
+      // Create default group
+      const [newGroup] = await this.db.insert(group).values({
+        name: "PE-101",
+        teacherId: newTeacher.teacherId,
+        facultyId: newFaculty.facultyId,
+      }).returning();
+      
+      // Create default student user
+      const [studentUser] = await this.db.insert(users).values({
         username: 'student',
-        password: 'student123',
-        role: 'student' as const,
-      });
+        password: 'student123', // This would be hashed in auth.ts
+        role: 'student' as UserRole,
+      }).returning();
       
-      // Update student user to include student_id
-      await this.updateUser(studentUser.id, { student_id: newStudent.student_id });
+      // Create default student profile
+      await this.db.insert(student).values({
+        userId: studentUser.id,
+        fullName: "Alex Johnson",
+        gender: "male",
+        dateOfBirth: "2000-01-01",
+        placeOfBirth: "Minsk",
+        groupId: newGroup.groupId,
+        medicalGroup: "basic",
+        phone: "+375291234568",
+        nationality: "Belarusian",
+        address: "Minsk, Belarus",
+        schoolGraduated: "School #1",
+        educationalDepartment: "Physical Education"
+      });
     }
   }
 
   // User operations
   async getUser(id: number): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.id, id));
+    // First get the user
+    const [user] = await this.db.select().from(users).where(eq(users.id, id));
+    if (!user) return undefined;
+
+    // If the user is a teacher, get their teacher_id
+    if (user.role === 'teacher') {
+      const [teacherRecord] = await this.db.select().from(teacher).where(eq(teacher.userId, id));
+      if (teacherRecord) {
+        return {
+          ...user,
+          teacher_id: teacherRecord.teacherId
+        };
+      }
+    }
+
+    // If the user is a student, get their student_id
+    if (user.role === 'student') {
+      const [studentRecord] = await this.db.select().from(student).where(eq(student.userId, id));
+      if (studentRecord) {
+        return {
+          ...user,
+          student_id: studentRecord.studentId
+        };
+      }
+    }
+
     return user;
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.username, username));
-    return user;
+    const [user] = await this.db.select().from(users).where(eq(users.username, username));
+    if (!user) return undefined;
+    return this.getUser(user.id);
   }
 
   async getUsersByRole(role: UserRole): Promise<User[]> {
-    return await db.select().from(users).where(eq(users.role, role));
+    return await this.db.select().from(users).where(eq(users.role, role));
   }
 
-  async createUser(userData: InsertUser): Promise<User> {
-    // Ensure role is one of the allowed UserRole values
-    const validatedData = {
-      ...userData,
-      role: userData.role as UserRole
-    };
-    const [user] = await db.insert(users).values([validatedData]).returning();
+  async createUser(userData: { username: string; password: string; role?: UserRole }): Promise<User> {
+    const [user] = await this.db.insert(users).values({
+      username: userData.username,
+      password: userData.password,
+      role: userData.role || 'student',
+    }).returning();
     return user;
   }
 
   async updateUser(id: number, userData: Partial<User>): Promise<User | undefined> {
-    const [updatedUser] = await db
-      .update(users)
-      .set(userData)
-      .where(eq(users.id, id))
-      .returning();
+    const [updatedUser] = await this.db.update(users).set(userData).where(eq(users.id, id)).returning();
     return updatedUser;
   }
 
   async deleteUser(id: number): Promise<boolean> {
-    const result = await db.delete(users).where(eq(users.id, id));
+    const result = await this.db.delete(users).where(eq(users.id, id));
     return result.rowCount !== null && result.rowCount > 0;
   }
 
   // Faculty operations
   async getAllFaculties(): Promise<Faculty[]> {
-    return await db.select().from(faculty);
+    return await this.db.select().from(faculty);
   }
 
   async getFaculty(id: number): Promise<Faculty | undefined> {
-    const [facultyRecord] = await db.select().from(faculty).where(eq(faculty.faculty_id, id));
+    const [facultyRecord] = await this.db.select().from(faculty).where(eq(faculty.facultyId, id));
     return facultyRecord;
   }
 
   async createFaculty(facultyData: InsertFaculty): Promise<Faculty> {
-    const [facultyRecord] = await db.insert(faculty).values([facultyData]).returning();
+    const [facultyRecord] = await this.db.insert(faculty).values(facultyData).returning();
     return facultyRecord;
   }
 
   async updateFaculty(id: number, facultyData: Partial<Faculty>): Promise<Faculty | undefined> {
-    const [updatedFaculty] = await db
+    const [updatedFaculty] = await this.db
       .update(faculty)
       .set(facultyData)
-      .where(eq(faculty.faculty_id, id))
+      .where(eq(faculty.facultyId, id))
       .returning();
     return updatedFaculty;
   }
 
   async deleteFaculty(id: number): Promise<boolean> {
-    const result = await db.delete(faculty).where(eq(faculty.faculty_id, id));
+    const result = await this.db.delete(faculty).where(eq(faculty.facultyId, id));
     return result.rowCount !== null && result.rowCount > 0;
   }
 
   // Group operations
   async getAllGroups(): Promise<Group[]> {
-    return await db.select().from(group);
+    return await this.db.select().from(group);
   }
 
   async getGroupsByFaculty(facultyId: number): Promise<Group[]> {
-    // Note: In the new schema, groups don't directly reference faculty
-    // This would require a more complex query or modifying the schema to maintain this relationship
-    // For now, returning all groups as a placeholder
-    return await db.select().from(group);
+    return await this.db.select().from(group).where(eq(group.facultyId, facultyId));
   }
 
   async getGroup(id: number): Promise<Group | undefined> {
-    const [groupRecord] = await db.select().from(group).where(eq(group.group_id, id));
+    const [groupRecord] = await this.db.select().from(group).where(eq(group.groupId, id));
     return groupRecord;
   }
 
   async createGroup(groupData: InsertGroup): Promise<Group> {
-    const [groupRecord] = await db.insert(group).values([groupData]).returning();
+    const [groupRecord] = await this.db.insert(group).values(groupData).returning();
     return groupRecord;
   }
 
   async updateGroup(id: number, groupData: Partial<Group>): Promise<Group | undefined> {
-    const [updatedGroup] = await db
+    const [updatedGroup] = await this.db
       .update(group)
       .set(groupData)
-      .where(eq(group.group_id, id))
+      .where(eq(group.groupId, id))
       .returning();
     return updatedGroup;
   }
 
   async deleteGroup(id: number): Promise<boolean> {
-    const result = await db.delete(group).where(eq(group.group_id, id));
+    const result = await this.db.delete(group).where(eq(group.groupId, id));
     return result.rowCount !== null && result.rowCount > 0;
   }
 
   // Teacher operations
   async getAllTeachers(): Promise<Teacher[]> {
-    return await db.select().from(teacher);
+    return await this.db.select().from(teacher);
   }
 
   async getTeacher(id: number): Promise<Teacher | undefined> {
-    const [teacherRecord] = await db.select().from(teacher).where(eq(teacher.teacher_id, id));
+    const [teacherRecord] = await this.db.select().from(teacher).where(eq(teacher.teacherId, id));
     return teacherRecord;
   }
 
   async createTeacher(teacherData: InsertTeacher): Promise<Teacher> {
-    const [teacherRecord] = await db.insert(teacher).values([teacherData]).returning();
+    const [teacherRecord] = await this.db.insert(teacher).values({
+      userId: teacherData.userId,
+      fullName: teacherData.fullName,
+      position: teacherData.position,
+      dateOfBirth: teacherData.dateOfBirth,
+      educationalDepartment: teacherData.educationalDepartment,
+      phone: teacherData.phone,
+      nationality: teacherData.nationality,
+    }).returning();
+    
+    // If this teacher is associated with a user, update the user's role
+    if (teacherData.userId) {
+      await this.updateUser(teacherData.userId, { role: 'teacher' });
+    }
+    
     return teacherRecord;
   }
 
   async updateTeacher(id: number, teacherData: Partial<Teacher>): Promise<Teacher | undefined> {
-    const [updatedTeacher] = await db
+    const [updatedTeacher] = await this.db
       .update(teacher)
       .set(teacherData)
-      .where(eq(teacher.teacher_id, id))
+      .where(eq(teacher.teacherId, id))
       .returning();
     return updatedTeacher;
   }
 
   async deleteTeacher(id: number): Promise<boolean> {
-    const result = await db.delete(teacher).where(eq(teacher.teacher_id, id));
+    const result = await this.db.delete(teacher).where(eq(teacher.teacherId, id));
     return result.rowCount !== null && result.rowCount > 0;
   }
 
   // Student operations
   async getAllStudents(): Promise<Student[]> {
-    return await db.select().from(student);
+    return await this.db.select().from(student);
   }
 
   async getStudentsByGroup(groupId: number): Promise<Student[]> {
-    return await db.select().from(student).where(eq(student.group_id, groupId));
+    return await this.db.select().from(student).where(eq(student.groupId, groupId));
   }
 
   async getStudent(id: number): Promise<Student | undefined> {
-    const [studentRecord] = await db.select().from(student).where(eq(student.student_id, id));
+    const [studentRecord] = await this.db.select().from(student).where(eq(student.studentId, id));
     return studentRecord;
   }
 
   async createStudent(studentData: InsertStudent): Promise<Student> {
-    const [studentRecord] = await db.insert(student).values([studentData]).returning();
-    return studentRecord;
+    const [newStudent] = await this.db.insert(student).values({
+      userId: studentData.userId,
+      fullName: studentData.fullName,
+      gender: studentData.gender,
+      dateOfBirth: studentData.dateOfBirth,
+      placeOfBirth: studentData.placeOfBirth,
+      groupId: studentData.groupId,
+      medicalGroup: studentData.medicalGroup,
+      phone: studentData.phone,
+      nationality: studentData.nationality,
+      address: studentData.address,
+      schoolGraduated: studentData.schoolGraduated,
+      educationalDepartment: studentData.educationalDepartment,
+    }).returning();
+    return newStudent;
   }
 
   async updateStudent(id: number, studentData: Partial<Student>): Promise<Student | undefined> {
-    const [updatedStudent] = await db
+    const [updatedStudent] = await this.db
       .update(student)
       .set(studentData)
-      .where(eq(student.student_id, id))
+      .where(eq(student.studentId, id))
       .returning();
     return updatedStudent;
   }
 
   async deleteStudent(id: number): Promise<boolean> {
-    const result = await db.delete(student).where(eq(student.student_id, id));
+    const result = await this.db.delete(student).where(eq(student.studentId, id));
     return result.rowCount !== null && result.rowCount > 0;
   }
 
   // Period operations
   async getAllPeriods(): Promise<Period[]> {
-    return await db.select().from(period);
+    return await this.db.select().from(period);
   }
 
   async getPeriod(id: number): Promise<Period | undefined> {
-    const [periodRecord] = await db.select().from(period).where(eq(period.period_id, id));
+    const [periodRecord] = await this.db.select().from(period).where(eq(period.periodId, id));
     return periodRecord;
   }
 
   async createPeriod(periodData: InsertPeriod): Promise<Period> {
-    const [periodRecord] = await db.insert(period).values([periodData]).returning();
+    const [periodRecord] = await this.db.insert(period).values(periodData).returning();
     return periodRecord;
   }
 
   async updatePeriod(id: number, periodData: Partial<Period>): Promise<Period | undefined> {
-    const [updatedPeriod] = await db
+    const [updatedPeriod] = await this.db
       .update(period)
       .set(periodData)
-      .where(eq(period.period_id, id))
+      .where(eq(period.periodId, id))
       .returning();
     return updatedPeriod;
   }
 
   async deletePeriod(id: number): Promise<boolean> {
-    const result = await db.delete(period).where(eq(period.period_id, id));
+    const result = await this.db.delete(period).where(eq(period.periodId, id));
     return result.rowCount !== null && result.rowCount > 0;
   }
 
   // Physical state operations
   async getPhysicalStatesByStudent(studentId: number): Promise<PhysicalState[]> {
-    return await db.select().from(physical_state).where(eq(physical_state.student_id, studentId));
+    return await this.db.select().from(physical_state).where(eq(physical_state.studentId, studentId));
   }
 
   async getPhysicalState(id: number): Promise<PhysicalState | undefined> {
-    const [physicalStateRecord] = await db.select().from(physical_state).where(eq(physical_state.state_id, id));
+    const [physicalStateRecord] = await this.db.select().from(physical_state).where(eq(physical_state.stateId, id));
     return physicalStateRecord;
   }
 
   async createPhysicalState(physicalStateData: InsertPhysicalState): Promise<PhysicalState> {
-    const [physicalStateRecord] = await db.insert(physical_state).values([physicalStateData]).returning();
+    const [physicalStateRecord] = await this.db.insert(physical_state).values(physicalStateData).returning();
     return physicalStateRecord;
   }
 
   async updatePhysicalState(id: number, physicalStateData: Partial<PhysicalState>): Promise<PhysicalState | undefined> {
-    const [updatedPhysicalState] = await db
+    const [updatedPhysicalState] = await this.db
       .update(physical_state)
       .set(physicalStateData)
-      .where(eq(physical_state.state_id, id))
+      .where(eq(physical_state.stateId, id))
       .returning();
     return updatedPhysicalState;
   }
 
   async deletePhysicalState(id: number): Promise<boolean> {
-    const result = await db.delete(physical_state).where(eq(physical_state.state_id, id));
+    const result = await this.db.delete(physical_state).where(eq(physical_state.stateId, id));
     return result.rowCount !== null && result.rowCount > 0;
   }
 
   // Physical tests operations
   async getPhysicalTestsByStudent(studentId: number): Promise<PhysicalTest[]> {
-    return await db.select().from(physical_tests).where(eq(physical_tests.student_id, studentId));
+    return await this.db.select().from(physical_tests).where(eq(physical_tests.studentId, studentId));
   }
 
   async getPhysicalTest(id: number): Promise<PhysicalTest | undefined> {
-    const [physicalTestRecord] = await db.select().from(physical_tests).where(eq(physical_tests.test_id, id));
+    const [physicalTestRecord] = await this.db.select().from(physical_tests).where(eq(physical_tests.testId, id));
     return physicalTestRecord;
   }
 
   async createPhysicalTest(physicalTestData: InsertPhysicalTest): Promise<PhysicalTest> {
-    const [physicalTestRecord] = await db.insert(physical_tests).values([physicalTestData]).returning();
+    const [physicalTestRecord] = await this.db.insert(physical_tests).values(physicalTestData).returning();
     return physicalTestRecord;
   }
 
   async updatePhysicalTest(id: number, physicalTestData: Partial<PhysicalTest>): Promise<PhysicalTest | undefined> {
-    const [updatedPhysicalTest] = await db
+    const [updatedPhysicalTest] = await this.db
       .update(physical_tests)
       .set(physicalTestData)
-      .where(eq(physical_tests.test_id, id))
+      .where(eq(physical_tests.testId, id))
       .returning();
     return updatedPhysicalTest;
   }
 
   async deletePhysicalTest(id: number): Promise<boolean> {
-    const result = await db.delete(physical_tests).where(eq(physical_tests.test_id, id));
+    const result = await this.db.delete(physical_tests).where(eq(physical_tests.testId, id));
     return result.rowCount !== null && result.rowCount > 0;
   }
 
   // Sport results operations
   async getSportResultsByStudent(studentId: number): Promise<SportResult[]> {
-    return await db.select().from(sport_results).where(eq(sport_results.student_id, studentId));
+    return await this.db.select().from(sport_results).where(eq(sport_results.studentId, studentId));
   }
 
   async getSportResult(id: number): Promise<SportResult | undefined> {
-    const [sportResultRecord] = await db.select().from(sport_results).where(eq(sport_results.result_id, id));
+    const [sportResultRecord] = await this.db.select().from(sport_results).where(eq(sport_results.sportResultId, id));
     return sportResultRecord;
   }
 
   async createSportResult(sportResultData: InsertSportResult): Promise<SportResult> {
-    const [sportResultRecord] = await db.insert(sport_results).values([sportResultData]).returning();
+    const [sportResultRecord] = await this.db.insert(sport_results).values(sportResultData).returning();
     return sportResultRecord;
   }
 
   async updateSportResult(id: number, sportResultData: Partial<SportResult>): Promise<SportResult | undefined> {
-    const [updatedSportResult] = await db
+    const [updatedSportResult] = await this.db
       .update(sport_results)
       .set(sportResultData)
-      .where(eq(sport_results.result_id, id))
+      .where(eq(sport_results.sportResultId, id))
       .returning();
     return updatedSportResult;
   }
 
   async deleteSportResult(id: number): Promise<boolean> {
-    const result = await db.delete(sport_results).where(eq(sport_results.result_id, id));
+    const result = await this.db.delete(sport_results).where(eq(sport_results.sportResultId, id));
     return result.rowCount !== null && result.rowCount > 0;
   }
 
   // Result operations
   async getResultsByStudent(studentId: number): Promise<Result[]> {
-    return await db.select().from(resultTable).where(eq(resultTable.student_id, studentId));
+    return await this.db.select().from(resultTable).where(eq(resultTable.studentId, studentId));
   }
 
   async getResultsByGroup(groupId: number): Promise<Result[]> {
-    // This is a more complex query that requires joining tables
-    // First, get students in this group
-    const studentsInGroup = await this.getStudentsByGroup(groupId);
-    const studentIds = studentsInGroup.map(student => student.student_id);
-    
-    // Then get results for these students
-    if (studentIds.length > 0) {
-      // Build WHERE conditions for each student_id
-      const conditions = studentIds.map(id => eq(resultTable.student_id, id));
-      // Combine conditions with OR
-      return await db.select().from(resultTable).where(conditions[0]);
-    }
-    return [];
+    return await this.db.select().from(resultTable).where(eq(resultTable.groupId, groupId));
   }
 
   async getResultsByPeriod(periodId: number): Promise<Result[]> {
-    return await db.select().from(resultTable).where(eq(resultTable.period_id, periodId));
+    return await this.db.select().from(resultTable).where(eq(resultTable.periodId, periodId));
   }
 
   async getResult(id: number): Promise<Result | undefined> {
-    const [resultRecord] = await db.select().from(resultTable).where(eq(resultTable.result_id, id));
+    const [resultRecord] = await this.db.select().from(resultTable).where(eq(resultTable.resultId, id));
     return resultRecord;
   }
 
   async createResult(resultData: InsertResult): Promise<Result> {
-    const [resultRecord] = await db.insert(resultTable).values([resultData]).returning();
+    const [resultRecord] = await this.db.insert(resultTable).values(resultData).returning();
     return resultRecord;
   }
 
   async updateResult(id: number, resultData: Partial<Result>): Promise<Result | undefined> {
-    const [updatedResult] = await db
+    const [updatedResult] = await this.db
       .update(resultTable)
       .set(resultData)
-      .where(eq(resultTable.result_id, id))
+      .where(eq(resultTable.resultId, id))
       .returning();
     return updatedResult;
   }
 
   async deleteResult(id: number): Promise<boolean> {
-    const deleteResult = await db.delete(resultTable).where(eq(resultTable.result_id, id));
-    return deleteResult.rowCount !== null && deleteResult.rowCount > 0;
+    const result = await this.db.delete(resultTable).where(eq(resultTable.resultId, id));
+    return result.rowCount !== null && result.rowCount > 0;
+  }
+
+  // Student profile methods
+  async getStudentProfile(studentId: number): Promise<StudentProfile | undefined> {
+    const studentData = await this.getStudent(studentId);
+    if (!studentData) return undefined;
+
+    const profile: StudentProfile = {
+      fullName: studentData.fullName,
+      gender: studentData.gender as "male" | "female" | "other",
+      dateOfBirth: studentData.dateOfBirth,
+      placeOfBirth: studentData.placeOfBirth || "",
+      address: studentData.address || "",
+      nationality: studentData.nationality || "",
+      schoolGraduated: studentData.schoolGraduated || "",
+      medicalGroup: studentData.medicalGroup as "basic" | "preparatory" | "special",
+      medicalDiagnosis: studentData.medicalDiagnosis || "",
+      previousIllnesses: studentData.previousIllnesses || "",
+      educationalDepartment: studentData.educationalDepartment || "",
+      activeSports: studentData.activeSports || "",
+      previousSports: studentData.previousSports || "",
+      additionalInfo: studentData.additionalInfo || "",
+      phone: studentData.phone,
+    };
+
+    return profile;
+  }
+
+  async updateStudentProfile(studentId: number, data: Partial<StudentProfile>): Promise<StudentProfile> {
+    const studentData = await this.getStudent(studentId);
+    if (!studentData) {
+      throw new Error("Student not found");
+    }
+
+    const [updatedStudent] = await this.db
+      .update(student)
+      .set({
+        fullName: data.fullName || studentData.fullName,
+        gender: data.gender || studentData.gender,
+        dateOfBirth: data.dateOfBirth || studentData.dateOfBirth,
+        placeOfBirth: data.placeOfBirth,
+        address: data.address,
+        nationality: data.nationality,
+        schoolGraduated: data.schoolGraduated,
+        medicalGroup: data.medicalGroup || studentData.medicalGroup,
+        medicalDiagnosis: data.medicalDiagnosis,
+        previousIllnesses: data.previousIllnesses,
+        educationalDepartment: data.educationalDepartment,
+        activeSports: data.activeSports,
+        previousSports: data.previousSports,
+        additionalInfo: data.additionalInfo,
+        phone: data.phone || studentData.phone,
+      })
+      .where(eq(student.studentId, studentId))
+      .returning();
+
+    if (!updatedStudent) {
+      throw new Error("Failed to update student profile");
+    }
+
+    return this.getStudentProfile(studentId) as Promise<StudentProfile>;
+  }
+
+  // Teacher profile methods
+  async getTeacherProfile(teacherId: number): Promise<TeacherProfile | undefined> {
+    const teacherData = await this.getTeacher(teacherId);
+    if (!teacherData) return undefined;
+
+    const profile: TeacherProfile = {
+      fullName: teacherData.fullName,
+      position: teacherData.position,
+      dateOfBirth: teacherData.dateOfBirth || undefined,
+      educationalDepartment: teacherData.educationalDepartment || undefined,
+      nationality: teacherData.nationality || undefined,
+      phone: teacherData.phone,
+    };
+
+    return profile;
+  }
+
+  async updateTeacherProfile(teacherId: number, data: Partial<TeacherProfile>): Promise<TeacherProfile> {
+    const teacherData = await this.getTeacher(teacherId);
+    if (!teacherData) {
+      throw new Error("Teacher not found");
+    }
+
+    const [updatedTeacher] = await this.db
+      .update(teacher)
+      .set({
+        fullName: data.fullName || teacherData.fullName,
+        position: data.position || teacherData.position,
+        dateOfBirth: data.dateOfBirth === undefined ? teacherData.dateOfBirth : data.dateOfBirth,
+        educationalDepartment: data.educationalDepartment === undefined ? teacherData.educationalDepartment : data.educationalDepartment,
+        nationality: data.nationality === undefined ? teacherData.nationality : data.nationality,
+        phone: data.phone || teacherData.phone,
+      })
+      .where(eq(teacher.teacherId, teacherId))
+      .returning();
+
+    if (!updatedTeacher) {
+      throw new Error("Failed to update teacher profile");
+    }
+
+    return this.getTeacherProfile(teacherId) as Promise<TeacherProfile>;
   }
 }
 
-export const storage = new DatabaseStorage();
+export const storage = new Storage(db);

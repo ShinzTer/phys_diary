@@ -3,13 +3,17 @@ import {
   useQuery,
   useMutation,
   UseMutationResult,
+  QueryFunction,
+  UseQueryResult,
 } from "@tanstack/react-query";
-import { insertUserSchema, User } from "@shared/schema";
+import { insertUserSchema, User, Student, Teacher } from "@shared/schema";
 import { getQueryFn, apiRequest, queryClient } from "../lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
 
-type UserWithoutPassword = Omit<User, "password">;
+type UserWithoutPassword = Omit<User, "password"> & {
+  fullName?: string;
+};
 
 type AuthContextType = {
   user: UserWithoutPassword | null;
@@ -43,21 +47,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     data: user,
     error,
     isLoading,
-  } = useQuery<UserWithoutPassword, Error>({
+  } = useQuery<UserWithoutPassword | null, Error>({
     queryKey: ["/api/user"],
-    queryFn: getQueryFn({ on401: "returnNull" }),
+    queryFn: async ({ signal }) => {
+      const baseUser = await getQueryFn({ on401: "returnNull" })({ 
+        queryKey: ["/api/user"], 
+        signal, 
+        meta: undefined 
+      }) as UserWithoutPassword | null;
+      
+      if (!baseUser) return null;
+
+      // Fetch full name based on role
+      if (baseUser.role === "student" || baseUser.role === "teacher") {
+        const profileRes = await apiRequest("GET", `/api/${baseUser.role}/profile`);
+        const profile = await profileRes.json() as { fullName: string };
+        return { ...baseUser, fullName: profile.fullName };
+      }
+
+      return baseUser;
+    },
   });
 
-  const loginMutation = useMutation({
+  const loginMutation = useMutation<UserWithoutPassword, Error, LoginData>({
     mutationFn: async (credentials: LoginData) => {
-      const res = await apiRequest("POST", "/api/login", credentials);
-      return await res.json();
+      return await apiRequest("POST", "/api/login", credentials) as UserWithoutPassword;
     },
     onSuccess: (user: UserWithoutPassword) => {
       queryClient.setQueryData(["/api/user"], user);
       toast({
         title: "Login successful",
-        description: `Welcome back, ${user.fullName || user.username}!`,
+        description: `Welcome back, ${user.username}!`,
       });
     },
     onError: (error: Error) => {
@@ -73,14 +93,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     mutationFn: async (credentials: RegisterData) => {
       // Remove confirmPassword before sending to API
       const { confirmPassword, ...userData } = credentials;
-      const res = await apiRequest("POST", "/api/register", userData);
-      return await res.json();
+      return await apiRequest("POST", "/api/register", userData);
     },
     onSuccess: (user: UserWithoutPassword) => {
       queryClient.setQueryData(["/api/user"], user);
       toast({
         title: "Registration successful",
-        description: `Welcome, ${user.fullName || user.username}!`,
+        description: `Welcome, ${user.username}!`,
       });
     },
     onError: (error: Error) => {

@@ -67,6 +67,12 @@ const visualSettingsSchema = z.object({
 
 type VisualSettingsValues = z.infer<typeof visualSettingsSchema>;
 
+interface UserData {
+  id: string;
+  visualSettings?: string;
+  // Add other user data fields as needed
+}
+
 export default function Settings() {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -83,7 +89,7 @@ export default function Settings() {
   });
 
   // Get existing settings from user data
-  const { data: userData, isLoading } = useQuery({
+  const { data: userData, isLoading } = useQuery<UserData>({
     queryKey: [`/api/profile/${user?.id}`],
   });
 
@@ -191,41 +197,109 @@ export default function Settings() {
 
   // Apply visual settings to the application
   function applyVisualSettings(settings: VisualSettingsValues) {
-    // Apply theme
     const htmlElement = document.documentElement;
     
-    // Theme (light/dark)
-    if (settings.theme === "dark") {
-      htmlElement.classList.add("dark");
-    } else if (settings.theme === "light") {
-      htmlElement.classList.remove("dark");
-    } else {
-      // System theme
-      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-      if (prefersDark) {
+    function setThemeClass(isDark: boolean) {
+      if (isDark) {
         htmlElement.classList.add("dark");
+        // Apply dark mode CSS variables
+        htmlElement.style.setProperty('--background', '240 10% 3.9%');
+        htmlElement.style.setProperty('--foreground', '0 0% 98%');
+        htmlElement.style.setProperty('--card', '240 10% 3.9%');
+        htmlElement.style.setProperty('--card-foreground', '0 0% 98%');
+        htmlElement.style.setProperty('--popover', '240 10% 3.9%');
+        htmlElement.style.setProperty('--popover-foreground', '0 0% 98%');
+        htmlElement.style.setProperty('--muted', '240 3.7% 15.9%');
+        htmlElement.style.setProperty('--muted-foreground', '240 5% 64.9%');
+        htmlElement.style.setProperty('--border', '240 3.7% 15.9%');
+        htmlElement.style.setProperty('--input', '240 3.7% 15.9%');
       } else {
         htmlElement.classList.remove("dark");
+        // Apply light mode CSS variables
+        htmlElement.style.setProperty('--background', '0 0% 100%');
+        htmlElement.style.setProperty('--foreground', '240 10% 3.9%');
+        htmlElement.style.setProperty('--card', '0 0% 100%');
+        htmlElement.style.setProperty('--card-foreground', '240 10% 3.9%');
+        htmlElement.style.setProperty('--popover', '0 0% 100%');
+        htmlElement.style.setProperty('--popover-foreground', '240 10% 3.9%');
+        htmlElement.style.setProperty('--muted', '240 4.8% 95.9%');
+        htmlElement.style.setProperty('--muted-foreground', '240 3.8% 46.1%');
+        htmlElement.style.setProperty('--border', '240 5.9% 90%');
+        htmlElement.style.setProperty('--input', '240 5.9% 90%');
       }
     }
-    
-    // Font size
-    htmlElement.style.fontSize = {
-      small: "14px",
-      medium: "16px",
-      large: "18px",
-      "extra-large": "20px"
-    }[settings.fontSize] || "16px";
+
+    // Remove any existing media query listeners
+    const existingListener = window.matchMedia("(prefers-color-scheme: dark)").removeEventListener('change', () => {});
+
+    // Theme (light/dark/system)
+    if (settings.theme === "dark") {
+      setThemeClass(true);
+    } else if (settings.theme === "light") {
+      setThemeClass(false);
+    } else {
+      // System theme
+      const systemThemeMedia = window.matchMedia("(prefers-color-scheme: dark)");
+      setThemeClass(systemThemeMedia.matches);
+      
+      // Add listener for system theme changes
+      systemThemeMedia.addEventListener('change', (e) => {
+        setThemeClass(e.matches);
+      });
+    }
+
+    // Apply color scheme
+    const colorSchemes = {
+      blue: {
+        primary: '221.2 83.2% 53.3%',
+        'primary-foreground': '210 40% 98%',
+      },
+      green: {
+        primary: '142.1 76.2% 36.3%',
+        'primary-foreground': '355.7 100% 97.3%',
+      },
+      purple: {
+        primary: '262.1 83.3% 57.8%',
+        'primary-foreground': '210 40% 98%',
+      },
+      orange: {
+        primary: '24.6 95% 53.1%',
+        'primary-foreground': '60 9.1% 97.8%',
+      },
+      red: {
+        primary: '0 84.2% 60.2%',
+        'primary-foreground': '355.7 100% 97.3%',
+      },
+    };
+
+    const selectedScheme = colorSchemes[settings.colorScheme as keyof typeof colorSchemes];
+    if (selectedScheme) {
+      Object.entries(selectedScheme).forEach(([key, value]) => {
+        htmlElement.style.setProperty(`--${key}`, value);
+      });
+    }
     
     // Reduced motion
     if (settings.reduceMotion) {
-      htmlElement.classList.add("reduce-motion");
+      htmlElement.classList.add("motion-reduce");
     } else {
-      htmlElement.classList.remove("reduce-motion");
+      htmlElement.classList.remove("motion-reduce");
     }
     
     // High contrast
     if (settings.contrastMode === "high") {
+      // Increase contrast by adjusting the foreground colors
+      const contrastAdjustment = (isDark: boolean) => {
+        if (isDark) {
+          htmlElement.style.setProperty('--foreground', '0 0% 100%');
+          htmlElement.style.setProperty('--muted-foreground', '240 5% 84.9%');
+        } else {
+          htmlElement.style.setProperty('--foreground', '240 10% 0%');
+          htmlElement.style.setProperty('--muted-foreground', '240 3.8% 26.1%');
+        }
+      };
+      
+      contrastAdjustment(htmlElement.classList.contains("dark"));
       htmlElement.classList.add("high-contrast");
     } else {
       htmlElement.classList.remove("high-contrast");

@@ -23,7 +23,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
       <div className="flex flex-1 overflow-hidden">
         <Sidebar isMobileSidebarOpen={mobileSidebarOpen} />
         
-        <main className="flex-1 overflow-y-auto bg-neutral-50 pb-16 md:pb-0">
+        <main className="flex-1 overflow-y-auto bg-background text-foreground">
           {children}
         </main>
       </div>
@@ -33,7 +33,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
       {/* Overlay for mobile sidebar */}
       {mobileSidebarOpen && (
         <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-10 md:hidden"
+          className="fixed inset-0 bg-black/50 z-10 md:hidden"
           onClick={() => setMobileSidebarOpen(false)}
         />
       )}

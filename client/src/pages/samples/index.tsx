@@ -30,21 +30,31 @@ import { Loader2, Search, Plus, Pencil, MoreHorizontal, ArrowUpDown } from "luci
 import { SAMPLE_TYPES } from "@shared/schema";
 import { format } from "date-fns";
 
+interface PhysicalState {
+  id: number;
+  student_id: number;
+  sample_type: string;
+  value: string;
+  notes?: string;
+  date: string;
+  created_at: string;
+}
+
 export default function Samples() {
   const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [sampleTypeFilter, setSampleTypeFilter] = useState<string>("all");
   
   // Fetch samples for current user (if student) or all samples (if teacher/admin)
-  const { data: samples, isLoading } = useQuery({
-    queryKey: [user?.role === "student" ? `/api/samples/${user.id}` : "/api/samples"],
+  const { data: samples, isLoading } = useQuery<PhysicalState[]>({
+    queryKey: [user?.role === "student" ? `/api/physical-states/${user.id}` : "/api/physical-states"],
   });
   
   // Filter samples based on search term and sample type
-  const filteredSamples = samples?.filter(sample => {
-    const matchesSearch = sample.sampleType.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  const filteredSamples = samples?.filter((sample: PhysicalState) => {
+    const matchesSearch = sample.sample_type.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          sample.value.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesType = sampleTypeFilter === "all" || sample.sampleType === sampleTypeFilter;
+    const matchesType = sampleTypeFilter === "all" || sample.sample_type === sampleTypeFilter;
     
     return matchesSearch && matchesType;
   });
@@ -149,7 +159,7 @@ export default function Samples() {
                         {filteredSamples?.map((sample) => (
                           <tr key={sample.id}>
                             <td className="px-4 py-4 whitespace-nowrap font-medium">
-                              {formatSampleType(sample.sampleType)}
+                              {formatSampleType(sample.sample_type)}
                             </td>
                             <td className="px-4 py-4 whitespace-nowrap">
                               {sample.value}

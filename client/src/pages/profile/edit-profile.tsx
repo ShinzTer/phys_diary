@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
-import { queryClient } from "@/lib/queryClient";
+import { queryClient, apiRequest, getQueryFn } from "@/lib/queryClient";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { userProfileSchema, MEDICAL_GROUP_TYPES } from "@shared/schema";
+import { userProfileSchema, MEDICAL_GROUP_TYPES, type UserProfile } from "@shared/schema";
 import MainLayout from "@/components/layout/main-layout";
 import { useLocation } from "wouter";
 import { 
@@ -27,7 +27,6 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { 
   Select,
@@ -43,14 +42,13 @@ import {
   TabsTrigger 
 } from "@/components/ui/tabs";
 import { Loader2, Save, ArrowLeft } from "lucide-react";
-import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
-const formSchema = userProfileSchema.extend({
-  dateOfBirth: z.string().optional(),
-});
+type ProfileFormValues = UserProfile;
 
-type ProfileFormValues = z.infer<typeof formSchema>;
+type ProfileResponse = {
+  profile: UserProfile;
+};
 
 export default function EditProfile() {
   const { user } = useAuth();
@@ -58,16 +56,44 @@ export default function EditProfile() {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("personal");
   
-  const { data: profile, isLoading } = useQuery({
-    queryKey: [`/api/profile/${user?.id}`],
+  // Redirect admin users away from profile page
+  useEffect(() => {
+    if (user?.role === "admin") {
+      toast({
+        title: "Access Restricted",
+        description: "Admin users don't have a profile page.",
+        variant: "destructive"
+      });
+      navigate('/');
+    }
+  }, [user?.role, navigate, toast]);
+
+  // If user is admin, don't render the profile page
+  if (user?.role === "admin") {
+    return null;
+  }
+
+  // First get the user record by userId
+  const { data: userRecord, isLoading: isLoadingRecord } = useQuery<{ teacherId?: number; studentId?: number }>({
+    queryKey: [`/api/users/${user?.id}/record`],
+    queryFn: getQueryFn({ on401: "throw" }),
+    enabled: !!user && (user.role === "teacher" || user.role === "student"),
+  });
+
+  // Then get the profile using the teacherId/studentId from the record
+  const { data: profile, isLoading: isLoadingProfile } = useQuery<ProfileResponse>({
+    queryKey: [`/api/profile/${user?.role}/${userRecord?.teacherId || userRecord?.studentId}`],
+    queryFn: getQueryFn({ on401: "throw" }),
+    enabled: !!userRecord && (!!userRecord.teacherId || !!userRecord.studentId),
   });
   
   const updateProfileMutation = useMutation({
     mutationFn: async (data: ProfileFormValues) => {
-      await apiRequest("PUT", `/api/profile/${user?.id}`, data);
+      const id = user?.role === "teacher" ? userRecord?.teacherId : userRecord?.studentId;
+      await apiRequest("PUT", `/api/profile/${user?.role}/${id}`, data);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/profile/${user?.id}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/profile/${user?.role}/${userRecord?.teacherId || userRecord?.studentId}`] });
       toast({
         title: "Profile updated",
         description: "Your profile has been updated successfully."
@@ -84,46 +110,54 @@ export default function EditProfile() {
   });
 
   const form = useForm<ProfileFormValues>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(userProfileSchema),
     defaultValues: {
+      role: user?.role || "student",
       fullName: "",
-      gender: "",
       dateOfBirth: "",
-      placeOfBirth: "",
-      address: "",
+      phone: "",
       nationality: "",
-      previousSchool: "",
-      facultyId: undefined,
-      groupId: undefined,
-      medicalGroup: "basic",
-      diagnosis: "",
-      previousIllnesses: "",
       educationalDepartment: "",
-      currentSports: "",
-      previousSports: "",
-      additionalInfo: ""
+      // Student-specific fields
+      ...(user?.role === "student" && {
+        gender: "male",
+        placeOfBirth: "",
+        address: "",
+        schoolGraduated: "",
+        medicalGroup: "basic",
+        medicalDiagnosis: "",
+        previousIllnesses: "",
+        activeSports: "",
+        previousSports: "",
+        additionalInfo: ""
+      }),
+      // Teacher-specific fields
+      ...(user?.role === "teacher" && {
+        position: ""
+      })
     }
   });
 
   // Update form when profile data is loaded
-  useState(() => {
-    if (profile) {
+  useEffect(() => {
+    if (profile?.profile) {
       // Format date string for date input
-      let dateOfBirth = profile.dateOfBirth ? new Date(profile.dateOfBirth).toISOString().split('T')[0] : "";
+      const formattedProfile = {
+        ...profile.profile,
+        dateOfBirth: profile.profile.dateOfBirth ? new Date(profile.profile.dateOfBirth).toISOString().split('T')[0] : "",
+        role: user?.role
+      };
       
       // Set each field value
-      Object.entries({
-        ...profile,
-        dateOfBirth
-      }).forEach(([key, value]) => {
+      Object.entries(formattedProfile).forEach(([key, value]) => {
         if (value !== undefined && value !== null) {
-          form.setValue(key as any, value);
+          form.setValue(key as keyof ProfileFormValues, value);
         }
       });
     }
-  });
+  }, [profile, user?.role, form]);
 
-  if (isLoading) {
+  if (isLoadingRecord || isLoadingProfile) {
     return (
       <MainLayout>
         <div className="flex items-center justify-center min-h-screen">
@@ -173,8 +207,12 @@ export default function EditProfile() {
                   <TabsList className="mb-4">
                     <TabsTrigger value="personal">Personal</TabsTrigger>
                     <TabsTrigger value="education">Education</TabsTrigger>
-                    <TabsTrigger value="medical">Medical</TabsTrigger>
-                    <TabsTrigger value="sports">Sports</TabsTrigger>
+                    {user?.role === "student" && (
+                      <>
+                        <TabsTrigger value="medical">Medical</TabsTrigger>
+                        <TabsTrigger value="sports">Sports</TabsTrigger>
+                      </>
+                    )}
                   </TabsList>
                   
                   <TabsContent value="personal">
@@ -194,34 +232,50 @@ export default function EditProfile() {
                           )}
                         />
                         
-                        <FormField
-                          control={form.control}
-                          name="gender"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Gender</FormLabel>
-                              <Select 
-                                onValueChange={field.onChange} 
-                                defaultValue={field.value}
-                              >
+                        {user?.role === "student" && (
+                          <FormField
+                            control={form.control}
+                            name="gender"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Gender</FormLabel>
+                                <Select 
+                                  onValueChange={field.onChange} 
+                                  defaultValue={field.value}
+                                >
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select gender" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    <SelectItem value="male">Male</SelectItem>
+                                    <SelectItem value="female">Female</SelectItem>
+                                    <SelectItem value="other">Other</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        )}
+
+                        {user?.role === "teacher" && (
+                          <FormField
+                            control={form.control}
+                            name="position"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Position</FormLabel>
                                 <FormControl>
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Select your gender" />
-                                  </SelectTrigger>
+                                  <Input placeholder="Senior Lecturer" {...field} />
                                 </FormControl>
-                                <SelectContent>
-                                  <SelectItem value="male">Male</SelectItem>
-                                  <SelectItem value="female">Female</SelectItem>
-                                  <SelectItem value="other">Other</SelectItem>
-                                </SelectContent>
-                              </Select>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        )}
+
                         <FormField
                           control={form.control}
                           name="dateOfBirth"
@@ -235,20 +289,37 @@ export default function EditProfile() {
                             </FormItem>
                           )}
                         />
-                        
+
                         <FormField
                           control={form.control}
-                          name="placeOfBirth"
+                          name="phone"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Place of Birth</FormLabel>
+                              <FormLabel>Phone Number</FormLabel>
                               <FormControl>
-                                <Input placeholder="City, Country" {...field} />
+                                <Input placeholder="+375XXXXXXXXX" {...field} />
                               </FormControl>
+                              <FormDescription>Format: +375*********</FormDescription>
                               <FormMessage />
                             </FormItem>
                           )}
                         />
+
+                        {user?.role === "student" && (
+                          <FormField
+                            control={form.control}
+                            name="address"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Address</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="123 Main St" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        )}
                         
                         <FormField
                           control={form.control}
@@ -257,264 +328,193 @@ export default function EditProfile() {
                             <FormItem>
                               <FormLabel>Nationality</FormLabel>
                               <FormControl>
-                                <Input placeholder="Your nationality" {...field} />
+                                <Input placeholder="Belarusian" {...field} />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
                           )}
                         />
                       </div>
-                      
+                    </div>
+                  </TabsContent>
+                  
+                  <TabsContent value="education">
+                    <div className="grid gap-6">
                       <FormField
                         control={form.control}
-                        name="address"
+                        name="educationalDepartment"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Address</FormLabel>
+                            <FormLabel>Educational Department</FormLabel>
                             <FormControl>
-                              <Textarea 
-                                placeholder="Your current address" 
-                                className="resize-none" 
-                                {...field} 
-                              />
+                              <Input placeholder="Department name" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
-                    </div>
-                  </TabsContent>
-                  
-                  <TabsContent value="education">
-                    <div className="grid gap-6">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <FormField
-                          control={form.control}
-                          name="previousSchool"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Previous School</FormLabel>
-                              <FormControl>
-                                <Input placeholder="Name of your previous school" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        
-                        <FormField
-                          control={form.control}
-                          name="educationalDepartment"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Educational Department</FormLabel>
-                              <FormControl>
-                                <Input placeholder="Your educational department" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
                       
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {user?.role === "student" && (
                         <FormField
                           control={form.control}
-                          name="facultyId"
+                          name="schoolGraduated"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Faculty ID</FormLabel>
+                              <FormLabel>School Graduated</FormLabel>
                               <FormControl>
-                                <Input 
-                                  type="number" 
-                                  placeholder="Your faculty ID" 
-                                  {...field}
-                                  onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
-                                />
+                                <Input placeholder="Previous school name" {...field} />
                               </FormControl>
-                              <FormDescription>Please enter your assigned faculty ID</FormDescription>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        
-                        <FormField
-                          control={form.control}
-                          name="groupId"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Group ID</FormLabel>
-                              <FormControl>
-                                <Input 
-                                  type="number" 
-                                  placeholder="Your group ID" 
-                                  {...field}
-                                  onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
-                                />
-                              </FormControl>
-                              <FormDescription>Please enter your assigned group ID</FormDescription>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                    </div>
-                  </TabsContent>
-                  
-                  <TabsContent value="medical">
-                    <div className="grid gap-6">
-                      <FormField
-                        control={form.control}
-                        name="medicalGroup"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Medical Group</FormLabel>
-                            <Select 
-                              onValueChange={field.onChange} 
-                              defaultValue={field.value}
-                            >
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select medical group" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                {MEDICAL_GROUP_TYPES.map(type => (
-                                  <SelectItem key={type} value={type} className="capitalize">
-                                    {type}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <FormDescription>Your assigned medical category</FormDescription>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      {form.watch("medicalGroup") && form.watch("medicalGroup") !== "basic" && (
-                        <FormField
-                          control={form.control}
-                          name="diagnosis"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Diagnosis</FormLabel>
-                              <FormControl>
-                                <Textarea 
-                                  placeholder="Medical diagnosis details" 
-                                  className="resize-none" 
-                                  {...field} 
-                                />
-                              </FormControl>
-                              <FormDescription>Required for special or preparatory medical groups</FormDescription>
                               <FormMessage />
                             </FormItem>
                           )}
                         />
                       )}
-                      
-                      <FormField
-                        control={form.control}
-                        name="previousIllnesses"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Previous Illnesses</FormLabel>
-                            <FormControl>
-                              <Textarea 
-                                placeholder="List any previous illnesses or medical conditions" 
-                                className="resize-none" 
-                                {...field} 
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
                     </div>
                   </TabsContent>
                   
-                  <TabsContent value="sports">
-                    <div className="grid gap-6">
-                      <FormField
-                        control={form.control}
-                        name="currentSports"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Currently Engaged In (Sports)</FormLabel>
-                            <FormControl>
-                              <Textarea 
-                                placeholder="List sports you are currently engaged in" 
-                                className="resize-none" 
-                                {...field} 
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <FormField
-                        control={form.control}
-                        name="previousSports"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Previously Engaged In (Sports)</FormLabel>
-                            <FormControl>
-                              <Textarea 
-                                placeholder="List sports you were previously engaged in" 
-                                className="resize-none" 
-                                {...field} 
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <FormField
-                        control={form.control}
-                        name="additionalInfo"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Additional Information</FormLabel>
-                            <FormControl>
-                              <Textarea 
-                                placeholder="Any additional information about yourself" 
-                                className="resize-none" 
-                                {...field} 
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                  </TabsContent>
+                  {user?.role === "student" && (
+                    <>
+                      <TabsContent value="medical">
+                        <div className="grid gap-6">
+                          <FormField
+                            control={form.control}
+                            name="medicalGroup"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Medical Group</FormLabel>
+                                <Select 
+                                  onValueChange={field.onChange} 
+                                  defaultValue={field.value}
+                                >
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select medical group" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    {MEDICAL_GROUP_TYPES.map(type => (
+                                      <SelectItem key={type} value={type} className="capitalize">
+                                        {type}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                                <FormDescription>Your assigned medical category</FormDescription>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          <FormField
+                            control={form.control}
+                            name="medicalDiagnosis"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Medical Diagnosis</FormLabel>
+                                <FormControl>
+                                  <Textarea 
+                                    placeholder="Enter any medical diagnoses" 
+                                    className="resize-none" 
+                                    {...field} 
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          <FormField
+                            control={form.control}
+                            name="previousIllnesses"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Previous Illnesses</FormLabel>
+                                <FormControl>
+                                  <Textarea 
+                                    placeholder="List any previous illnesses" 
+                                    className="resize-none" 
+                                    {...field} 
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                      </TabsContent>
+
+                      <TabsContent value="sports">
+                        <div className="grid gap-6">
+                          <FormField
+                            control={form.control}
+                            name="activeSports"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Currently Engaged In (Sports)</FormLabel>
+                                <FormControl>
+                                  <Textarea 
+                                    placeholder="List sports you are currently engaged in" 
+                                    className="resize-none" 
+                                    {...field} 
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={form.control}
+                            name="previousSports"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Previously Engaged In (Sports)</FormLabel>
+                                <FormControl>
+                                  <Textarea 
+                                    placeholder="List sports you were previously engaged in" 
+                                    className="resize-none" 
+                                    {...field} 
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={form.control}
+                            name="additionalInfo"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Additional Information</FormLabel>
+                                <FormControl>
+                                  <Textarea 
+                                    placeholder="Any additional information about yourself" 
+                                    className="resize-none" 
+                                    {...field} 
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                      </TabsContent>
+                    </>
+                  )}
                 </Tabs>
               </CardContent>
-              <CardFooter className="flex justify-between">
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={navigateToProfile}
-                >
-                  Cancel
-                </Button>
+              <CardFooter>
                 <Button 
                   type="submit" 
                   disabled={updateProfileMutation.isPending}
+                  className="ml-auto"
                 >
-                  {updateProfileMutation.isPending ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Saving...
-                    </>
-                  ) : (
-                    <>
-                      <Save className="mr-2 h-4 w-4" />
-                      Save Changes
-                    </>
+                  {updateProfileMutation.isPending && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   )}
+                  <Save className="mr-2 h-4 w-4" />
+                  Save Changes
                 </Button>
               </CardFooter>
             </Card>

@@ -33,7 +33,7 @@ export default function Header({ toggleSidebar }: HeaderProps) {
   };
 
   return (
-    <header className="bg-primary text-white shadow-md z-10">
+    <header className="bg-primary text-primary-foreground shadow-md z-10">
       <div className="container mx-auto px-4 py-3 flex justify-between items-center">
         <div className="flex items-center">
           <button 
@@ -52,12 +52,12 @@ export default function Header({ toggleSidebar }: HeaderProps) {
           <div className="hidden md:flex items-center">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="flex items-center space-x-2 hover:bg-primary-light px-2 py-1 rounded-md">
+                <button className="flex items-center space-x-2 hover:bg-primary/90 px-2 py-1 rounded-md">
                   <span className="text-sm">{user?.fullName || user?.username}</span>
                   <Avatar className="h-8 w-8">
                     <AvatarImage src="" alt={user?.fullName || user?.username} />
-                    <AvatarFallback className="bg-white text-primary">
-                      {user?.fullName ? getInitials(user.fullName) : user?.username.substring(0, 2).toUpperCase()}
+                    <AvatarFallback className="bg-muted text-muted-foreground">
+                      {user?.fullName ? getInitials(user.fullName) : user?.username?.substring(0, 2).toUpperCase() || '??'}
                     </AvatarFallback>
                   </Avatar>
                   <ChevronDown className="h-4 w-4" />
@@ -65,7 +65,7 @@ export default function Header({ toggleSidebar }: HeaderProps) {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuLabel>
-                  <div className="font-normal text-sm text-gray-500">Signed in as</div>
+                  <div className="font-normal text-sm text-muted-foreground">Signed in as</div>
                   <div className="font-medium">{user?.username}</div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
@@ -80,7 +80,7 @@ export default function Header({ toggleSidebar }: HeaderProps) {
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout} className="text-red-600 cursor-pointer">
+                <DropdownMenuItem onClick={handleLogout} className="text-destructive cursor-pointer">
                   Log out
                 </DropdownMenuItem>
               </DropdownMenuContent>

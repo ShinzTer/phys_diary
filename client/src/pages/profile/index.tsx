@@ -20,23 +20,34 @@ import { Button } from "@/components/ui/button";
 import { Loader2, Edit, UserCheck, Award, Calendar, Flag, Home, School, Users, Heart, BookOpen, Activity } from "lucide-react";
 import { format } from "date-fns";
 import { Separator } from "@/components/ui/separator";
+import { type User, type StudentProfile, type TeacherProfile, type PhysicalTest, type PhysicalSample } from "@/lib/types";
+
+interface ProfileResponse {
+  id: number;
+  username: string;
+  role: "admin" | "teacher" | "student";
+  profile: StudentProfile | TeacherProfile | null;
+}
 
 export default function Profile() {
   const { user } = useAuth();
   
-  const { data: profile, isLoading } = useQuery({
+  const { data: profileData, isLoading } = useQuery<ProfileResponse>({
     queryKey: [`/api/profile/${user?.id}`],
+    enabled: !!user?.id,
   });
 
-  const { data: tests } = useQuery({
+  const { data: tests } = useQuery<PhysicalTest[]>({
     queryKey: [`/api/tests/${user?.id}`],
+    enabled: !!user?.id && user?.role === "student",
   });
 
-  const { data: samples } = useQuery({
+  const { data: samples } = useQuery<PhysicalSample[]>({
     queryKey: [`/api/samples/${user?.id}`],
+    enabled: !!user?.id && user?.role === "student",
   });
 
-  if (isLoading) {
+  if (isLoading || !profileData) {
     return (
       <MainLayout>
         <div className="flex items-center justify-center min-h-screen">
@@ -46,252 +57,155 @@ export default function Profile() {
     );
   }
 
+  const profile = profileData.profile;
+
+  // Get initials for avatar
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(part => part[0])
+      .join('')
+      .toUpperCase()
+      .substring(0, 2);
+  };
+
   return (
     <MainLayout>
-      <div className="container mx-auto px-4 py-6">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
-          <div>
-            <h2 className="text-2xl font-semibold">User Profile</h2>
-            <p className="text-gray-500">View and manage your personal information</p>
-          </div>
+      <div className="container mx-auto py-6 space-y-6">
+        <div className="flex justify-between items-center">
+          <h1 className="text-3xl font-bold">Profile</h1>
           <Link href="/profile/edit">
-            <Button className="mt-4 md:mt-0">
-              <Edit className="mr-2 h-4 w-4" />
+            <Button>
+              <Edit className="h-4 w-4 mr-2" />
               Edit Profile
             </Button>
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Profile Summary Card */}
-          <Card className="lg:col-span-1">
-            <CardHeader className="pb-2">
-              <div className="flex items-center justify-center mb-4">
-                <div className="h-24 w-24 bg-primary rounded-full flex items-center justify-center text-white text-2xl font-bold">
-                  {profile?.fullName ? profile.fullName.split(' ').map(n => n[0]).join('').toUpperCase() : user?.username?.slice(0, 2).toUpperCase()}
-                </div>
-              </div>
-              <CardTitle className="text-center text-xl">{profile?.fullName || user?.username}</CardTitle>
-              <CardDescription className="text-center capitalize">{user?.role}</CardDescription>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Basic Info Card */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Basic Information</CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex items-center">
-                  <UserCheck className="h-5 w-5 text-gray-500 mr-3" />
-                  <div>
-                    <p className="text-sm text-gray-500">Username</p>
-                    <p className="font-medium">{user?.username}</p>
-                  </div>
+            <CardContent className="space-y-4">
+              <div className="flex items-center space-x-4">
+                <div className="h-16 w-16 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-xl font-semibold">
+                  {profile?.fullName ? getInitials(profile.fullName) : "??"}
                 </div>
-                
-                <div className="flex items-center">
-                  <Award className="h-5 w-5 text-gray-500 mr-3" />
-                  <div>
-                    <p className="text-sm text-gray-500">Medical Group</p>
-                    <p className="font-medium capitalize">{profile?.medicalGroup || "Not specified"}</p>
-                  </div>
-                </div>
-                
-                {profile?.dateOfBirth && (
-                  <div className="flex items-center">
-                    <Calendar className="h-5 w-5 text-gray-500 mr-3" />
-                    <div>
-                      <p className="text-sm text-gray-500">Date of Birth</p>
-                      <p className="font-medium">{format(new Date(profile.dateOfBirth), 'MMMM d, yyyy')}</p>
-                    </div>
-                  </div>
-                )}
-                
-                <Separator />
-                
-                <div className="grid grid-cols-2 gap-4 pt-2">
-                  <div className="bg-gray-50 p-3 rounded-lg text-center">
-                    <p className="text-2xl font-bold text-primary">{tests?.length || 0}</p>
-                    <p className="text-xs text-gray-500">Tests</p>
-                  </div>
-                  <div className="bg-gray-50 p-3 rounded-lg text-center">
-                    <p className="text-2xl font-bold text-primary">{samples?.length || 0}</p>
-                    <p className="text-xs text-gray-500">Samples</p>
-                  </div>
+                <div>
+                  <h3 className="font-semibold">{profile?.fullName}</h3>
+                  <p className="text-sm text-muted-foreground capitalize">{profileData.role}</p>
                 </div>
               </div>
+
+              {profileData.role === "student" && (
+                <div className="space-y-2">
+                  <div className="flex items-center text-sm">
+                    <UserCheck className="h-4 w-4 mr-2" />
+                    <span>Medical Group: {(profile as StudentProfile)?.medicalGroup}</span>
+                  </div>
+                  <div className="flex items-center text-sm">
+                    <Calendar className="h-4 w-4 mr-2" />
+                    <span>Date of Birth: {profile?.dateOfBirth ? format(new Date(profile.dateOfBirth), 'PP') : 'Not set'}</span>
+                  </div>
+                </div>
+              )}
+
+              {profileData.role === "teacher" && (
+                <div className="space-y-2">
+                  <div className="flex items-center text-sm">
+                    <Award className="h-4 w-4 mr-2" />
+                    <span>Position: {(profile as TeacherProfile)?.position}</span>
+                  </div>
+                  {profile?.dateOfBirth && (
+                    <div className="flex items-center text-sm">
+                      <Calendar className="h-4 w-4 mr-2" />
+                      <span>Date of Birth: {format(new Date(profile.dateOfBirth), 'PP')}</span>
+                    </div>
+                  )}
+                </div>
+              )}
             </CardContent>
           </Card>
 
-          {/* Profile Details Card */}
-          <Card className="lg:col-span-2">
-            <CardHeader>
-              <CardTitle>Profile Details</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Tabs defaultValue="personal">
-                <TabsList className="mb-4">
-                  <TabsTrigger value="personal">Personal</TabsTrigger>
-                  <TabsTrigger value="education">Education</TabsTrigger>
-                  <TabsTrigger value="medical">Medical</TabsTrigger>
-                  <TabsTrigger value="sports">Sports</TabsTrigger>
-                </TabsList>
-                
-                <TabsContent value="personal">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <h3 className="text-sm font-medium text-gray-500 mb-4">Basic Information</h3>
-                      <div className="space-y-4">
-                        <div className="flex items-start">
-                          <UserCheck className="h-5 w-5 text-gray-400 mr-3 mt-0.5" />
-                          <div>
-                            <p className="text-sm text-gray-500">Full Name</p>
-                            <p className="font-medium">{profile?.fullName || "Not specified"}</p>
-                          </div>
-                        </div>
-                        
-                        <div className="flex items-start">
-                          <Calendar className="h-5 w-5 text-gray-400 mr-3 mt-0.5" />
-                          <div>
-                            <p className="text-sm text-gray-500">Date of Birth</p>
-                            <p className="font-medium">
-                              {profile?.dateOfBirth ? format(new Date(profile.dateOfBirth), 'MMMM d, yyyy') : "Not specified"}
-                            </p>
-                          </div>
-                        </div>
-                        
-                        <div className="flex items-start">
-                          <Flag className="h-5 w-5 text-gray-400 mr-3 mt-0.5" />
-                          <div>
-                            <p className="text-sm text-gray-500">Gender</p>
-                            <p className="font-medium">{profile?.gender || "Not specified"}</p>
-                          </div>
-                        </div>
-                      </div>
+          {/* Additional Info Cards */}
+          {profileData.role === "student" && (
+            <>
+              {/* Physical Tests Card */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Physical Tests</CardTitle>
+                  <CardDescription>Recent test results</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {tests && tests.length > 0 ? (
+                    <div className="space-y-2">
+                      {/* Render test results */}
                     </div>
-                    
-                    <div>
-                      <h3 className="text-sm font-medium text-gray-500 mb-4">Location Information</h3>
-                      <div className="space-y-4">
-                        <div className="flex items-start">
-                          <Flag className="h-5 w-5 text-gray-400 mr-3 mt-0.5" />
-                          <div>
-                            <p className="text-sm text-gray-500">Place of Birth</p>
-                            <p className="font-medium">{profile?.placeOfBirth || "Not specified"}</p>
-                          </div>
-                        </div>
-                        
-                        <div className="flex items-start">
-                          <Home className="h-5 w-5 text-gray-400 mr-3 mt-0.5" />
-                          <div>
-                            <p className="text-sm text-gray-500">Address</p>
-                            <p className="font-medium">{profile?.address || "Not specified"}</p>
-                          </div>
-                        </div>
-                        
-                        <div className="flex items-start">
-                          <Flag className="h-5 w-5 text-gray-400 mr-3 mt-0.5" />
-                          <div>
-                            <p className="text-sm text-gray-500">Nationality</p>
-                            <p className="font-medium">{profile?.nationality || "Not specified"}</p>
-                          </div>
-                        </div>
-                      </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">No test results available</p>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Physical State Card */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Physical State</CardTitle>
+                  <CardDescription>Recent measurements</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {samples && samples.length > 0 ? (
+                    <div className="space-y-2">
+                      {/* Render physical state measurements */}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">No measurements available</p>
+                  )}
+                </CardContent>
+              </Card>
+            </>
+          )}
+
+          {profileData.role === "teacher" && (
+            <>
+              {/* Teacher Stats Card */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Teaching Stats</CardTitle>
+                  <CardDescription>Current semester</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    <div className="flex items-center text-sm">
+                      <Users className="h-4 w-4 mr-2" />
+                      <span>Students: 120</span>
+                    </div>
+                    <div className="flex items-center text-sm">
+                      <BookOpen className="h-4 w-4 mr-2" />
+                      <span>Groups: 4</span>
+                    </div>
+                    <div className="flex items-center text-sm">
+                      <Activity className="h-4 w-4 mr-2" />
+                      <span>Tests Conducted: 240</span>
                     </div>
                   </div>
-                </TabsContent>
-                
-                <TabsContent value="education">
-                  <div className="space-y-4">
-                    <div className="flex items-start">
-                      <School className="h-5 w-5 text-gray-400 mr-3 mt-0.5" />
-                      <div>
-                        <p className="text-sm text-gray-500">Previous School</p>
-                        <p className="font-medium">{profile?.previousSchool || "Not specified"}</p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-start">
-                      <BookOpen className="h-5 w-5 text-gray-400 mr-3 mt-0.5" />
-                      <div>
-                        <p className="text-sm text-gray-500">Faculty</p>
-                        <p className="font-medium">{profile?.facultyId ? `Faculty ID: ${profile.facultyId}` : "Not specified"}</p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-start">
-                      <Users className="h-5 w-5 text-gray-400 mr-3 mt-0.5" />
-                      <div>
-                        <p className="text-sm text-gray-500">Group</p>
-                        <p className="font-medium">{profile?.groupId ? `Group ID: ${profile.groupId}` : "Not specified"}</p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-start">
-                      <BookOpen className="h-5 w-5 text-gray-400 mr-3 mt-0.5" />
-                      <div>
-                        <p className="text-sm text-gray-500">Educational Department</p>
-                        <p className="font-medium">{profile?.educationalDepartment || "Not specified"}</p>
-                      </div>
-                    </div>
-                  </div>
-                </TabsContent>
-                
-                <TabsContent value="medical">
-                  <div className="space-y-4">
-                    <div className="flex items-start">
-                      <Heart className="h-5 w-5 text-gray-400 mr-3 mt-0.5" />
-                      <div>
-                        <p className="text-sm text-gray-500">Medical Group</p>
-                        <p className="font-medium capitalize">{profile?.medicalGroup || "Not specified"}</p>
-                      </div>
-                    </div>
-                    
-                    {profile?.medicalGroup && profile.medicalGroup !== "basic" && (
-                      <div className="flex items-start">
-                        <Heart className="h-5 w-5 text-gray-400 mr-3 mt-0.5" />
-                        <div>
-                          <p className="text-sm text-gray-500">Diagnosis</p>
-                          <p className="font-medium">{profile?.diagnosis || "Not specified"}</p>
-                        </div>
-                      </div>
-                    )}
-                    
-                    <div className="flex items-start">
-                      <Heart className="h-5 w-5 text-gray-400 mr-3 mt-0.5" />
-                      <div>
-                        <p className="text-sm text-gray-500">Previous Illnesses</p>
-                        <p className="font-medium">{profile?.previousIllnesses || "None reported"}</p>
-                      </div>
-                    </div>
-                  </div>
-                </TabsContent>
-                
-                <TabsContent value="sports">
-                  <div className="space-y-4">
-                    <div className="flex items-start">
-                      <Activity className="h-5 w-5 text-gray-400 mr-3 mt-0.5" />
-                      <div>
-                        <p className="text-sm text-gray-500">Currently Engaged In</p>
-                        <p className="font-medium">{profile?.currentSports || "Not specified"}</p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-start">
-                      <Activity className="h-5 w-5 text-gray-400 mr-3 mt-0.5" />
-                      <div>
-                        <p className="text-sm text-gray-500">Previously Engaged In</p>
-                        <p className="font-medium">{profile?.previousSports || "Not specified"}</p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-start">
-                      <Activity className="h-5 w-5 text-gray-400 mr-3 mt-0.5" />
-                      <div>
-                        <p className="text-sm text-gray-500">Additional Information</p>
-                        <p className="font-medium">{profile?.additionalInfo || "None provided"}</p>
-                      </div>
-                    </div>
-                  </div>
-                </TabsContent>
-              </Tabs>
-            </CardContent>
-          </Card>
+                </CardContent>
+              </Card>
+
+              {/* Schedule Card */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Schedule</CardTitle>
+                  <CardDescription>Upcoming classes</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground">No upcoming classes</p>
+                </CardContent>
+              </Card>
+            </>
+          )}
         </div>
       </div>
     </MainLayout>

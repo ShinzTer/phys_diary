@@ -39,6 +39,19 @@ import { Loader2, Save, ArrowLeft } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
+interface Student {
+  id: number;
+  username: string;
+  fullName?: string;
+}
+
+interface SampleData {
+  studentId: number;
+  date: string;
+  notes: string | null;
+  [key: string]: any; // For dynamic sample type fields
+}
+
 // Form schema for sample creation/editing
 const sampleFormSchema = z.object({
   userId: z.number(),
@@ -55,28 +68,74 @@ export default function SampleForm() {
   const params = useParams();
   const { toast } = useToast();
   const isEdit = !!params.id;
-  const sampleId = isEdit ? parseInt(params.id) : undefined;
+  const sampleId = isEdit && params.id ? parseInt(params.id) : undefined;
   
   // Fetch students for teacher/admin to select a student
-  const { data: students } = useQuery({
+  const { data: students = [] } = useQuery<Student[]>({
     queryKey: ["/api/users?role=student"],
     enabled: user?.role !== "student"
   });
   
   // Fetch specific sample data when editing
-  const { data: sampleData, isLoading: isLoadingSample } = useQuery({
-    queryKey: [`/api/samples/${sampleId}`],
-    enabled: isEdit
+  const { data: sampleData, isLoading: isLoadingSample } = useQuery<SampleData>({
+    queryKey: [`/api/physical-states/${sampleId}`],
+    enabled: !!isEdit && !!sampleId
   });
   
+  // Setup form with default values
+  const form = useForm<SampleFormValues>({
+    resolver: zodResolver(sampleFormSchema),
+    defaultValues: {
+      userId: user?.role === "student" ? (user.studentId || 0) : 0,
+      sampleType: "",
+      value: "",
+      notes: ""
+    }
+  });
+
+  // Update form when edit data is loaded
+  useEffect(() => {
+    if (isEdit && sampleData) {
+      const sampleType = Object.keys(sampleData).find(key => 
+        SAMPLE_TYPES.includes(key as any)
+      );
+      
+      if (sampleType) {
+        form.reset({
+          userId: sampleData.studentId,
+          sampleType: sampleType,
+          value: sampleData[sampleType]?.toString() || "",
+          notes: sampleData.notes || ""
+        });
+      }
+    }
+  }, [isEdit, sampleData, form]);
+
+  // Get formatted sample type display name
+  const formatSampleType = (type: string) => {
+    return type.split('_').map(word => 
+      word.charAt(0).toUpperCase() + word.slice(1)
+    ).join(' ');
+  };
+
   // Create sample mutation
   const createSampleMutation = useMutation({
     mutationFn: async (data: SampleFormValues) => {
-      await apiRequest("POST", "/api/samples", data);
+      // Create an empty state data object
+      const stateData: SampleData = {
+        studentId: user?.role === "student" ? (user.studentId || 0) : data.userId,
+        date: new Date().toISOString().split('T')[0],
+        notes: data.notes || null
+      };
+      
+      // Add the specific sample type value
+      stateData[data.sampleType] = parseFloat(data.value) || data.value;
+      
+      await apiRequest("POST", "/api/physical-states", stateData);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/samples/${user?.id}`] });
-      queryClient.invalidateQueries({ queryKey: ["/api/samples"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/physical-states/${user?.studentId || user?.id}`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/physical-states"] });
       toast({
         title: "Sample recorded",
         description: "Your physical measurement has been successfully recorded."
@@ -95,11 +154,19 @@ export default function SampleForm() {
   // Update sample mutation
   const updateSampleMutation = useMutation({
     mutationFn: async (data: SampleFormValues) => {
-      await apiRequest("PUT", `/api/samples/${sampleId}`, data);
+      const stateData: SampleData = {
+        studentId: user?.role === "student" ? (user.studentId || 0) : data.userId,
+        date: new Date().toISOString().split('T')[0],
+        notes: data.notes || null
+      };
+      
+      stateData[data.sampleType] = parseFloat(data.value) || data.value;
+      
+      await apiRequest("PUT", `/api/physical-states/${sampleId}`, stateData);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/samples/${user?.id}`] });
-      queryClient.invalidateQueries({ queryKey: ["/api/samples"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/physical-states/${user?.studentId || user?.id}`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/physical-states"] });
       toast({
         title: "Sample updated",
         description: "The physical measurement has been successfully updated."
@@ -114,36 +181,6 @@ export default function SampleForm() {
       });
     }
   });
-
-  // Setup form with default values
-  const form = useForm<SampleFormValues>({
-    resolver: zodResolver(sampleFormSchema),
-    defaultValues: {
-      userId: user?.id || 0,
-      sampleType: "",
-      value: "",
-      notes: ""
-    }
-  });
-
-  // Update form when edit data is loaded
-  useEffect(() => {
-    if (isEdit && sampleData) {
-      form.reset({
-        userId: sampleData.userId,
-        sampleType: sampleData.sampleType,
-        value: sampleData.value,
-        notes: sampleData.notes || ""
-      });
-    }
-  }, [isEdit, sampleData, form]);
-
-  // Get formatted sample type display name
-  const formatSampleType = (type: string) => {
-    return type.split('_').map(word => 
-      word.charAt(0).toUpperCase() + word.slice(1)
-    ).join(' ');
-  };
 
   // Handle form submission
   function onSubmit(data: SampleFormValues) {

@@ -4,8 +4,9 @@ import { Express } from "express";
 import session from "express-session";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
-import { storage } from "./mem-storage";
-import { User as SelectUser } from "@shared/schema";
+import { storage } from "./storage.js";
+import { User as SelectUser, InsertStudent, InsertUser, studentProfileSchema, student } from "@shared/schema";
+import { z } from "zod";
 
 declare global {
   namespace Express {
@@ -27,6 +28,64 @@ async function comparePasswords(supplied: string, stored: string) {
   const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
   return timingSafeEqual(hashedBuf, suppliedBuf);
 }
+
+// User creation form schema
+const baseUserSchema = z.object({
+  username: z.string().min(3, "Username must be at least 3 characters"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+  role: z.enum(["admin", "teacher", "student"]),
+});
+
+const studentUserSchema = baseUserSchema.extend({
+  fullName: z.string().min(1, "Full name is required"),
+  gender: z.enum(["male", "female", "other"], {
+    required_error: "Gender is required",
+  }),
+  dateOfBirth: z.string().min(1, "Date of birth is required"),
+  phone: z.string()
+    .regex(/^\+375\d{9}$/, "Phone number must be in format: +375*********"),
+  medicalGroup: z.enum(["basic", "preparatory", "special"], {
+    required_error: "Medical group is required",
+  }),
+  groupId: z.number({
+    required_error: "Group is required",
+  }),
+});
+
+// Student creation schema
+const studentCreationSchema = z.object({
+  userId: z.number(),
+  fullName: z.string().min(1, "Full name is required"),
+  gender: z.enum(["male", "female", "other"], {
+    required_error: "Gender is required",
+  }),
+  dateOfBirth: z.string().min(1, "Date of birth is required"),
+  groupId: z.number({
+    required_error: "Group is required",
+  }),
+  medicalGroup: z.enum(["basic", "preparatory", "special"], {
+    required_error: "Medical group is required",
+  }),
+  phone: z.string()
+    .regex(/^\+375\d{9}$/, "Phone number must be in format: +375*********"),
+  placeOfBirth: z.string().optional(),
+  nationality: z.string().optional(),
+  address: z.string().optional(),
+  schoolGraduated: z.string().optional(),
+  educationalDepartment: z.string().optional(),
+});
+
+// Teacher creation schema
+const teacherCreationSchema = z.object({
+  userId: z.number(),
+  fullName: z.string().min(1, "Full name is required"),
+  position: z.string().min(1, "Position is required"),
+  dateOfBirth: z.string().min(1, "Date of birth is required"),
+  educationalDepartment: z.string().min(1, "Educational department is required"),
+  phone: z.string()
+    .regex(/^\+375\d{9}$/, "Phone number must be in format: +375*********"),
+  nationality: z.string().optional(),
+});
 
 export async function setupAuth(app: Express) {
   // Initialize database and create default users if needed
@@ -102,11 +161,85 @@ export async function setupAuth(app: Express) {
         return res.status(400).json({ message: "Username already exists" });
       }
 
+      // Validate request body based on role
+      let validationResult;
+      if (req.body.role === "student") {
+        validationResult = studentUserSchema.safeParse(req.body);
+      } else {
+        validationResult = baseUserSchema.safeParse(req.body);
+      }
+
+      if (!validationResult.success) {
+        return res.status(400).json({
+          message: "Invalid request data",
+          errors: validationResult.error.errors
+        });
+      }
+
       const hashedPassword = await hashPassword(req.body.password);
+      
+      // Create user first
       const user = await storage.createUser({
-        ...req.body,
+        username: req.body.username,
         password: hashedPassword,
+        role: req.body.role,
       });
+
+      // If registering a student, create student record with userId
+      if (req.body.role === "student") {
+        try {
+          const studentData = studentCreationSchema.parse({
+            userId: user.id,
+            fullName: req.body.fullName,
+            gender: req.body.gender,
+            dateOfBirth: req.body.dateOfBirth,
+            medicalGroup: req.body.medicalGroup,
+            groupId: req.body.groupId,
+            phone: req.body.phone,
+            placeOfBirth: req.body.placeOfBirth,
+            nationality: req.body.nationality,
+            address: req.body.address,
+            schoolGraduated: req.body.schoolGraduated,
+            educationalDepartment: req.body.educationalDepartment,
+          });
+          
+          const student = await storage.createStudent(studentData);
+          if (!student) {
+            // Rollback user creation if student creation fails
+            await storage.deleteUser(user.id);
+            return res.status(500).json({ message: "Failed to create student record" });
+          }
+        } catch (error) {
+          // Rollback user creation if student creation fails
+          await storage.deleteUser(user.id);
+          throw error;
+        }
+      }
+      // If registering a teacher, create teacher record with userId
+      else if (req.body.role === "teacher") {
+        try {
+          const teacherData = teacherCreationSchema.parse({
+            userId: user.id,
+            fullName: req.body.fullName,
+            position: req.body.position,
+            dateOfBirth: req.body.dateOfBirth,
+            educationalDepartment: req.body.educationalDepartment,
+            phone: req.body.phone,
+            nationality: req.body.nationality,
+          });
+          
+          const teacher = await storage.createTeacher(teacherData);
+          if (!teacher) {
+            // Rollback user creation if teacher creation fails
+            await storage.deleteUser(user.id);
+            return res.status(500).json({ message: "Failed to create teacher record" });
+          }
+        } catch (error) {
+          // Rollback user creation if teacher creation fails
+          await storage.deleteUser(user.id);
+          throw error;
+        }
+      }
 
       req.login(user, (err) => {
         if (err) return next(err);
@@ -150,8 +283,8 @@ export async function setupAuth(app: Express) {
     res.json(userWithoutPassword);
   });
 
-  // Middleware to check for admin role
-  app.use(["/api/admin", "/api/users", "/api/faculties", "/api/groups"], (req, res, next) => {
+  // Middleware to check for admin role - only for user management routes
+  app.use(["/api/admin", "/api/users/manage", "/api/faculties", "/api/groups"], (req, res, next) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Not authenticated" });
     }
