@@ -70,7 +70,6 @@ interface User {
   id: number;
   username: string;
   role: "admin" | "teacher" | "student";
-  fullName?: string;
   facultyId?: number;
   groupId?: number;
 }
@@ -116,11 +115,7 @@ const teacherUserSchema = baseUserSchema.extend({
     .regex(/^\+375\d{9}$/, "Phone number must be in format: +375*********"),
 });
 
-const adminUserSchema = baseUserSchema.extend({
-  fullName: z.string().min(1, "Full name is required"),
-});
-
-type UserFormValues = z.infer<typeof studentUserSchema> | z.infer<typeof teacherUserSchema> | z.infer<typeof adminUserSchema>;
+type UserFormValues = z.infer<typeof studentUserSchema> | z.infer<typeof teacherUserSchema> | z.infer<typeof baseUserSchema>;
 
 export default function UserManagement() {
   const { user } = useAuth();
@@ -199,7 +194,7 @@ export default function UserManagement() {
         ? studentUserSchema 
         : selectedRole === "teacher" 
           ? teacherUserSchema 
-          : adminUserSchema
+          : baseUserSchema
     ),
     defaultValues: {
       username: "",
@@ -229,13 +224,13 @@ export default function UserManagement() {
 
   // Filter users based on search term and role filter
   const filteredUsers = users.filter((u: User) => {
-    const matchesSearch = 
-      u.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (u.fullName && u.fullName.toLowerCase().includes(searchTerm.toLowerCase()));
+    // const matchesSearch = 
+    //   u.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    //   (u.fullName && u.fullName.toLowerCase().includes(searchTerm.toLowerCase()));
     
     const matchesRole = !roleFilter || u.role === roleFilter;
     
-    return matchesSearch && matchesRole;
+    return /*matchesSearch && */matchesRole;
   });
 
   // Get role icon
@@ -345,11 +340,11 @@ export default function UserManagement() {
                               <div className="flex items-center">
                                 <Avatar className="h-8 w-8 mr-3">
                                   <AvatarFallback>
-                                    {getInitials(u.fullName || u.username)}
+                                    {getInitials(u.username)} 
                                   </AvatarFallback>
                                 </Avatar>
                                 <div>
-                                  <div className="font-medium">{u.fullName || "Not Set"}</div>
+                                  <div className="font-medium">{"Not Set"}</div>
                                 </div>
                               </div>
                             </td>
@@ -490,22 +485,23 @@ export default function UserManagement() {
                   )}
                 />
 
-                <FormField
-                  control={form.control}
-                  name="fullName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Full Name</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter full name" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                
 
                 {selectedRole === "student" && (
                   <>
+                    <FormField
+                      control={form.control}
+                      name="fullName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Full Name</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Enter full name" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                     <FormField
                       control={form.control}
                       name="gender"
@@ -624,6 +620,19 @@ export default function UserManagement() {
 
                 {selectedRole === "teacher" && (
                   <>
+                    <FormField
+                      control={form.control}
+                      name="fullName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Full Name</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Enter full name" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                     <FormField
                       control={form.control}
                       name="position"

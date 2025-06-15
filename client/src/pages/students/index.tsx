@@ -126,7 +126,7 @@ export default function Students() {
 
   const getGroupName = (groupId?: number) => {
     if (!groupId) return "Not Assigned";
-    const group = groups.data.find((g: Group) => g.groupId === groupId);
+    const group = groups.find((g: Group) => g.groupId === groupId); //.data
     return group ? group.name : "Not Found";
   };
 

@@ -154,7 +154,7 @@ export default function ProfilePage() {
                 </div>
               </div>
             </div>
-          ) : (
+          ) : ( //Добавить адрес и т.д.
             <div>
               <h2 className="text-xl font-semibold mb-4">
                 Student Information
@@ -173,6 +173,12 @@ export default function ProfilePage() {
                 <div>
                   <p className="text-sm text-gray-500">Phone</p>
                   <p className="text-lg">{profile.profile.phone}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Address</p>
+                  <p className="text-lg">
+                    {profile.profile. || "-"}
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">

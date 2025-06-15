@@ -714,7 +714,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const studentId = parseInt(req.params.studentId);
       
       // If not an admin or teacher, only allow access to own sport results
-      if (req.user?.role !== "admin" && req.user?.role !== "teacher" && req.user?.studentId !== studentId) {
+      if (req.user?.role !== "admin" && req.user?.role !== "teacher" && req.user?.studentId !== studentId) { //тут беда
         return res.status(403).json({ message: "Access denied" });
       }
       
@@ -734,7 +734,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const resultData = insertSportResultsSchema.parse(req.body);
       
       // If student, can only create sport results for themselves
-      if (req.user?.role === "student" && resultData.studentId !== req.user.studentId) {
+      if (req.user?.role === "student" && resultData.studentId !== req.user.studentId) { //тут беда
         return res.status(403).json({ message: "Access denied" });
       }
       
@@ -763,7 +763,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Students can only update their own sport results
-      if (req.user?.role === "student" && existingResult.studentId !== req.user.studentId) {
+      if (req.user?.role === "student" && existingResult.studentId !== req.user.studentId) { //тут беда
         return res.status(403).json({ message: "Access denied" });
       }
       
@@ -874,7 +874,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const studentId = parseInt(req.params.studentId);
       
       // If not an admin or teacher, only allow access to own results
-      if (req.user?.role !== "admin" && req.user?.role !== "teacher" && req.user?.studentId !== studentId) {
+      if (req.user?.role !== "admin" && req.user?.role !== "teacher" && req.user?.studentId !== studentId) { //тут беда
         return res.status(403).json({ message: "Access denied" });
       }
       
@@ -1042,7 +1042,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Check if user is admin or the teacher themselves
-      if (req.user?.role !== "admin" && req.user?.teacherId !== parseInt(req.params.id)) {
+      if (req.user?.role !== "admin" && req.user?.teacherId !== parseInt(req.params.id)) { //тут беда
         return res.status(403).json({ message: "Access denied" });
       }
       
@@ -1248,7 +1248,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Check if user is admin, teacher, or the student themselves
-      if (req.user?.role !== "admin" && req.user?.role !== "teacher" && req.user?.studentId !== parseInt(req.params.id)) {
+      if (req.user?.role !== "admin" && req.user?.role !== "teacher" && req.user?.studentId !== parseInt(req.params.id)) { //тут беда
         return res.status(403).json({ message: "Access denied" });
       }
       

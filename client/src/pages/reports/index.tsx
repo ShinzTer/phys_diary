@@ -368,7 +368,7 @@ export default function Reports() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Groups</SelectItem>
-                    {groups?.data.map(group => {
+                      {groups?.map(group => { //.data
                       if (!group?.id) return null; // Skip if no valid ID
                       return (
                         <SelectItem 

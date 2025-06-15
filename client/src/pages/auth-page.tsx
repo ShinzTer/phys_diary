@@ -17,19 +17,7 @@ const loginSchema = z.object({
   password: z.string().min(1, "Password is required"),
 });
 
-const registerSchema = z.object({
-  username: z.string().min(3, "Username must be at least 3 characters"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
-  confirmPassword: z.string().min(1, "Confirm password is required"),
-  role: z.enum(["admin", "teacher", "student"]),
-  fullName: z.string().min(1, "Full name is required"),
-}).refine(data => data.password === data.confirmPassword, {
-  message: "Passwords do not match",
-  path: ["confirmPassword"],
-});
-
 type LoginFormValues = z.infer<typeof loginSchema>;
-type RegisterFormValues = z.infer<typeof registerSchema>;
 
 export default function AuthPage() {
   const [activeTab, setActiveTab] = useState<string>("login");
@@ -43,23 +31,8 @@ export default function AuthPage() {
     },
   });
   
-  const registerForm = useForm<RegisterFormValues>({
-    resolver: zodResolver(registerSchema),
-    defaultValues: {
-      username: "",
-      password: "",
-      confirmPassword: "",
-      role: "student",
-      fullName: "",
-    },
-  });
-  
   function onLoginSubmit(data: LoginFormValues) {
     loginMutation.mutate(data);
-  }
-  
-  function onRegisterSubmit(data: RegisterFormValues) {
-    registerMutation.mutate(data);
   }
 
   // If already logged in, redirect to dashboard
@@ -78,171 +51,53 @@ export default function AuthPage() {
               Sign in to access the Physical Education Control System
             </CardDescription>
           </CardHeader>
-          
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="login">Login</TabsTrigger>
-              <TabsTrigger value="register">Register</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="login">
-              <CardContent className="pt-4">
-                <Form {...loginForm}>
-                  <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
-                    <FormField
-                      control={loginForm.control}
-                      name="username"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Username</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Enter your username" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={loginForm.control}
-                      name="password"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Password</FormLabel>
-                          <FormControl>
-                            <Input type="password" placeholder="Enter your password" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <Button 
-                      type="submit" 
-                      className="w-full" 
-                      disabled={loginMutation.isPending}
-                    >
-                      {loginMutation.isPending ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Please wait
-                        </>
-                      ) : (
-                        "Log in"
-                      )}
-                    </Button>
-                  </form>
-                </Form>
-              </CardContent>
-            </TabsContent>
-            
-            <TabsContent value="register">
-              <CardContent className="pt-4">
-                <Form {...registerForm}>
-                  <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-4">
-                    <FormField
-                      control={registerForm.control}
-                      name="fullName"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Full Name</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Enter your full name" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={registerForm.control}
-                      name="username"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Username</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Choose a username" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={registerForm.control}
-                      name="role"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Role</FormLabel>
-                          <Select 
-                            onValueChange={field.onChange} 
-                            defaultValue={field.value}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select a role" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="student">Student</SelectItem>
-                              <SelectItem value="teacher">Teacher</SelectItem>
-                              <SelectItem value="admin">Administrator</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={registerForm.control}
-                      name="password"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Password</FormLabel>
-                          <FormControl>
-                            <Input 
-                              type="password" 
-                              placeholder="Create a password"
-                              {...field} 
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={registerForm.control}
-                      name="confirmPassword"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Confirm Password</FormLabel>
-                          <FormControl>
-                            <Input 
-                              type="password" 
-                              placeholder="Confirm your password" 
-                              {...field} 
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <Button 
-                      type="submit" 
-                      className="w-full"
-                      disabled={registerMutation.isPending}
-                    >
-                      {registerMutation.isPending ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Creating account
-                        </>
-                      ) : (
-                        "Register"
-                      )}
-                    </Button>
-                  </form>
-                </Form>
-              </CardContent>
-            </TabsContent>
-          </Tabs>
-          
+          <CardContent>
+            <Form {...loginForm}>
+              <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
+                <FormField
+                  control={loginForm.control}
+                  name="username"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Username</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter your username" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={loginForm.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Password</FormLabel>
+                      <FormControl>
+                        <Input type="password" placeholder="Enter your password" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <Button 
+                  type="submit" 
+                  className="w-full" 
+                  disabled={loginMutation.isPending}
+                >
+                  {loginMutation.isPending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Please wait
+                    </>
+                  ) : (
+                    "Log in"
+                  )}
+                </Button>
+              </form>
+            </Form>
+          </CardContent>
+
           <CardFooter className="flex flex-col space-y-2">
             <div className="text-sm text-center text-gray-500 mt-2">
               <p>
