@@ -390,6 +390,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+
+  app.get("/api/profile/studen/:userId", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const studentId = parseInt(req.params.userId);
+      
+      // Get the student record to check permissions
+      const student = await storage.getStudentByUserId(studentId);
+      if (!student) {
+        return res.status(404).json({ message: "Student not found" });
+      }
+
+      // Only allow students to access their own profile unless they're an admin/teacher
+      if (req.user?.role === "student" && req.user?.id !== student.userId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const profileData = await storage.getStudentProfile(studentId);
+      const user = await storage.getUser(student.userId!);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Don't send the password back to the client
+      const { password, ...userWithoutPassword } = user;
+      res.json({
+        ...userWithoutPassword,
+        profile: profileData
+      });
+    } catch (error) {
+      console.error("Error fetching student profile:", error);
+      res.status(500).json({ message: "Error fetching student profile" });
+    }
+  });
+
   app.get("/api/profile/teacher/:teacherId", async (req, res) => {
     try {
       if (!req.isAuthenticated()) {

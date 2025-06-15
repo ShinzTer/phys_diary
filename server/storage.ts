@@ -412,6 +412,11 @@ export class Storage implements IStorage {
     return studentRecord;
   }
 
+    async getStudentByUserId(id: number): Promise<Student | undefined> {
+    const [studentRecord] = await this.db.select().from(student).where(eq(student.userId, id));
+    return studentRecord;
+  }
+
   async createStudent(studentData: InsertStudent): Promise<Student> {
     const [newStudent] = await this.db.insert(student).values({
       userId: studentData.userId,

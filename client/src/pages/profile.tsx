@@ -177,7 +177,7 @@ export default function ProfilePage() {
                 <div>
                   <p className="text-sm text-gray-500">Address</p>
                   <p className="text-lg">
-                    {profile.profile. || "-"}
+                    {(profile.profile as Student).address || "-"}
                   </p>
                 </div>
                 <div>

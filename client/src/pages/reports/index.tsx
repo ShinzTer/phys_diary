@@ -56,14 +56,14 @@ interface Faculty {
 }
 
 interface Group {
-  id: number;
+  groupId: number;
   name: string;
   facultyId: number;
   year: number;
 }
 
 interface Student {
-  id: number;
+  userId: number;
   username: string;
   fullName?: string;
   medicalGroup?: string;
@@ -107,6 +107,7 @@ export default function Reports() {
     queryKey: ["/api/faculties"],
   });
 
+  
   // Fetch groups (filtered by faculty if selected)
   const { data: groups } = useQuery<Group[]>({
     queryKey: ["/api/groups", selectedFaculty],
@@ -122,30 +123,23 @@ export default function Reports() {
   });
 
   // Fetch students (filtered by group if selected)
-  const { data: students } = useQuery<Student[]>({
-    queryKey: ["/api/users?role=student", selectedGroup],
-    queryFn: async () => {
-      const url = selectedGroup !== "all"
-        ? `/api/users?role=student&groupId=${selectedGroup}`
-        : "/api/users?role=student";
-      
-      const res = await fetch(url, { credentials: "include" });
-      if (!res.ok) throw new Error("Failed to fetch students");
-      return res.json();
-    },
+  const { data: students = [], isLoading: isLoadingStudents } = useQuery<Student[]>({
+    queryKey: ["/api/students"],
+    enabled: user?.role !== "student"
   });
-
+  
   // Fetch all tests and samples
   const { data: tests, isLoading: isLoadingTests } = useQuery<Test[]>({
-    queryKey: ["/api/tests", selectedUser],
-    enabled: selectedUser !== "",
+    queryKey: ["/api/physical-tests/", selectedUser],
+    enabled: selectedUser !== "" && selectedUser !== "all",
     queryFn: async () => {
-      const res = await fetch(`/api/tests/${selectedUser}`, { credentials: "include" });
+      const res = await fetch(`/api/physical-tests/${selectedUser}`, { credentials: "include" });
       if (!res.ok) throw new Error("Failed to fetch tests");
       return res.json();
     },
   });
 
+console.log(tests)
   const { data: samples, isLoading: isLoadingSamples } = useQuery<Sample[]>({
     queryKey: ["/api/samples", selectedUser],
     enabled: selectedUser !== "",
@@ -158,7 +152,7 @@ export default function Reports() {
 
   // Get data for selected student
   const { data: userData } = useQuery<UserData>({
-    queryKey: [`/api/profile/${selectedUser}`],
+    queryKey: [`/api/profile/studen/${selectedUser}`],
     enabled: selectedUser !== "" && selectedUser !== "all",
   });
 
@@ -369,11 +363,11 @@ export default function Reports() {
                   <SelectContent>
                     <SelectItem value="all">All Groups</SelectItem>
                       {groups?.map(group => { //.data
-                      if (!group?.id) return null; // Skip if no valid ID
+                      if (!group?.groupId) return null; // Skip if no valid ID
                       return (
                         <SelectItem 
-                          key={group.id} 
-                          value={group.id.toString()}
+                          key={group.groupId} 
+                          value={group.groupId.toString()}
                         >
                           {group.name}
                         </SelectItem>
@@ -395,11 +389,11 @@ export default function Reports() {
                   <SelectContent>
                     <SelectItem value="all">Select Student</SelectItem>
                     {students?.map(student => {
-                      if (!student?.id) return null; // Skip if no valid ID
+                      if (!student?.userId) return null; // Skip if no valid ID
                       return (
                         <SelectItem 
-                          key={student.id} 
-                          value={student.id.toString()}
+                          key={student.userId} 
+                          value={student.userId.toString()}
                         >
                           {student.fullName || student.username}
                         </SelectItem>
@@ -488,7 +482,7 @@ export default function Reports() {
                 </div>
               ) : (
                 <>
-                  {!selectedUser ? (
+                  {!selectedUser || selectedUser === "all" ? (
                     <div className="text-center py-12">
                       <Users className="h-16 w-16 text-gray-300 mx-auto mb-4" />
                       <h3 className="text-lg font-medium text-gray-900 mb-2">Select a Student</h3>
