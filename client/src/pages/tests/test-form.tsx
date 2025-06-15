@@ -114,13 +114,12 @@ export default function TestForm() {
     enabled: !!userRecord?.studentId,
   });
 
-    const { data: periods = [], isLoading: isLoadingPeriods } = useQuery<
-      Period[]
-    >({
-      queryKey: ["/api/periods"],
-      enabled: user?.role !== "student",
-    });
-
+  const { data: periods = [], isLoading: isLoadingPeriods } = useQuery<
+    Period[]
+  >({
+    queryKey: ["/api/periods"],
+    enabled: user?.role !== "student",
+  });
 
   // Fetch students for teacher/admin to select a student
   const { data: students = [], isLoading: isLoadingStudents } = useQuery<
@@ -150,7 +149,7 @@ export default function TestForm() {
       pullUps: 0,
       plank: 0,
       forwardBend: 0,
-      longJump: 0,
+      longJump: 0.00,
     },
   });
 
@@ -212,7 +211,7 @@ export default function TestForm() {
   const createTestMutation = useMutation({
     mutationFn: async (data: TestFormValues) => {
       let studentId: number;
-      console.log('pizda')
+      console.log("pizda");
       if (user?.role === "student") {
         if (!studentProfile?.studentId) {
           throw new Error(
@@ -333,11 +332,10 @@ export default function TestForm() {
 
   // Handle form submission
   function onSubmit(data: TestFormValues) {
-    
     if (isEdit) {
       updateTestMutation.mutate(data);
     } else {
-      console.log('pizda')
+      console.log("SUBMIT DATA", data);
       createTestMutation.mutate(data);
     }
   }
@@ -394,75 +392,84 @@ export default function TestForm() {
             </CardDescription>
           </CardHeader>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)}>
+            <form
+              onSubmit={form.handleSubmit(onSubmit, (errors) => {
+                console.log("FORM ERRORS:", errors);
+              })}
+            >
               {user?.role !== "student" && (
-                  <FormField
-                    control={form.control}
-                    name="studentId"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Student</FormLabel>
-                        <Select 
-                          onValueChange={(value) => field.onChange(parseInt(value))} 
-                          defaultValue={field.value.toString()}
-                          disabled={isEdit}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select a student" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {students?.map(student => (
-                              <SelectItem key={student.id} value={student.id.toString()}>
-                                {student.fullName || student.username}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormDescription>
-                          Select the student for whom this test is being recorded
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                <FormField
+                  control={form.control}
+                  name="studentId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Student</FormLabel>
+                      <Select
+                        onValueChange={(value) =>
+                          field.onChange(parseInt(value))
+                        }
+                        defaultValue={field.value.toString()}
+                        disabled={isEdit}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a student" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {students?.map((student) => (
+                            <SelectItem
+                              key={student.id}
+                              value={student.id.toString()}
+                            >
+                              {student.fullName || student.username}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormDescription>
+                        Select the student for whom this test is being recorded
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+
+              <FormField
+                control={form.control}
+                name="periodId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Period</FormLabel>
+                    <Select
+                      onValueChange={(value) => field.onChange(parseInt(value))}
+                      defaultValue={field.value.toString()}
+                      disabled={isEdit}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a student" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {periods?.map((period) => (
+                          <SelectItem
+                            key={period.periodId}
+                            value={period.periodId.toString()}
+                          >
+                            {period.periodOfStudy}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormDescription>
+                      Select the student for whom this test is being recorded
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
                 )}
-
-
-                
-                  <FormField
-                    control={form.control}
-                    name="periodId"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Period</FormLabel>
-                        <Select 
-                          onValueChange={(value) => field.onChange(parseInt(value))} 
-                          defaultValue={field.value.toString()}
-                          disabled={isEdit}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select a student" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {periods?.map(period => (
-                              <SelectItem key={period.periodId} value={period.periodId.toString()}>
-                                {period.periodOfStudy}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormDescription>
-                          Select the student for whom this test is being recorded
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                
+              />
 
               <CardContent className="space-y-4">
                 {/* Табличный ввод */}
@@ -496,7 +503,15 @@ export default function TestForm() {
                                 <Input
                                   type="number"
                                   step={test.key === "longJump" ? "0.01" : "1"}
-                                  {...field}
+                                  value={field.value ?? ""}
+                                  onChange={(e) => {
+                                    const inputValue = e.target.value;
+                                    field.onChange(
+                                      inputValue === ""
+                                        ? undefined
+                                        : Number(inputValue)
+                                    );
+                                  }}
                                 />
                               )}
                             />

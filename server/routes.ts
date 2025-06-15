@@ -599,13 +599,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!req.isAuthenticated()) {
         return res.status(401).json({ message: "Not authenticated" });
       }
-    
+      console.log(req.body)
+      console.log(insertPhysicalTestsSchema)
       const testData = insertPhysicalTestsSchema.parse(req.body);
       
       // If student, can only create tests for themselves
       if (req.user?.role === "student" && testData.studentId !== req.user.id) {
         return res.status(403).json({ message: "Access denied" });
       }
+      console.log(testData);
       const test = await storage.createPhysicalTest(testData);
       res.status(201).json(test);
     } catch (error) {

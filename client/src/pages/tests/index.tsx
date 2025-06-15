@@ -30,19 +30,10 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Search, SlidersHorizontal, Plus, Pencil, MoreHorizontal, ArrowUpDown, Star } from "lucide-react";
-import { TEST_TYPES, CONTROL_EXERCISE_TYPES, TEST_TYPES_CAMEL, CONTROL_EXERCISE_TYPES_CAMEL } from "@shared/schema";
+import { TEST_TYPES, CONTROL_EXERCISE_TYPES, TEST_TYPES_CAMEL, CONTROL_EXERCISE_TYPES_CAMEL, PhysicalTest } from "@shared/schema";
 import { format } from "date-fns";
 
-interface PhysicalTest {
-  id: number;
-  student_id: number;
-  test_type: string;
-  value: string;
-  grade?: string;
-  notes?: string;
-  date: string;
-  created_at: string;
-}
+
 
 export default function Tests() {
   const { user } = useAuth();
@@ -51,7 +42,7 @@ export default function Tests() {
   const [testTypeFilter, setTestTypeFilter] = useState<string>("all");
   const [activeTab, setActiveTab] = useState<string>("tests");
   
-const { data: testsRaw, isLoading } = useQuery<PhysicalTest[]>({
+const { data: tests, isLoading } = useQuery<PhysicalTest[]>({
   queryKey: [user?.role === "student" ? `/api/physical-tests/${user.id}` : "/api/tests/all"],
 });
 
@@ -65,41 +56,9 @@ const formatTestType2 = (type: string) => {
   }).join('');
 };
 
-const tests: PhysicalTest[] | undefined  = testsRaw?.flatMap((entry) => {
-  const { id, student_id, date, grade, notes, ...testValues } = entry;
 
-  return Object.entries(testValues).flatMap(([test_type, value]) => {
-    if (value == null) return []; 
-    return [{
-      id,
-      student_id,
-      test_type,
-      value: String(value),
-      grade,
-      notes,
-      date,
-      created_at: date,
-    }];
-  });
-});
 
-  // Combine test types and control exercise types for filtering
-  const allTestTypes = [...TEST_TYPES, ...CONTROL_EXERCISE_TYPES];
-  
-  // Filter tests based on search term and test type
-  const filteredTests = tests?.filter((test: PhysicalTest) => {
-    const matchesSearch = test.test_type.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         test.value.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesType = testTypeFilter === "all" || test.test_type === testTypeFilter;
-    
-    const isPhysicalTest = TEST_TYPES_CAMEL.includes(test.test_type as any);
-    const isControlExercise = CONTROL_EXERCISE_TYPES_CAMEL.includes(test.test_type as any);
-    
-    if (activeTab === "tests" && !isPhysicalTest) return false;
-    if (activeTab === "exercises" && !isControlExercise) return false;
-    
-    return matchesSearch && matchesType;
-  });
+
 
   // Get formatted test type display name
   const formatTestType = (type: string) => {
@@ -199,7 +158,7 @@ const tests: PhysicalTest[] | undefined  = testsRaw?.flatMap((entry) => {
               </div>
             ) : (
               <>
-                {(!filteredTests || filteredTests.length === 0) ? (
+                {(!tests || tests.length === 0) ? (
                   <div className="text-center py-12">
                     <p className="text-gray-500 mb-4">No test records found.</p>
                     <Link href="/tests/new">
@@ -233,7 +192,7 @@ const tests: PhysicalTest[] | undefined  = testsRaw?.flatMap((entry) => {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-200">
-                        {filteredTests?.map((test) => (
+                        {tests?.map((test) => (
                           <tr key={test.id}>
                             <td className="px-4 py-4 whitespace-nowrap font-medium">
                               {formatTestType(test.test_type)}

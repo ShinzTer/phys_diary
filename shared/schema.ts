@@ -107,7 +107,7 @@ export const physical_tests = pgTable("physical_tests", {
   pullUps: integer("pull_ups"),
   plank: integer("plank"),
   forwardBend: integer("forward_bend"),
-  longJump: numeric("long_jump", { precision: 10, scale: 2 }),
+  longJump: integer("long_jump"),
 });
 
 // Sport results table
