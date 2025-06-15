@@ -517,6 +517,7 @@ export class Storage implements IStorage {
 
   // Physical tests operations
   async getPhysicalTestsByStudent(studentId: number): Promise<PhysicalTest[]> {
+    
     return await this.db.select().from(physical_tests).where(eq(physical_tests.studentId, studentId));
   }
 

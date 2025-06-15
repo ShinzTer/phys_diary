@@ -37,6 +37,7 @@ export const group = pgTable("group", {
   name: varchar("name", { length: 255 }).notNull(),
   teacherId: integer("teacher_id").notNull().references(() => teacher.teacherId),
   facultyId: integer("faculty_id").notNull().references(() => faculty.facultyId),
+  dateOfCreation: date("date_of_creation").notNull().defaultNow(),
 });
 
 // Student table
@@ -64,7 +65,11 @@ export const student = pgTable("student", {
 // Period table
 export const period = pgTable("period", {
   periodId: serial("period_id").primaryKey(),
-  name: varchar("name", { length: 255 }).notNull(),
+  periodOfStudy: text("period_of_study", { enum: ["first_course_beginning",  
+    "semester_1",  "semester_2",  "second_course_beginning",  
+    "semester_3",  "semester_4",  "third_course_beginning",  
+    "semester_5",  "semester_6",  "fourth_course_beginning",  
+    "semester_7",  "semester_8"] }).notNull(),
 });
 
 // Physical state table
@@ -93,6 +98,7 @@ export const physical_tests = pgTable("physical_tests", {
   testId: serial("test_id").primaryKey(),
   studentId: integer("student_id").notNull().references(() => users.id),
   date: date("date").notNull(),
+  periodId: integer("period_id").notNull().references(() => period.periodId),
   pushUps: integer("push_ups"),
   legHold: integer("leg_hold"),
   tappingTest: integer("tapping_test"),   

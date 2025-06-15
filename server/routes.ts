@@ -603,7 +603,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const testData = insertPhysicalTestsSchema.parse(req.body);
       
       // If student, can only create tests for themselves
-      if (req.user?.role === "student" && testData.studentId !== req.user.studentId) {
+      if (req.user?.role === "student" && testData.studentId !== req.user.id) {
         return res.status(403).json({ message: "Access denied" });
       }
       const test = await storage.createPhysicalTest(testData);

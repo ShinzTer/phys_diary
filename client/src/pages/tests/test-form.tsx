@@ -5,39 +5,40 @@ import { queryClient } from "@/lib/queryClient";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { TEST_TYPES, CONTROL_EXERCISE_TYPES } from "@shared/schema";
+import { TEST_TYPES, CONTROL_EXERCISE_TYPES, Period } from "@shared/schema";
 import MainLayout from "@/components/layout/main-layout";
 import { useLocation, useParams } from "wouter";
-import { 
-  Form, 
-  FormControl, 
-  FormDescription, 
-  FormField, 
-  FormItem, 
-  FormLabel, 
-  FormMessage 
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
 } from "@/components/ui/form";
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardFooter, 
-  CardHeader, 
-  CardTitle 
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { 
+import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue
+  SelectValue,
 } from "@/components/ui/select";
 import { Loader2, Save, ArrowLeft } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { date } from "drizzle-orm/mysql-core";
 
 interface UserRecord {
   studentId?: number;
@@ -58,18 +59,33 @@ interface Student {
 interface TestData {
   studentId: number;
   date: string;
-  notes: string | null;
-  grade: string | null;
-  [key: string]: any; // For dynamic test type fields
+  periodId: number;
+  pushUps?: number;
+  legHold?: number;
+  tappingTest?: number;
+  runningInPlace?: number;
+  halfSquat?: number;
+  pullUps?: number;
+  plank?: number;
+  forwardBend?: number;
+  longJump?: number;
 }
 
 // Form schema for test creation/editing
 const testFormSchema = z.object({
-  userId: z.number(),
-  testType: z.string().min(1, "Test type is required"),
-  result: z.string().min(1, "Result is required"),
-  grade: z.string().optional(),
-  notes: z.string().optional(),
+  studentId: z.number(),
+  periodId: z.number(),
+  pushUps: z.number().optional(),
+  legHold: z.number().optional(),
+  tappingTest: z.number().optional(),
+  runningInPlace: z.number().optional(),
+  halfSquat: z.number().optional(),
+  pullUps: z.number().optional(),
+  plank: z.number().optional(),
+  forwardBend: z.number().optional(),
+  longJump: z.number().optional(),
+  // grade: z.string().optional(),
+  // notes: z.string().optional(),
 });
 
 type TestFormValues = z.infer<typeof testFormSchema>;
@@ -81,7 +97,7 @@ export default function TestForm() {
   const { toast } = useToast();
   const isEdit = !!params.id;
   const testId = isEdit && params.id ? parseInt(params.id) : undefined;
-  
+
   // Get search params to check if we're in grading mode
   const [searchParams] = useLocation();
   const isGrading = searchParams.includes("grade=true");
@@ -91,55 +107,77 @@ export default function TestForm() {
     queryKey: [`/api/users/${user?.id}/record`],
     enabled: user?.role === "student" && !!user?.id,
   });
-  
+
   // Then fetch student profile using the studentId
   const { data: studentProfile } = useQuery<StudentProfile>({
     queryKey: [`/api/profile/student/${userRecord?.studentId}`],
     enabled: !!userRecord?.studentId,
   });
-  
+
+    const { data: periods = [], isLoading: isLoadingPeriods } = useQuery<
+      Period[]
+    >({
+      queryKey: ["/api/periods"],
+      enabled: user?.role !== "student",
+    });
+
+
   // Fetch students for teacher/admin to select a student
-  const { data: students = [], isLoading: isLoadingStudents } = useQuery<Student[]>({
+  const { data: students = [], isLoading: isLoadingStudents } = useQuery<
+    Student[]
+  >({
     queryKey: ["/api/student/users"],
-    enabled: user?.role !== "student"
+    enabled: user?.role !== "student",
   });
-  
+
   // Fetch specific test data when editing
   const { data: testData, isLoading: isLoadingTest } = useQuery<TestData>({
     queryKey: [`/api/tests/${testId}`],
-    enabled: !!isEdit && !!testId
+    enabled: !!isEdit && !!testId,
   });
-  
+
   // Setup form with default values
   const form = useForm<TestFormValues>({
     resolver: zodResolver(testFormSchema),
     defaultValues: {
-      userId: 0,
-      testType: "",
-      result: "",
-      grade: "",
-      notes: ""
-    }
+      studentId: 0,
+      periodId: 0,
+      pushUps: 0,
+      legHold: 0,
+      tappingTest: 0,
+      runningInPlace: 0,
+      halfSquat: 0,
+      pullUps: 0,
+      plank: 0,
+      forwardBend: 0,
+      longJump: 0,
+    },
   });
 
   // Update form when student profile or edit data is loaded
   useEffect(() => {
     if (user?.role === "student" && studentProfile) {
-      form.setValue("userId", studentProfile.studentId);
+      form.setValue("studentId", studentProfile.studentId);
     }
-    
+
     if (isEdit && testData) {
-      const testType = Object.keys(testData).find(key => 
+      const testType = Object.keys(testData).find((key) =>
         [...TEST_TYPES, ...CONTROL_EXERCISE_TYPES].includes(key as any)
       );
-      
+
       if (testType) {
         form.reset({
-          userId: testData.studentId,
-          testType: testType,
-          result: testData[testType]?.toString() || "",
-          grade: testData.grade || "",
-          notes: testData.notes || ""
+          studentId: testData.studentId,
+          periodId: testData.periodId,
+          pushUps: testData.pushUps ?? 0,
+          legHold: testData.legHold ?? 0,
+          tappingTest: testData.tappingTest ?? 0,
+          runningInPlace: testData.runningInPlace ?? 0,
+          halfSquat: testData.halfSquat ?? 0,
+          pullUps: testData.pullUps ?? 0,
+          plank: testData.plank ?? 0,
+          forwardBend: testData.forwardBend ?? 0,
+          longJump: testData.longJump ?? 0,
         });
       }
     }
@@ -150,34 +188,40 @@ export default function TestForm() {
 
   // Get formatted test type display name
   const formatTestType = (type: string) => {
-    const ret = type.split('_').map(word => 
-      word.charAt(0).toUpperCase() + word.slice(1)
-    ).join(' ');
-   
+    const ret = type
+      .split("_")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
+
     return ret;
   };
-const formatTestType2 = (type: string) => {
-  return type.split('_').map((word, index) => {
-    // Первое слово оставляем в lowercase, остальные с заглавной буквы
-    if (index === 0) {
-      return word.toLowerCase();
-    }
-    return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
-  }).join('');
-};
+  const formatTestType2 = (type: string) => {
+    return type
+      .split("_")
+      .map((word, index) => {
+        // Первое слово оставляем в lowercase, остальные с заглавной буквы
+        if (index === 0) {
+          return word.toLowerCase();
+        }
+        return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+      })
+      .join("");
+  };
 
   // Create test mutation
   const createTestMutation = useMutation({
     mutationFn: async (data: TestFormValues) => {
       let studentId: number;
-      
+      console.log('pizda')
       if (user?.role === "student") {
         if (!studentProfile?.studentId) {
-          throw new Error("Student profile not found. Please contact your administrator.");
+          throw new Error(
+            "Student profile not found. Please contact your administrator."
+          );
         }
         studentId = studentProfile.studentId;
       } else {
-        studentId = data.userId;
+        studentId = data.studentId;
       }
 
       if (!studentId) {
@@ -186,48 +230,58 @@ const formatTestType2 = (type: string) => {
 
       // Create test data object
       const testData: TestData = {
-        studentId,
-        date: new Date().toISOString().split('T')[0],
-        notes: data.notes || null,
-        grade: data.grade || null
+        studentId: data.studentId,
+        date: new Date().toISOString().split("T")[0],
+        periodId: data.periodId,
+        pushUps: data.pushUps ?? 0,
+        legHold: data.legHold ?? 0,
+        tappingTest: data.tappingTest ?? 0,
+        runningInPlace: data.runningInPlace ?? 0,
+        halfSquat: data.halfSquat ?? 0,
+        pullUps: data.pullUps ?? 0,
+        plank: data.plank ?? 0,
+        forwardBend: data.forwardBend ?? 0,
+        longJump: data.longJump ?? 0,
       };
-      
-      // Add the specific test type value
-      testData[data.testType] = parseFloat(data.result) || data.result;
-     
+
       await apiRequest("POST", "/api/physical-tests", testData);
     },
     onSuccess: () => {
-      const studentId = user?.role === "student" ? studentProfile?.studentId : form.getValues("userId");
-      queryClient.invalidateQueries({ queryKey: [`/api/physical-tests/${studentId}`] });
+      const studentId =
+        user?.role === "student"
+          ? studentProfile?.studentId
+          : form.getValues("studentId");
+      queryClient.invalidateQueries({
+        queryKey: [`/api/physical-tests/${studentId}`],
+      });
       queryClient.invalidateQueries({ queryKey: ["/api/physical-tests"] });
       toast({
         title: "Test recorded",
-        description: "Your test result has been successfully recorded."
+        description: "Your test result has been successfully recorded.",
       });
-      navigate('/tests');
+      navigate("/tests");
     },
     onError: (error) => {
       toast({
         title: "Error",
         description: error.message || "Failed to record test",
-        variant: "destructive"
+        variant: "destructive",
       });
-    }
+    },
   });
-  
+
   // Update test mutation
   const updateTestMutation = useMutation({
     mutationFn: async (data: TestFormValues) => {
       let studentId: number;
-      
+
       if (user?.role === "student") {
         if (!studentProfile?.studentId) {
           throw new Error("Student profile not found");
         }
         studentId = studentProfile.studentId;
       } else {
-        studentId = data.userId;
+        studentId = data.studentId;
       }
 
       if (!studentId) {
@@ -235,42 +289,55 @@ const formatTestType2 = (type: string) => {
       }
 
       const testData: TestData = {
-        studentId,
-        date: new Date().toISOString().split('T')[0],
-        notes: data.notes || null,
-        grade: data.grade || null
+        studentId: data.studentId,
+        date: new Date().toISOString().split("T")[0],
+        periodId: data.periodId,
+        pushUps: data.pushUps ?? 0,
+        legHold: data.legHold ?? 0,
+        tappingTest: data.tappingTest ?? 0,
+        runningInPlace: data.runningInPlace ?? 0,
+        halfSquat: data.halfSquat ?? 0,
+        pullUps: data.pullUps ?? 0,
+        plank: data.plank ?? 0,
+        forwardBend: data.forwardBend ?? 0,
+        longJump: data.longJump ?? 0,
       };
-      
-      testData[data.testType] = parseFloat(data.result) || data.result;
-      
+
       await apiRequest("PUT", `/api/physical-tests/${testId}`, testData);
     },
     onSuccess: () => {
-      const studentId = user?.role === "student" ? studentProfile?.studentId : form.getValues("userId");
-      queryClient.invalidateQueries({ queryKey: [`/api/physical-tests/${studentId}`] });
+      const studentId =
+        user?.role === "student"
+          ? studentProfile?.studentId
+          : form.getValues("studentId");
+      queryClient.invalidateQueries({
+        queryKey: [`/api/physical-tests/${studentId}`],
+      });
       queryClient.invalidateQueries({ queryKey: ["/api/physical-tests"] });
       toast({
         title: isGrading ? "Test graded" : "Test updated",
-        description: isGrading 
-          ? "The test has been successfully graded." 
-          : "The test has been successfully updated."
+        description: isGrading
+          ? "The test has been successfully graded."
+          : "The test has been successfully updated.",
       });
-      navigate('/tests');
+      navigate("/tests");
     },
     onError: (error) => {
       toast({
         title: "Error",
         description: error.message || "Failed to update test",
-        variant: "destructive"
+        variant: "destructive",
       });
-    }
+    },
   });
 
   // Handle form submission
   function onSubmit(data: TestFormValues) {
+    
     if (isEdit) {
       updateTestMutation.mutate(data);
     } else {
+      console.log('pizda')
       createTestMutation.mutate(data);
     }
   }
@@ -285,25 +352,32 @@ const formatTestType2 = (type: string) => {
     );
   }
 
-  const pageTitle = isEdit 
-    ? (isGrading ? "Grade Test" : "Edit Test Record") 
+  const pageTitle = isEdit
+    ? isGrading
+      ? "Grade Test"
+      : "Edit Test Record"
     : "Record New Test";
 
   return (
     <MainLayout>
       <div className="container mx-auto px-4 py-6">
         <div className="flex items-center mb-6">
-          <Button variant="ghost" onClick={() => navigate('/tests')} className="mr-2">
+          <Button
+            variant="ghost"
+            onClick={() => navigate("/tests")}
+            className="mr-2"
+          >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back
           </Button>
           <div>
             <h2 className="text-2xl font-semibold">{pageTitle}</h2>
             <p className="text-gray-500">
-              {isEdit 
-                ? (isGrading ? "Assign a grade to this test" : "Update test information") 
-                : "Record a new physical test or control exercise"
-              }
+              {isEdit
+                ? isGrading
+                  ? "Assign a grade to this test"
+                  : "Update test information"
+                : "Record a new physical test or control exercise"}
             </p>
           </div>
         </div>
@@ -312,20 +386,19 @@ const formatTestType2 = (type: string) => {
           <CardHeader>
             <CardTitle>{pageTitle}</CardTitle>
             <CardDescription>
-              {isEdit 
-                ? (isGrading ? "Review and grade this test result" : "Make changes to the test record") 
-                : "Fill in the details for the new test"
-              }
+              {isEdit
+                ? isGrading
+                  ? "Review and grade this test result"
+                  : "Make changes to the test record"
+                : "Fill in the details for the new test"}
             </CardDescription>
           </CardHeader>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)}>
-              <CardContent className="space-y-4">
-                {/* Student selection (for teachers/admins only) */}
-                {user?.role !== "student" && (
+              {user?.role !== "student" && (
                   <FormField
                     control={form.control}
-                    name="userId"
+                    name="studentId"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Student</FormLabel>
@@ -356,132 +429,117 @@ const formatTestType2 = (type: string) => {
                   />
                 )}
 
-                {/* Test type selection - disabled in grading mode */}
-                <FormField
-                  control={form.control}
-                  name="testType"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Test Type</FormLabel>
-                      <Select 
-                        onValueChange={field.onChange} 
-                        defaultValue={field.value}
-                        disabled={isGrading}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select test type" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {/* Category headers and section dividers */}
-                          <div className="px-2 py-1.5 text-sm font-semibold text-muted-foreground">
-                            Select a test type
-                          </div>
-                          {/* Physical Tests Section */}
-                          <div className="px-2 py-1.5 text-sm font-semibold text-primary">
-                            Physical Tests
-                          </div>
-                          {TEST_TYPES.map(type => (
-                            <SelectItem key={type} value={formatTestType2(type)}>
-                              {formatTestType(type)}
-                            </SelectItem>
-                          ))}
-                          
-                          {/* Control Exercises Section */}
-                          <div className="px-2 py-1.5 text-sm font-semibold text-primary">
-                            Control Exercises
-                          </div>
-                          {CONTROL_EXERCISE_TYPES.map(type => (
-                            <SelectItem key={type} value={type}>
-                              {formatTestType(type)}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
 
-                {/* Test result - disabled in grading mode */}
-                <FormField
-                  control={form.control}
-                  name="result"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Result</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter test result" {...field} disabled={isGrading} />
-                      </FormControl>
-                      <FormDescription>
-                        Enter the numeric or descriptive result (e.g., "12 reps", "180 cm")
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {/* Grade - only enabled for teachers or in grading mode */}
-                {(user?.role === "teacher" || user?.role === "admin" || isGrading) && (
+                
                   <FormField
                     control={form.control}
-                    name="grade"
+                    name="periodId"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Grade</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter grade" {...field} />
-                        </FormControl>
+                        <FormLabel>Period</FormLabel>
+                        <Select 
+                          onValueChange={(value) => field.onChange(parseInt(value))} 
+                          defaultValue={field.value.toString()}
+                          disabled={isEdit}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select a student" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {periods?.map(period => (
+                              <SelectItem key={period.periodId} value={period.periodId.toString()}>
+                                {period.periodOfStudy}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                         <FormDescription>
-                          Assign a grade (e.g., A, B, C, D or numeric 1-5)
+                          Select the student for whom this test is being recorded
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                )}
+                
 
-                {/* Notes */}
-                <FormField
-                  control={form.control}
-                  name="notes"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Notes</FormLabel>
-                      <FormControl>
-                        <Textarea 
-                          placeholder="Additional notes about the test" 
-                          className="resize-none" 
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+              <CardContent className="space-y-4">
+                {/* Табличный ввод */}
+                <div className="overflow-x-auto">
+                  <table className="w-full table-auto border border-gray-200 text-sm">
+                    <thead className="bg-muted">
+                      <tr>
+                        <th className="p-2 text-left">Test Name</th>
+                        <th className="p-2 text-left">Result</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {[
+                        { name: "Push-Ups", key: "pushUps" },
+                        { name: "Leg Hold", key: "legHold" },
+                        { name: "Tapping Test", key: "tappingTest" },
+                        { name: "Running in Place", key: "runningInPlace" },
+                        { name: "Half Squat", key: "halfSquat" },
+                        { name: "Pull-Ups", key: "pullUps" },
+                        { name: "Plank", key: "plank" },
+                        { name: "Forward Bend", key: "forwardBend" },
+                        { name: "Long Jump", key: "longJump" },
+                      ].map((test) => (
+                        <tr key={test.key} className="border-t border-gray-100">
+                          <td className="p-2 font-medium">{test.name}</td>
+                          <td className="p-2">
+                            <FormField
+                              control={form.control}
+                              name={test.key as keyof TestFormValues}
+                              render={({ field }) => (
+                                <Input
+                                  type="number"
+                                  step={test.key === "longJump" ? "0.01" : "1"}
+                                  {...field}
+                                />
+                              )}
+                            />
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </CardContent>
+
               <CardFooter className="flex justify-between">
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={() => navigate('/tests')}
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => navigate("/tests")}
                 >
                   Cancel
                 </Button>
-                <Button 
-                  type="submit" 
-                  disabled={createTestMutation.isPending || updateTestMutation.isPending}
+                <Button
+                  type="submit"
+                  disabled={
+                    createTestMutation.isPending || updateTestMutation.isPending
+                  }
                 >
-                  {createTestMutation.isPending || updateTestMutation.isPending ? (
+                  {createTestMutation.isPending ||
+                  updateTestMutation.isPending ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      {isEdit ? (isGrading ? "Saving Grade..." : "Updating...") : "Saving..."}
+                      {isEdit
+                        ? isGrading
+                          ? "Saving Grade..."
+                          : "Updating..."
+                        : "Saving..."}
                     </>
                   ) : (
                     <>
                       <Save className="mr-2 h-4 w-4" />
-                      {isEdit ? (isGrading ? "Save Grade" : "Update Test") : "Save Test"}
+                      {isEdit
+                        ? isGrading
+                          ? "Save Grade"
+                          : "Update Test"
+                        : "Save Test"}
                     </>
                   )}
                 </Button>
