@@ -131,32 +131,32 @@ export default function TestForm() {
 
   // Fetch specific test data when editing
   const { data: testData, isLoading: isLoadingTest } = useQuery<TestData>({
-    queryKey: [`/api/tests/${testId}`],
+    queryKey: [`/api/physical-tests/${testId}`],
     enabled: !!isEdit && !!testId,
-  });
+  }); 
 
   // Setup form with default values
   const form = useForm<TestFormValues>({
     resolver: zodResolver(testFormSchema),
     defaultValues: {
-      studentId: 0,
-      periodId: 0,
-      pushUps: 0,
-      legHold: 0,
-      tappingTest: 0,
-      runningInPlace: 0,
-      halfSquat: 0,
-      pullUps: 0,
-      plank: 0,
-      forwardBend: 0,
-      longJump: 0.00,
+      studentId: testData?.studentId ?? 0,
+      periodId: testData?.periodId ?? 0,
+      pushUps: testData?.studentId ?? 0,
+      legHold: testData?.legHold ?? 0,
+      tappingTest: testData?.tappingTest ?? 0,
+      runningInPlace: testData?.runningInPlace ?? 0,
+      halfSquat: testData?.halfSquat ?? 0,
+      pullUps: testData?.pullUps ?? 0,
+      plank: testData?.plank ?? 0,
+      forwardBend: testData?.forwardBend ?? 0,
+      longJump: testData?.longJump ?? 0,
     },
   });
-
+console.log(studentProfile)
   // Update form when student profile or edit data is loaded
   useEffect(() => {
-    if (user?.role === "student" && studentProfile) {
-      form.setValue("studentId", studentProfile.studentId);
+    if (user?.role === "student" && testData  ) {
+      form.setValue("studentId", testData?.studentId);
     }
 
     if (isEdit && testData) {
@@ -211,7 +211,7 @@ export default function TestForm() {
   const createTestMutation = useMutation({
     mutationFn: async (data: TestFormValues) => {
       let studentId: number;
-      console.log("pizda");
+      
       if (user?.role === "student") {
         if (!studentProfile?.studentId) {
           throw new Error(
@@ -335,7 +335,7 @@ export default function TestForm() {
     if (isEdit) {
       updateTestMutation.mutate(data);
     } else {
-      console.log("SUBMIT DATA", data);
+     
       createTestMutation.mutate(data);
     }
   }

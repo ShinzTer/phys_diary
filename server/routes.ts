@@ -390,6 +390,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+ 
+
 
   app.get("/api/profile/studen/:userId", async (req, res) => {
     try {
@@ -423,8 +425,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         profile: profileData
       });
     } catch (error) {
-      console.error("Error fetching student profile:", error);
-      res.status(500).json({ message: "Error fetching student profile" });
+      console.error("Error fetching student profile by userID:", error);
+      res.status(500).json({ message: "Error fetching student profile by userID" });
     }
   });
 
@@ -633,7 +635,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Students can only update their own tests
-      if (req.user?.role === "student" && existingTest.studentId !== req.user.studentId) {
+      if (req.user?.role === "student" && existingTest.studentId !== req.user.id) {
         return res.status(403).json({ message: "Access denied" });
       }
       
@@ -688,7 +690,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const states = await storage.getPhysicalTests();
-     
+     console.log(states)
       res.json(states);
     } catch (error) {
       res.status(500).json({ message: "Error fetching physical tests" });

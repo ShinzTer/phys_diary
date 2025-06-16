@@ -30,7 +30,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Search, SlidersHorizontal, Plus, Pencil, MoreHorizontal, ArrowUpDown, Star } from "lucide-react";
-import { TEST_TYPES, CONTROL_EXERCISE_TYPES, TEST_TYPES_CAMEL, CONTROL_EXERCISE_TYPES_CAMEL, PhysicalTest } from "@shared/schema";
+import { TEST_TYPES, CONTROL_EXERCISE_TYPES, TEST_TYPES_CAMEL, CONTROL_EXERCISE_TYPES_CAMEL, PhysicalTest, Student, Period } from "@shared/schema";
 import { format } from "date-fns";
 
 
@@ -45,6 +45,19 @@ export default function Tests() {
 const { data: tests, isLoading } = useQuery<PhysicalTest[]>({
   queryKey: [user?.role === "student" ? `/api/physical-tests/${user.id}` : "/api/tests/all"],
 });
+console.log(tests)
+console.log(user?.role)
+ const { data: students = [], isLoading: isLoadingStudents } = useQuery<Student[]>({
+    queryKey: ["/api/students"],
+    enabled: user?.role !== "student"
+  });
+
+   const { data: periods = [], isLoading: isLoadingPeriods } = useQuery<
+      Period[]
+    >({
+      queryKey: ["/api/periods"],
+      enabled: user?.role !== "student",
+    });
 
 const formatTestType2 = (type: string) => {
   return type.split('_').map((word, index) => {
@@ -126,22 +139,7 @@ const formatTestType2 = (type: string) => {
             <div className="flex justify-between items-center">
               <CardTitle className="text-lg">Test Records</CardTitle>
               <div className="flex gap-2">
-                <Select
-                  value={testTypeFilter}
-                  onValueChange={setTestTypeFilter}
-                >
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="All test types" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All test types</SelectItem>
-                    {allTestTypes.map(type => (
-                      <SelectItem key={type} value={formatTestType2(type)}>
-                        {formatTestType(type)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              
               </div>
             </div>
             <Tabs defaultValue="tests" value={activeTab} onValueChange={setActiveTab}>
@@ -173,44 +171,66 @@ const formatTestType2 = (type: string) => {
                     <table className="w-full">
                       <thead>
                         <tr className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          <th className="px-4 py-3">
-                            <div className="flex items-center">
-                              Test Type
-                              <ArrowUpDown className="ml-2 h-3 w-3" />
-                            </div>
-                          </th>
-                          <th className="px-4 py-3">Result</th>
+                        
+                          <th className="px-4 py-3">Student</th>
+                          
                           <th className="px-4 py-3">Date</th>
-                          <th className="px-4 py-3">
+                          <th className="px-4 py-3">Period</th>
+                          <th className="px-4 py-3">Push ups</th>
+                          <th className="px-4 py-3">Pull ups</th>
+                          <th className="px-4 py-3">Leg hold</th>
+                          <th className="px-4 py-3">Tapping test</th>
+                          <th className="px-4 py-3">Running in place</th>
+                          <th className="px-4 py-3">Plank</th>
+                          <th className="px-4 py-3">Forward Bend</th>
+                           <th className="px-4 py-3">Long jump</th>
+                          {/* <th className="px-4 py-3">
                             <div className="flex items-center">
                               Grade
                               <ArrowUpDown className="ml-2 h-3 w-3" />
                             </div>
                           </th>
-                          <th className="px-4 py-3">Notes</th>
+                          <th className="px-4 py-3">Notes</th> */}
                           <th className="px-4 py-3 text-right">Actions</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-200">
                         {tests?.map((test) => (
-                          <tr key={test.id}>
+                          <tr key={test.testId}>
                             <td className="px-4 py-4 whitespace-nowrap font-medium">
-                              {formatTestType(test.test_type)}
+                              {students.find((student) => student.userId === test.studentId)?.fullName || 'Unknown'}
                             </td>
                             <td className="px-4 py-4 whitespace-nowrap">
-                              {test.value}
+                              {test.date ? format(new Date(test.date), 'MM dd, yyyy') : '-'}
                             </td>
                             <td className="px-4 py-4 whitespace-nowrap text-sm">
-                              {test.date ? format(new Date(test.date), 'MMM d, yyyy') : '-'}
+                              {periods.find((period) => period.periodId === test.periodId)?.periodOfStudy || '-'}
                             </td>
                             <td className="px-4 py-4 whitespace-nowrap">
-                              {getGradeBadge(test.grade)}
+                              {test.pushUps || '-'}
                             </td>
-                            <td className="px-4 py-4">
-                              <div className="max-w-xs truncate">
-                                {test.notes || '-'}
-                              </div>
+                              <td className="px-4 py-4 whitespace-nowrap">
+                              {test.pullUps || '-'}
                             </td>
+                              <td className="px-4 py-4 whitespace-nowrap">
+                              {test.legHold || '-'}
+                            </td>
+                              <td className="px-4 py-4 whitespace-nowrap">
+                              {test.tappingTest || '-'}
+                            </td>
+                              <td className="px-4 py-4 whitespace-nowrap">
+                              {test.runningInPlace || '-'}
+                            </td>
+                             <td className="px-4 py-4 whitespace-nowrap">
+                              {test.forwardBend || '-'}
+                            </td>
+                             <td className="px-4 py-4 whitespace-nowrap">
+                              {test.plank || '-'}
+                            </td>
+                             <td className="px-4 py-4 whitespace-nowrap">
+                              {test.longJump || '-'}
+                            </td>
+
                             <td className="px-4 py-4 whitespace-nowrap text-right">
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
@@ -220,12 +240,12 @@ const formatTestType2 = (type: string) => {
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
                                   <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                  <DropdownMenuItem onClick={() => navigate(`/tests/edit/${test.id}`)}>
+                                  <DropdownMenuItem onClick={() => navigate(`/tests/edit/${test.testId}`)}>
                                     <Pencil className="mr-2 h-4 w-4" />
                                     Edit
                                   </DropdownMenuItem>
-                                  {user?.role === "teacher" && !test.grade && (
-                                    <DropdownMenuItem onClick={() => navigate(`/tests/edit/${test.id}?grade=true`)}>
+                                  {user?.role === "teacher"  && (
+                                    <DropdownMenuItem onClick={() => navigate(`/tests/edit/${test.testId}?grade=true`)}>
                                       <Star className="mr-2 h-4 w-4" />
                                       Assign Grade
                                     </DropdownMenuItem>
