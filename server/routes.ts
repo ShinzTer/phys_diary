@@ -390,9 +390,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
- 
-
-
   app.get("/api/profile/studen/:userId", async (req, res) => {
     try {
       if (!req.isAuthenticated()) {
@@ -767,6 +764,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+
+   app.get("/api/sport-results-period/:periodId", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const studentId = parseInt(req.params.periodId);
+      
+      // If not an admin or teacher, only allow access to own sport results
+      if (req.user?.role !== "admin" && req.user?.role !== "teacher" ) { //тут беда
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const results = await storage.getSportResultsByPeriod(studentId);
+      res.json(results);
+    } catch (error) {
+      res.status(500).json({ message: "Error fetching sport results" });
+    }
+  });
+
   app.post("/api/sport-results", async (req, res) => {
     try {
       if (!req.isAuthenticated()) {
@@ -821,11 +839,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       if (!req.isAuthenticated()) {
         return res.status(401).json({ message: "Not authenticated" });
-      }
-      
-      // Check if user is admin or teacher
-      if (req.user?.role !== "admin" && req.user?.role !== "teacher") {
-        return res.status(403).json({ message: "Access denied. Admin or teacher role required." });
       }
       
       const periods = await storage.getAllPeriods();

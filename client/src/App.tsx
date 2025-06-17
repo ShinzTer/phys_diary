@@ -20,6 +20,7 @@ import FacultyManagement from "./pages/admin/faculty-management";
 import GroupManagement from "./pages/admin/group-management";
 import Reports from "./pages/reports";
 import Settings from "./pages/settings";
+import SportResultForm from "./pages/tests/sport-result-form";
 
 function Router() {
   return (
@@ -49,7 +50,8 @@ function Router() {
       <ProtectedRoute path="/tests" component={Tests} />
       <ProtectedRoute path="/tests/new" component={TestForm} />
       <ProtectedRoute path="/tests/edit/:id" component={TestForm} />
-
+      <ProtectedRoute path="/sport_results/new" component={SportResultForm} />
+      <ProtectedRoute path="/sport_results/edit/:id" component={SportResultForm} />
       {/* Sample routes */}
       <ProtectedRoute path="/samples" component={Samples} />
       <ProtectedRoute path="/samples/new" component={SampleForm} />

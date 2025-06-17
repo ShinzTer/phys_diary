@@ -113,7 +113,7 @@ export const physical_tests = pgTable("physical_tests", {
 // Sport results table
 export const sport_results = pgTable("sport_results", {
   sportResultId: serial("sport_result_id").primaryKey(),
-  studentId: integer("student_id").notNull().references(() => student.studentId),
+  studentId: integer("student_id").notNull().references(() => users.id),
   basketballFreethrow: integer("basketball_freethrow"),
   basketballDribble: integer("basketball_dribble"),
   volleyballPass: integer("volleyball_pass"),
@@ -123,6 +123,7 @@ export const sport_results = pgTable("sport_results", {
   swimming100m: numeric("swimming_100m", { precision: 10, scale: 2 }),
   running100m: numeric("running_100m", { precision: 10, scale: 2 }),
   running500m1000m: numeric("running_500m_1000m", { precision: 10, scale: 2 }),
+  periodId: integer("period_id").notNull().references(() => period.periodId),
 });
 
 // Result table

@@ -552,6 +552,9 @@ export class Storage implements IStorage {
     return await this.db.select().from(sport_results).where(eq(sport_results.studentId, studentId));
   }
 
+    async getSportResultsByPeriod(periodId: number): Promise<SportResult[]> {
+    return await this.db.select().from(sport_results).where(eq(sport_results.periodId, periodId));
+  }
   async getSportResult(id: number): Promise<SportResult | undefined> {
     const [sportResultRecord] = await this.db.select().from(sport_results).where(eq(sport_results.sportResultId, id));
     return sportResultRecord;
