@@ -623,6 +623,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // If student, can only create tests for themselves
       if (req.user?.role === "student" && testData.studentId !== req.user.id) {
+        console.log(testData)
+        console.log(req.user.id)
         return res.status(403).json({ message: "Access denied" });
       }
       console.log(testData);

@@ -33,7 +33,7 @@ import {
 } from "@shared/schema";
 
 import { db } from "./db";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, asc } from "drizzle-orm";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
 import { pool } from "./db";
@@ -451,7 +451,7 @@ export class Storage implements IStorage {
 
   // Period operations
   async getAllPeriods(): Promise<Period[]> {
-    return await this.db.select().from(period);
+    return await this.db.select().from(period).orderBy(asc(period.periodId));
   }
 
   async getPeriod(id: number): Promise<Period | undefined> {
@@ -622,6 +622,7 @@ export class Storage implements IStorage {
     if (!studentData) return undefined;
 
     const profile: StudentProfile = {
+      studentId: studentData.studentId,
       fullName: studentData.fullName,
       gender: studentData.gender as "male" | "female" | "other",
       dateOfBirth: studentData.dateOfBirth,

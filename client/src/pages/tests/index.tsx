@@ -241,7 +241,7 @@ const formatTestType2 = (type: string) => {
                               {user?.role === "student" ? user?.username : students.find((student) => student.userId === test.studentId)?.fullName || 'Unknown'}
                             </td>
                             <td className="px-4 py-4 whitespace-nowrap">
-                              {test.date ? format(new Date(test.date), 'MM dd, yyyy') : '-'}
+                              {test.date ? format(new Date(test.date), 'dd.MM.yyyy') : '-'}
                             </td>
                             <td className="px-4 py-4 whitespace-nowrap text-sm">
                               {periods.find((period) => period.periodId === test.periodId)?.periodOfStudy || '-'}

@@ -139,9 +139,9 @@ console.log(testData)
   const form = useForm<TestFormValues>({
     resolver: zodResolver(testFormSchema),
     defaultValues: {
-      studentId: testData?.studentId ?? 0,
+      studentId: user?.role === "student" ? user.id : (testData?.studentId ?? 0),
       periodId: testData?.periodId ?? 0,
-      pushUps: testData?.studentId ?? 0,
+      pushUps: testData?.pushUps ?? 0,
       legHold: testData?.legHold ?? 0,
       tappingTest: testData?.tappingTest ?? 0,
       runningInPlace: testData?.runningInPlace ?? 0,
@@ -166,7 +166,7 @@ console.log(studentProfile)
 
       if (testType) {
         form.reset({
-          studentId: testData.studentId,
+          studentId: user?.role === "student" ? user.id : (testData.studentId),
           periodId: testData.periodId,
           pushUps: testData.pushUps ?? 0,
           legHold: testData.legHold ?? 0,
@@ -211,14 +211,14 @@ console.log(studentProfile)
   const createTestMutation = useMutation({
     mutationFn: async (data: TestFormValues) => {
       let studentId: number;
-      
+      console.log(data)
       if (user?.role === "student") {
-        if (!studentProfile?.studentId) {
+        if (!studentProfile?.profile.studentId) {
           throw new Error(
             "Student profile not found. Please contact your administrator."
           );
         }
-        studentId = studentProfile.studentId;
+        studentId = studentProfile.profile.studentId;
       } else {
         studentId = data.studentId;
       }
@@ -248,7 +248,7 @@ console.log(studentProfile)
     onSuccess: () => {
       const studentId =
         user?.role === "student"
-          ? studentProfile?.studentId
+          ? user?.id
           : form.getValues("studentId");
       queryClient.invalidateQueries({
         queryKey: [`/api/physical-tests/${studentId}`],
@@ -392,7 +392,7 @@ console.log(studentProfile)
             </CardDescription>
           </CardHeader>
           <Form {...form}>
-            <form
+            <form className="p-4"
               onSubmit={form.handleSubmit(onSubmit, (errors) => {
                 console.log("FORM ERRORS:", errors);
               })}
@@ -427,7 +427,7 @@ console.log(studentProfile)
                           ))}
                         </SelectContent>
                       </Select>
-                      <FormDescription>
+                      <FormDescription className="py-2">
                         Select the student for whom this test is being recorded
                       </FormDescription>
                       <FormMessage />
@@ -463,7 +463,7 @@ console.log(studentProfile)
                         ))}
                       </SelectContent>
                     </Select>
-                    <FormDescription>
+                    <FormDescription className="py-2">
                       Select the student for whom this test is being recorded
                     </FormDescription>
                     <FormMessage />
@@ -471,7 +471,7 @@ console.log(studentProfile)
                 )}
               />
 
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-4 py-2">
                 {/* Табличный ввод */}
                 <div className="overflow-x-auto">
                   <table className="w-full table-auto border border-gray-200 text-sm">

@@ -320,6 +320,7 @@ export const teacherProfileSchema = baseProfileSchema.extend({
 
 // Student profile schema extends base schema
 export const studentProfileSchema = baseProfileSchema.extend({
+  studentId: z.number(),
   gender: z.enum(["male", "female", "other"]),
   placeOfBirth: z.string().optional(),
   address: z.string().min(2, "Address is required"),
