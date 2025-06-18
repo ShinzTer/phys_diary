@@ -764,6 +764,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+    app.get("/api/sport-results-id/:testId", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const studentId = parseInt(req.params.testId);
+      
+      const results = await storage.getSportResult(studentId);
+      res.json(results);
+    } catch (error) {
+      res.status(500).json({ message: "Error fetching sport results" });
+    }
+  });
+
 
    app.get("/api/sport-results-period/:periodId", async (req, res) => {
     try {

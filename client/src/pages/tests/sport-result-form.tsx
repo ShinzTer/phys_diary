@@ -10,6 +10,7 @@ import {
   CONTROL_EXERCISE_TYPES,
   Period,
   SportResult,
+  CONTROL_EXERCISE_TYPES_CAMEL,
 } from "@shared/schema";
 import MainLayout from "@/components/layout/main-layout";
 import { useLocation, useParams } from "wouter";
@@ -121,10 +122,10 @@ export default function SportResultForm() {
 
   // Fetch specific test data when editing
   const { data: testData, isLoading: isLoadingTest } = useQuery<SportResult>({
-    queryKey: [`/api/physical-tests/${testId}`],
+    queryKey: [`/api/sport-results-id/${testId}`],
     enabled: !!isEdit && !!testId,
   });
-
+console.log(testData?.basketballFreethrow)
   // Setup form with default values
   const form = useForm<TestFormValues>({
     resolver: zodResolver(testFormSchema),
@@ -135,11 +136,11 @@ export default function SportResultForm() {
       basketballDribble: testData?.basketballDribble ?? 0,
       volleyballPass: testData?.volleyballPass ?? 0,
       volleyballServe: testData?.volleyballServe ?? 0,
-      swimming25m: testData?.swimming25m ?? 0,
-      swimming50m: testData?.swimming50m ?? 0,
-      swimming100m: testData?.swimming100m ?? 0,
-      running100m: testData?.running100m ?? 0,
-      running500m1000m: testData?.running500m1000m ?? 0,
+      swimming25m: Number(testData?.swimming25m ?? 0),
+      swimming50m: Number(testData?.swimming50m ?? 0),
+      swimming100m: Number(testData?.swimming100m ?? 0),
+      running100m: Number(testData?.running100m ?? 0),
+      running500m1000m: Number(testData?.running500m1000m ?? 0),
     },
   });
 
@@ -151,22 +152,22 @@ export default function SportResultForm() {
 
     if (isEdit && testData) {
       const testType = Object.keys(testData).find((key) =>
-        [...TEST_TYPES, ...CONTROL_EXERCISE_TYPES].includes(key as any)
+        [ ...CONTROL_EXERCISE_TYPES_CAMEL].includes(key as any)
       );
-
+        console.log(testData)
       if (testType) {
         form.reset({
           studentId: testData.studentId,
           periodId: testData.periodId,
-          pushUps: testData.pushUps ?? 0,
-          legHold: testData.legHold ?? 0,
-          tappingTest: testData.tappingTest ?? 0,
-          runningInPlace: testData.runningInPlace ?? 0,
-          halfSquat: testData.halfSquat ?? 0,
-          pullUps: testData.pullUps ?? 0,
-          plank: testData.plank ?? 0,
-          forwardBend: testData.forwardBend ?? 0,
-          longJump: testData.longJump ?? 0,
+      basketballFreethrow: testData?.basketballFreethrow ?? 0,
+      basketballDribble: testData?.basketballDribble ?? 0,
+      volleyballPass: testData?.volleyballPass ?? 0,
+      volleyballServe: testData?.volleyballServe ?? 0,
+      swimming25m: Number(testData?.swimming25m) ?? 0,
+      swimming50m: Number(testData?.swimming50m) ?? 0,
+      swimming100m: Number(testData?.swimming100m) ?? 0,
+      running100m: Number(testData?.running100m) ?? 0,
+      running500m1000m: Number(testData?.running500m1000m) ?? 0,
         });
       }
     }
@@ -218,22 +219,22 @@ export default function SportResultForm() {
       }
 
       // Create test data object
-      const testData: TestData = {
+      const testData: Partial<SportResult> = {
         studentId: data.studentId,
-        date: new Date().toISOString().split("T")[0],
         periodId: data.periodId,
-        pushUps: data.pushUps ?? 0,
-        legHold: data.legHold ?? 0,
-        tappingTest: data.tappingTest ?? 0,
-        runningInPlace: data.runningInPlace ?? 0,
-        halfSquat: data.halfSquat ?? 0,
-        pullUps: data.pullUps ?? 0,
-        plank: data.plank ?? 0,
-        forwardBend: data.forwardBend ?? 0,
-        longJump: data.longJump ?? 0,
+        
+      basketballFreethrow: data?.basketballFreethrow ?? 0,
+      basketballDribble: data?.basketballDribble ?? 0,
+      volleyballPass: data?.volleyballPass ?? 0,
+      volleyballServe: data?.volleyballServe ?? 0,
+      swimming25m: String(data?.swimming25m) ?? 0,
+      swimming50m: String(data?.swimming50m) ?? 0,
+      swimming100m: String(data?.swimming100m) ?? 0,
+      running100m: String(data?.running100m) ?? 0,
+      running500m1000m: String(data?.running500m1000m) ?? 0,
       };
 
-      await apiRequest("POST", "/api/physical-tests", testData);
+      await apiRequest("POST", "/api/sport-results", testData);
     },
     onSuccess: () => {
       const studentId =
@@ -241,9 +242,9 @@ export default function SportResultForm() {
           ? studentProfile?.studentId
           : form.getValues("studentId");
       queryClient.invalidateQueries({
-        queryKey: [`/api/physical-tests/${studentId}`],
+        queryKey: [`/api/sport-results/${studentId}`],
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/physical-tests"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/sport-results"] });
       toast({
         title: "Test recorded",
         description: "Your test result has been successfully recorded.",
@@ -277,22 +278,23 @@ export default function SportResultForm() {
         throw new Error("Student ID is required");
       }
 
-      const testData: TestData = {
+      const testData: Partial<SportResult> = {
         studentId: data.studentId,
-        date: new Date().toISOString().split("T")[0],
+       
         periodId: data.periodId,
-        pushUps: data.pushUps ?? 0,
-        legHold: data.legHold ?? 0,
-        tappingTest: data.tappingTest ?? 0,
-        runningInPlace: data.runningInPlace ?? 0,
-        halfSquat: data.halfSquat ?? 0,
-        pullUps: data.pullUps ?? 0,
-        plank: data.plank ?? 0,
-        forwardBend: data.forwardBend ?? 0,
-        longJump: data.longJump ?? 0,
+        
+      basketballFreethrow: data?.basketballFreethrow ?? 0,
+      basketballDribble: data?.basketballDribble ?? 0,
+      volleyballPass: data?.volleyballPass ?? 0,
+      volleyballServe: data?.volleyballServe ?? 0,
+      swimming25m: String(data?.swimming25m) ?? 0,
+      swimming50m: String(data?.swimming50m) ?? 0,
+      swimming100m: String(data?.swimming100m) ?? 0,
+      running100m: String(data?.running100m) ?? 0,
+      running500m1000m: String(data?.running500m1000m) ?? 0,
       };
 
-      await apiRequest("PUT", `/api/physical-tests/${testId}`, testData);
+      await apiRequest("PUT", `/api/sport-results/${testId}`, testData);
     },
     onSuccess: () => {
       const studentId =
@@ -300,9 +302,9 @@ export default function SportResultForm() {
           ? studentProfile?.studentId
           : form.getValues("studentId");
       queryClient.invalidateQueries({
-        queryKey: [`/api/physical-tests/${studentId}`],
+        queryKey: [`/api/sport-results/${studentId}`],
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/physical-tests"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/sport-results"] });
       toast({
         title: isGrading ? "Test graded" : "Test updated",
         description: isGrading
@@ -380,8 +382,8 @@ export default function SportResultForm() {
                 : "Fill in the details for the new test"}
             </CardDescription>
           </CardHeader>
-          <Form {...form}>
-            <form
+          <Form {...form} >
+            <form className="px-4"
               onSubmit={form.handleSubmit(onSubmit, (errors) => {
                 console.log("FORM ERRORS:", errors);
               })}
@@ -425,7 +427,7 @@ export default function SportResultForm() {
                 />
               )}
 
-              <FormField
+              <FormField 
                 control={form.control}
                 name="periodId"
                 render={({ field }) => (
@@ -460,7 +462,7 @@ export default function SportResultForm() {
                 )}
               />
 
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-4 py-2">
                 {/* Табличный ввод */}
                 <div className="overflow-x-auto">
                   <table className="w-full table-auto border border-gray-200 text-sm">
@@ -472,15 +474,16 @@ export default function SportResultForm() {
                     </thead>
                     <tbody>
                       {[
-                        { name: "Push-Ups", key: "pushUps" },
-                        { name: "Leg Hold", key: "legHold" },
-                        { name: "Tapping Test", key: "tappingTest" },
-                        { name: "Running in Place", key: "runningInPlace" },
-                        { name: "Half Squat", key: "halfSquat" },
-                        { name: "Pull-Ups", key: "pullUps" },
-                        { name: "Plank", key: "plank" },
-                        { name: "Forward Bend", key: "forwardBend" },
-                        { name: "Long Jump", key: "longJump" },
+                        { name: "Basketball Freethrow", key: "basketballFreethrow" },
+                        { name: "Basketball Dribble", key: "basketballDribble" },
+                        { name: "Volleyball Pass", key: "volleyballPass" },
+                        { name: "Volleyball Serve", key: "volleyballServe" },
+                        { name: "Swimming 25m", key: "swimming25m" },
+                        { name: "Swimming 50m", key: "swimming50m" },
+                        { name: "Swimming 100m", key: "swimming100m" },
+                        { name: "Running 100m", key: "running100m" },
+                        { name: "Running 500m/1000m", key: "running500m1000m" },
+                        
                       ].map((test) => (
                         <tr key={test.key} className="border-t border-gray-100">
                           <td className="p-2 font-medium">{test.name}</td>
@@ -491,7 +494,7 @@ export default function SportResultForm() {
                               render={({ field }) => (
                                 <Input
                                   type="number"
-                                  step={test.key === "longJump" ? "0.01" : "1"}
+                                  step={/\d/.test(test.key) ? "0.01" : "1"}
                                   value={field.value ?? ""}
                                   onChange={(e) => {
                                     const inputValue = e.target.value;
