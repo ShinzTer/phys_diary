@@ -593,6 +593,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+
+   app.get("/api/physical-tests-id/:studentId", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      console.log(req.user);
+      const studentId = parseInt(req.params.studentId);
+      
+      const tests = await storage.getPhysicalTest(studentId);
+      
+      // If no tests found, return empty array instead of null
+      res.json(tests || []);
+    } catch (error) {
+      console.error('Error fetching physical tests:', error);
+      res.status(500).json({ message: "Error fetching physical tests", error: String(error) });
+    }
+  });
+
   app.post("/api/physical-tests", async (req, res) => {
     try {
       if (!req.isAuthenticated()) {

@@ -5,7 +5,7 @@ import { queryClient } from "@/lib/queryClient";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { TEST_TYPES, CONTROL_EXERCISE_TYPES, Period } from "@shared/schema";
+import { TEST_TYPES, CONTROL_EXERCISE_TYPES, Period, TEST_TYPES_CAMEL } from "@shared/schema";
 import MainLayout from "@/components/layout/main-layout";
 import { useLocation, useParams } from "wouter";
 import {
@@ -131,10 +131,10 @@ export default function TestForm() {
 
   // Fetch specific test data when editing
   const { data: testData, isLoading: isLoadingTest } = useQuery<TestData>({
-    queryKey: [`/api/physical-tests/${testId}`],
+    queryKey: [`/api/physical-tests-id/${testId}`],
     enabled: !!isEdit && !!testId,
   }); 
-
+console.log(testData)
   // Setup form with default values
   const form = useForm<TestFormValues>({
     resolver: zodResolver(testFormSchema),
@@ -161,7 +161,7 @@ console.log(studentProfile)
 
     if (isEdit && testData) {
       const testType = Object.keys(testData).find((key) =>
-        [...TEST_TYPES, ...CONTROL_EXERCISE_TYPES].includes(key as any)
+        [...TEST_TYPES_CAMEL].includes(key as any)
       );
 
       if (testType) {
@@ -273,12 +273,12 @@ console.log(studentProfile)
   const updateTestMutation = useMutation({
     mutationFn: async (data: TestFormValues) => {
       let studentId: number;
-
+   console.log(studentProfile)
       if (user?.role === "student") {
-        if (!studentProfile?.studentId) {
+        if (!studentProfile?.student_id) {
           throw new Error("Student profile not found");
         }
-        studentId = studentProfile.studentId;
+        studentId = studentProfile.student_id;
       } else {
         studentId = data.studentId;
       }
