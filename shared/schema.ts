@@ -139,7 +139,7 @@ export const result = pgTable("result", {
   stateId: integer("state_id").references(() => physical_state.stateId),
   sportResultId: integer("sport_result_id").references(() => sport_results.sportResultId),
   finalGrade: numeric("final_grade", { precision: 10, scale: 2 }),
-});
+}); 
 
 // Create insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({

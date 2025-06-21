@@ -3,16 +3,16 @@ import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import MainLayout from "@/components/layout/main-layout";
 import { Link, useLocation } from "wouter";
-import { 
-  Card, 
-  CardContent, 
-  CardHeader, 
-  CardTitle, 
-  CardDescription 
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { 
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -20,7 +20,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { 
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -29,11 +29,28 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Search, SlidersHorizontal, Plus, Pencil, MoreHorizontal, ArrowUpDown, Star } from "lucide-react";
-import { TEST_TYPES, CONTROL_EXERCISE_TYPES, TEST_TYPES_CAMEL, CONTROL_EXERCISE_TYPES_CAMEL, PhysicalTest, Student, Period, SportResult } from "@shared/schema";
+import {
+  Loader2,
+  Search,
+  SlidersHorizontal,
+  Plus,
+  Pencil,
+  MoreHorizontal,
+  ArrowUpDown,
+  Star,
+} from "lucide-react";
+import {
+  TEST_TYPES,
+  CONTROL_EXERCISE_TYPES,
+  TEST_TYPES_CAMEL,
+  CONTROL_EXERCISE_TYPES_CAMEL,
+  PhysicalTest,
+  Student,
+  Period,
+  SportResult,
+  Teacher,
+} from "@shared/schema";
 import { format } from "date-fns";
-
-
 
 export default function Tests() {
   const { user } = useAuth();
@@ -41,54 +58,80 @@ export default function Tests() {
   const [searchTerm, setSearchTerm] = useState("");
   const [periodFilter, setPeriodFilter] = useState<string>("all");
   const [activeTab, setActiveTab] = useState<string>("tests");
-  
-const { data: tests, isLoading } = useQuery<PhysicalTest[]>({
-  queryKey: [user?.role === "student" ? `/api/physical-tests/${user.id}` : "/api/tests/all"],
-});
-const filteredTests = tests?.filter((test) => test.periodId === Number(periodFilter)|| periodFilter === "all");
-const { data: sport_results, isLoading: isLoadingResults } = useQuery<SportResult[]>({
-  queryKey: [user?.role === "student" ? `/api/physical-tests/${user.id}` : `/api/sport-results-period/${periodFilter}`],
-  enabled: periodFilter !== "all",
-});
-
-const filteredSportResults = sport_results?.filter((test) => test.periodId === Number(periodFilter));
- const { data: students = [], isLoading: isLoadingStudents } = useQuery<Student[]>({
-    queryKey: ["/api/students"],
-    enabled: user?.role !== "student"
+  const { data: teacherProfile, isLoading: isLoadingTeacherProfile } =
+    useQuery<Teacher>({
+      queryKey: [`/api/profile/teacher/${user?.id}`],
+      enabled: user?.role === "teacher",
+    });
+  const { data: tests, isLoading } = useQuery<PhysicalTest[]>({
+    queryKey: [
+      user?.role === "student"
+        ? `/api/physical-tests/${user.id}`
+        : user?.role === "teacher"
+        ? `/api/tests/all/${teacherProfile?.teacher_id}`
+        : "api/tests/all",
+    ],
+  });
+  const filteredTests = tests?.filter(
+    (test) => test.periodId === Number(periodFilter) || periodFilter === "all"
+  );
+  const { data: sport_results, isLoading: isLoadingResults } = useQuery<
+    SportResult[]
+  >({
+    queryKey: [
+      user?.role === "student"
+        ? `/api/sport-results/${user.id}`
+        : user?.role === "teacher"
+        ? `/api/sport-results-teacher/${teacherProfile?.teacher_id}/period/${periodFilter}`
+        : `/api/sport-results-period/${periodFilter}`,
+    ],
+    enabled: periodFilter !== "all",
   });
 
-   const { data: periods = [], isLoading: isLoadingPeriods } = useQuery<
-      Period[]
-    >({
-      queryKey: ["/api/periods"],
-      enabled: !!user,
-    });
+  console.log(user?.id);
+  console.log(teacherProfile);
+  const filteredSportResults = sport_results?.filter(
+    (test) => test.periodId === Number(periodFilter)
+  );
+  const { data: students = [], isLoading: isLoadingStudents } = useQuery<
+    Student[]
+  >({
+    queryKey: ["/api/students"],
+    enabled: user?.role !== "student",
+  });
 
-const formatTestType2 = (type: string) => {
-  return type.split('_').map((word, index) => {
-    // Первое слово оставляем в lowercase, остальные с заглавной буквы
-    if (index === 0) {
-      return word.toLowerCase();
-    }
-    return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
-  }).join('');
-};
+  const { data: periods = [], isLoading: isLoadingPeriods } = useQuery<
+    Period[]
+  >({
+    queryKey: ["/api/periods"],
+    enabled: !!user,
+  });
 
-
-
-
+  const formatTestType2 = (type: string) => {
+    return type
+      .split("_")
+      .map((word, index) => {
+        // Первое слово оставляем в lowercase, остальные с заглавной буквы
+        if (index === 0) {
+          return word.toLowerCase();
+        }
+        return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+      })
+      .join("");
+  };
 
   // Get formatted test type display name
   const formatTestType = (type: string) => {
-    return type.split('_').map(word => 
-      word.charAt(0).toUpperCase() + word.slice(1)
-    ).join(' ');
+    return type
+      .split("_")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
   };
 
   // Get grade badge
   const getGradeBadge = (grade?: string) => {
     if (!grade) return <Badge variant="outline">Не назначен</Badge>;
-    
+
     let badgeClass = "";
     switch (grade.toUpperCase()) {
       case "10":
@@ -120,7 +163,9 @@ const formatTestType2 = (type: string) => {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
           <div>
             <h2 className="text-2xl font-semibold">Физические тесты</h2>
-            <p className="text-gray-500">Просмотр и управление результатами физических тестов</p>
+            <p className="text-gray-500">
+              Просмотр и управление результатами физических тестов
+            </p>
           </div>
           <div className="mt-4 md:mt-0 flex flex-col sm:flex-row gap-3">
             <div className="relative">
@@ -132,12 +177,22 @@ const formatTestType2 = (type: string) => {
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-            <Link href="/tests/new">
-              <Button>
-                <Plus className="mr-2 h-4 w-4" />
-                Записать тест
-              </Button>
-            </Link>
+            {activeTab === "tests" ? (
+              <Link href="/tests/new">
+                {" "}
+                <Button>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Записать тест
+                </Button>
+              </Link>
+            ) : (
+              <Link href="/sport_results/new">
+                <Button>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Записать контрольное упражнение
+                </Button>
+              </Link>
+            )}
           </div>
         </div>
 
@@ -146,166 +201,208 @@ const formatTestType2 = (type: string) => {
             <div className="flex justify-between items-center">
               <CardTitle className="text-lg">Записи тестов</CardTitle>
               <div className="flex gap-2">
-                  <div className="space-y-2">
-                <label className="text-sm font-medium">Период</label>
-                <Select value={periodFilter} onValueChange={setPeriodFilter}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Выберите период" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Выберите период</SelectItem>
-                    {periods?.map((student) => {
-                      if (!student?.periodId) return null; // Skip if no valid ID
-                      return (
-                        <SelectItem
-                          key={student.periodId}
-                          value={student.periodId.toString()}
-                        >
-                          {student.periodOfStudy}
-                        </SelectItem>
-                      );
-                    })}
-                  </SelectContent>
-                </Select>
-              </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Период</label>
+                  <Select value={periodFilter} onValueChange={setPeriodFilter}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Выберите период" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Выберите период</SelectItem>
+                      {periods?.map((student) => {
+                        if (!student?.periodId) return null; // Skip if no valid ID
+                        return (
+                          <SelectItem
+                            key={student.periodId}
+                            value={student.periodId.toString()}
+                          >
+                            {student.periodOfStudy}
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </div>
-             </CardHeader>
-             {periodFilter === "all" ? (
-                <div className="text-center py-12">
-                      
-                      <h3 className="text-lg font-medium text-gray-900 mb-2">
-                        Выберите период
-                      </h3>
-                      <p className="text-gray-500 max-w-md mx-auto">
-                        Пожалуйста, выберите период из 
-                        фильтров для просмотра записей.
-                      </p>
-                    </div>
-             ) : (
-            <Tabs defaultValue="tests" value={activeTab} onValueChange={setActiveTab}>
+          </CardHeader>
+          {periodFilter === "all" ? (
+            <div className="text-center py-12">
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                Выберите период
+              </h3>
+              <p className="text-gray-500 max-w-md mx-auto">
+                Пожалуйста, выберите период из фильтров для просмотра записей.
+              </p>
+            </div>
+          ) : (
+            <Tabs
+              defaultValue="tests"
+              value={activeTab}
+              onValueChange={setActiveTab}
+            >
               <TabsList>
                 <TabsTrigger value="tests">Физические тесты</TabsTrigger>
-                <TabsTrigger value="exercises">Контрольные упражнения</TabsTrigger>
+                <TabsTrigger value="exercises">
+                  Контрольные упражнения
+                </TabsTrigger>
               </TabsList>
-            
-          <TabsContent value="tests" className="m-0">
-              <div className="text-center py-16">
-               <CardContent>
-            {isLoading ? (
-              <div className="flex justify-center items-center h-64">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              </div>
-            ) : (
-              <>
-                {(!filteredTests || filteredTests.length === 0) ? (
-                  <div className="text-center py-12">
-                    <p className="text-gray-500 mb-4">Не найдено записей тестов.</p>
-                    <Link href="/tests/new">
-                      <Button>
-                        <Plus className="mr-2 h-4 w-4" />
-                        Записать новый тест
-                      </Button>
-                    </Link>
-                  </div>
-                ) : (
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead>
-                        <tr className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
 
-                          <th className="px-4 py-3">Студент</th>
-                          <th className="px-4 py-3">Дата</th>
-                          <th className="px-4 py-3">Период</th>
-                          <th className="px-4 py-3">Отжимания</th>
-                          <th className="px-4 py-3">Подтягивания</th>
-                          <th className="px-4 py-3">Удержание ног над полом</th>
-                          <th className="px-4 py-3">Теппинг–тест</th>
-                          <th className="px-4 py-3">Бег на месте</th>
-                          <th className="px-4 py-3">Планка</th>
-                          <th className="px-4 py-3">Наклон вперед из положения сидя</th>
-                          <th className="px-4 py-3">Прыжок в длину</th>
+              <TabsContent value="tests" className="m-0">
+                <div className="text-center py-16">
+                  <CardContent>
+                    {isLoading ? (
+                      <div className="flex justify-center items-center h-64">
+                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                      </div>
+                    ) : (
+                      <>
+                        {!filteredTests || filteredTests.length === 0 ? (
+                          <div className="text-center py-12">
+                            <p className="text-gray-500 mb-4">
+                              Не найдено записей тестов.
+                            </p>
+                            <Link href="/tests/new">
+                              <Button>
+                                <Plus className="mr-2 h-4 w-4" />
+                                Записать новый тест
+                              </Button>
+                            </Link>
+                          </div>
+                        ) : (
+                          <div className="overflow-x-auto">
+                            <table className="w-full">
+                              <thead>
+                                <tr className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                  <th className="px-4 py-3">Студент</th>
+                                  <th className="px-4 py-3">Дата</th>
+                                  <th className="px-4 py-3">Период</th>
+                                  <th className="px-4 py-3">Отжимания</th>
+                                  <th className="px-4 py-3">Подтягивания</th>
+                                  <th className="px-4 py-3">
+                                    Удержание ног над полом
+                                  </th>
+                                  <th className="px-4 py-3">Теппинг–тест</th>
+                                  <th className="px-4 py-3">Бег на месте</th>
+                                  <th className="px-4 py-3">Планка</th>
+                                  <th className="px-4 py-3">
+                                    Наклон вперед из положения сидя
+                                  </th>
+                                  <th className="px-4 py-3">Прыжок в длину</th>
 
-                          {/* <th className="px-4 py-3">
+                                  {/* <th className="px-4 py-3">
                             <div className="flex items-center">
                               Grade
                               <ArrowUpDown className="ml-2 h-3 w-3" />
                             </div>
                           </th>
                           <th className="px-4 py-3">Notes</th> */}
-                          <th className="px-4 py-3 text-right">Действия</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-200">
-                        {filteredTests?.map((test) => (
-                          <tr key={test.testId}>
-                            <td className="px-4 py-4 whitespace-nowrap font-medium">
-                              {user?.role === "student" ? user?.username : students.find((student) => student.userId === test.studentId)?.fullName || 'Unknown'}
-                            </td>
-                            <td className="px-4 py-4 whitespace-nowrap">
-                              {test.date ? format(new Date(test.date), 'dd.MM.yyyy') : '-'}
-                            </td>
-                            <td className="px-4 py-4 whitespace-nowrap text-sm">
-                              {periods.find((period) => period.periodId === test.periodId)?.periodOfStudy || '-'}
-                            </td>
-                            <td className="px-4 py-4 whitespace-nowrap">
-                              {test.pushUps || '-'}
-                            </td>
-                              <td className="px-4 py-4 whitespace-nowrap">
-                              {test.pullUps || '-'}
-                            </td>
-                              <td className="px-4 py-4 whitespace-nowrap">
-                              {test.legHold || '-'}
-                            </td>
-                              <td className="px-4 py-4 whitespace-nowrap">
-                              {test.tappingTest || '-'}
-                            </td>
-                              <td className="px-4 py-4 whitespace-nowrap">
-                              {test.runningInPlace || '-'}
-                            </td>
-                             <td className="px-4 py-4 whitespace-nowrap">
-                              {test.forwardBend || '-'}
-                            </td>
-                             <td className="px-4 py-4 whitespace-nowrap">
-                              {test.plank || '-'}
-                            </td>
-                             <td className="px-4 py-4 whitespace-nowrap">
-                              {test.longJump || '-'}
-                            </td>
+                                  <th className="px-4 py-3 text-right">
+                                    Действия
+                                  </th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-gray-200">
+                                {filteredTests?.map((test) => (
+                                  <tr key={test.testId}>
+                                    <td className="px-4 py-4 whitespace-nowrap font-medium">
+                                      {user?.role === "student"
+                                        ? user?.username
+                                        : students.find(
+                                            (student) =>
+                                              student.userId === test.studentId
+                                          )?.fullName || "Unknown"}
+                                    </td>
+                                    <td className="px-4 py-4 whitespace-nowrap">
+                                      {test.date
+                                        ? format(
+                                            new Date(test.date),
+                                            "dd.MM.yyyy"
+                                          )
+                                        : "-"}
+                                    </td>
+                                    <td className="px-4 py-4 whitespace-nowrap text-sm">
+                                      {periods.find(
+                                        (period) =>
+                                          period.periodId === test.periodId
+                                      )?.periodOfStudy || "-"}
+                                    </td>
+                                    <td className="px-4 py-4 whitespace-nowrap">
+                                      {test.pushUps || "-"}
+                                    </td>
+                                    <td className="px-4 py-4 whitespace-nowrap">
+                                      {test.pullUps || "-"}
+                                    </td>
+                                    <td className="px-4 py-4 whitespace-nowrap">
+                                      {test.legHold || "-"}
+                                    </td>
+                                    <td className="px-4 py-4 whitespace-nowrap">
+                                      {test.tappingTest || "-"}
+                                    </td>
+                                    <td className="px-4 py-4 whitespace-nowrap">
+                                      {test.runningInPlace || "-"}
+                                    </td>
+                                    <td className="px-4 py-4 whitespace-nowrap">
+                                      {test.forwardBend || "-"}
+                                    </td>
+                                    <td className="px-4 py-4 whitespace-nowrap">
+                                      {test.plank || "-"}
+                                    </td>
+                                    <td className="px-4 py-4 whitespace-nowrap">
+                                      {test.longJump || "-"}
+                                    </td>
 
-                            <td className="px-4 py-4 whitespace-nowrap text-right">
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                                    <MoreHorizontal className="h-4 w-4" />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                  <DropdownMenuLabel>Действия</DropdownMenuLabel>
-                                  <DropdownMenuItem onClick={() => navigate(`/tests/edit/${test.testId}`)}>
-                                    <Pencil className="mr-2 h-4 w-4" />
-                                    Редактировать
-                                  </DropdownMenuItem>
-                                  {user?.role === "teacher"  && (
-                                    <DropdownMenuItem onClick={() => navigate(`/tests/edit/${test.testId}?grade=true`)}>
-                                      <Star className="mr-2 h-4 w-4" />
-                                      Выставить оценку
-                                    </DropdownMenuItem>
-                                  )}
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </>
-            )}
-          </CardContent>
-              </div>
-            </TabsContent>
+                                    <td className="px-4 py-4 whitespace-nowrap text-right">
+                                      <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                          <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="h-8 w-8 p-0"
+                                          >
+                                            <MoreHorizontal className="h-4 w-4" />
+                                          </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end">
+                                          <DropdownMenuLabel>
+                                            Действия
+                                          </DropdownMenuLabel>
+                                          <DropdownMenuItem
+                                            onClick={() =>
+                                              navigate(
+                                                `/tests/edit/${test.testId}`
+                                              )
+                                            }
+                                          >
+                                            <Pencil className="mr-2 h-4 w-4" />
+                                            Редактировать
+                                          </DropdownMenuItem>
+                                          {user?.role === "teacher" && (
+                                            <DropdownMenuItem
+                                              onClick={() =>
+                                                navigate(
+                                                  `/tests/edit/${test.testId}?grade=true`
+                                                )
+                                              }
+                                            >
+                                              <Star className="mr-2 h-4 w-4" />
+                                              Выставить оценку
+                                            </DropdownMenuItem>
+                                          )}
+                                        </DropdownMenuContent>
+                                      </DropdownMenu>
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </CardContent>
+                </div>
+              </TabsContent>
               <TabsContent value="exercises" className="m-0">
               <div className="text-center py-16">
                <CardContent>
@@ -318,10 +415,10 @@ const formatTestType2 = (type: string) => {
                 {(!filteredSportResults || filteredSportResults.length === 0) ? (
                   <div className="text-center py-12">
                     <p className="text-gray-500 mb-4">Не найдено записей тестов.</p>
-                    <Link href="/tests/new">
+                    <Link href="/sport_results/new">
                       <Button>
                         <Plus className="mr-2 h-4 w-4" />
-                        Записать новый тест
+                        Записать новое контрольное упражнение 
                       </Button>
                     </Link>
                   </div>
@@ -347,7 +444,7 @@ const formatTestType2 = (type: string) => {
                           <th className="px-4 py-3">Бег 100 м</th>
                           <th className="px-4 py-3">Бег 500/1000 м</th>
 
-                          {/* <th className="px-4 py-3">
+                                  {/* <th className="px-4 py-3">
                             <div className="flex items-center">
                               Grade
                               <ArrowUpDown className="ml-2 h-3 w-3" />
@@ -412,12 +509,12 @@ const formatTestType2 = (type: string) => {
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
                                   <DropdownMenuLabel>Действия</DropdownMenuLabel>
-                                  <DropdownMenuItem onClick={() => navigate(`/tests/edit/${test.sportResultId}`)}>
+                                  <DropdownMenuItem onClick={() => navigate(`/sport_results/edit/${test.sportResultId}`)}>
                                     <Pencil className="mr-2 h-4 w-4" />
                                     Edit
                                   </DropdownMenuItem>
                                   {user?.role === "teacher"  && (
-                                    <DropdownMenuItem onClick={() => navigate(`/tests/edit/${test.sportResultId}?grade=true`)}>
+                                    <DropdownMenuItem onClick={() => navigate(`/sport_resutls/edit/${test.sportResultId}?grade=true`)}>
                                       <Star className="mr-2 h-4 w-4" />
                                       Выставить оценку
                                     </DropdownMenuItem>
@@ -439,7 +536,6 @@ const formatTestType2 = (type: string) => {
            </Tabs> 
            )}
         </Card>
-        
       </div>
     </MainLayout>
   );

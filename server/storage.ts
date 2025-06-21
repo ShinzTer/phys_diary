@@ -1,35 +1,56 @@
-import { 
+import {
   // User types and schema
-  type User, type InsertUser, type UserRole, users,
-  
+  type User,
+  type InsertUser,
+  type UserRole,
+  users,
+
   // Faculty types and schema
-  type Faculty, type InsertFaculty, faculty,
-  
+  type Faculty,
+  type InsertFaculty,
+  faculty,
+
   // Group types and schema
-  type Group, type InsertGroup, group,
-  
+  type Group,
+  type InsertGroup,
+  group,
+
   // Teacher types and schema
-  type Teacher, type InsertTeacher, teacher,
+  type Teacher,
+  type InsertTeacher,
+  teacher,
   type TeacherProfile,
-  
+
   // Student types and schema
-  type Student, type InsertStudent, student,
+  type Student,
+  type InsertStudent,
+  student,
   type StudentProfile,
-  
+
   // Period types and schema
-  type Period, type InsertPeriod, period,
-  
+  type Period,
+  type InsertPeriod,
+  period,
+
   // Physical state types and schema
-  type PhysicalState, type InsertPhysicalState, physical_state,
-  
+  type PhysicalState,
+  type InsertPhysicalState,
+  physical_state,
+
   // Physical tests types and schema
-  type PhysicalTest, type InsertPhysicalTest, physical_tests,
-  
+  type PhysicalTest,
+  type InsertPhysicalTest,
+  physical_tests,
+
   // Sport results types and schema
-  type SportResult, type InsertSportResult, sport_results,
-  
+  type SportResult,
+  type InsertSportResult,
+  sport_results,
+
   // Result types and schema
-  type Result, type InsertResult, result as resultTable
+  type Result,
+  type InsertResult,
+  result as resultTable,
 } from "@shared/schema";
 
 import { db } from "./db";
@@ -58,88 +79,127 @@ export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   getUsersByRole(role: UserRole): Promise<User[]>;
-  createUser(userData: { username: string; password: string; role?: UserRole }): Promise<User>;
+  createUser(userData: {
+    username: string;
+    password: string;
+    role?: UserRole;
+  }): Promise<User>;
   updateUser(id: number, userData: Partial<User>): Promise<User | undefined>;
   deleteUser(id: number): Promise<boolean>;
-  
+
   // Faculty operations
   getAllFaculties(): Promise<Faculty[]>;
   getFaculty(id: number): Promise<Faculty | undefined>;
   createFaculty(faculty: InsertFaculty): Promise<Faculty>;
-  updateFaculty(id: number, facultyData: Partial<Faculty>): Promise<Faculty | undefined>;
+  updateFaculty(
+    id: number,
+    facultyData: Partial<Faculty>
+  ): Promise<Faculty | undefined>;
   deleteFaculty(id: number): Promise<boolean>;
-  
+
   // Group operations
   getAllGroups(): Promise<Group[]>;
   getGroupsByFaculty(facultyId: number): Promise<Group[]>;
   getGroup(id: number): Promise<Group | undefined>;
   createGroup(group: InsertGroup): Promise<Group>;
-  updateGroup(id: number, groupData: Partial<Group>): Promise<Group | undefined>;
+  updateGroup(
+    id: number,
+    groupData: Partial<Group>
+  ): Promise<Group | undefined>;
   deleteGroup(id: number): Promise<boolean>;
-  
+
   // Teacher operations
   getAllTeachers(): Promise<Teacher[]>;
   getTeacher(id: number): Promise<Teacher | undefined>;
   createTeacher(teacher: InsertTeacher): Promise<Teacher>;
-  updateTeacher(id: number, teacherData: Partial<Teacher>): Promise<Teacher | undefined>;
+  updateTeacher(
+    id: number,
+    teacherData: Partial<Teacher>
+  ): Promise<Teacher | undefined>;
   deleteTeacher(id: number): Promise<boolean>;
-  
+
   // Student operations
   getAllStudents(): Promise<Student[]>;
   getStudentsByGroup(groupId: number): Promise<Student[]>;
   getStudent(id: number): Promise<Student | undefined>;
   createStudent(studentData: InsertStudent): Promise<Student>;
-  updateStudent(id: number, studentData: Partial<Student>): Promise<Student | undefined>;
+  updateStudent(
+    id: number,
+    studentData: Partial<Student>
+  ): Promise<Student | undefined>;
   deleteStudent(id: number): Promise<boolean>;
-  
+
   // Period operations
   getAllPeriods(): Promise<Period[]>;
   getPeriod(id: number): Promise<Period | undefined>;
   createPeriod(period: InsertPeriod): Promise<Period>;
-  updatePeriod(id: number, periodData: Partial<Period>): Promise<Period | undefined>;
+  updatePeriod(
+    id: number,
+    periodData: Partial<Period>
+  ): Promise<Period | undefined>;
   deletePeriod(id: number): Promise<boolean>;
-  
+
   // Physical state operations
   getPhysicalStatesByStudent(studentId: number): Promise<PhysicalState[]>;
   getPhysicalState(id: number): Promise<PhysicalState | undefined>;
-  createPhysicalState(physicalState: InsertPhysicalState): Promise<PhysicalState>;
-  updatePhysicalState(id: number, physicalStateData: Partial<PhysicalState>): Promise<PhysicalState | undefined>;
+  createPhysicalState(
+    physicalState: InsertPhysicalState
+  ): Promise<PhysicalState>;
+  updatePhysicalState(
+    id: number,
+    physicalStateData: Partial<PhysicalState>
+  ): Promise<PhysicalState | undefined>;
   deletePhysicalState(id: number): Promise<boolean>;
-  
+
   // Physical tests operations
   getPhysicalTestsByStudent(studentId: number): Promise<PhysicalTest[]>;
   getPhysicalTest(id: number): Promise<PhysicalTest | undefined>;
   createPhysicalTest(physicalTest: InsertPhysicalTest): Promise<PhysicalTest>;
-  updatePhysicalTest(id: number, physicalTestData: Partial<PhysicalTest>): Promise<PhysicalTest | undefined>;
+  updatePhysicalTest(
+    id: number,
+    physicalTestData: Partial<PhysicalTest>
+  ): Promise<PhysicalTest | undefined>;
   deletePhysicalTest(id: number): Promise<boolean>;
-  
+
   // Sport results operations
   getSportResultsByStudent(studentId: number): Promise<SportResult[]>;
-  getSportResult(id: number): Promise<SportResult | undefined>;
+  getSportRgeesult(id: number): Promise<SportResult | undefined>;
   createSportResult(sportResult: InsertSportResult): Promise<SportResult>;
-  updateSportResult(id: number, sportResultData: Partial<SportResult>): Promise<SportResult | undefined>;
+  updateSportResult(
+    id: number,
+    sportResultData: Partial<SportResult>
+  ): Promise<SportResult | undefined>;
   deleteSportResult(id: number): Promise<boolean>;
-  
+
   // Result operations
   getResultsByStudent(studentId: number): Promise<Result[]>;
   getResultsByGroup(groupId: number): Promise<Result[]>;
   getResultsByPeriod(periodId: number): Promise<Result[]>;
   getResult(id: number): Promise<Result | undefined>;
   createResult(resultData: InsertResult): Promise<Result>;
-  updateResult(id: number, resultData: Partial<Result>): Promise<Result | undefined>;
+  updateResult(
+    id: number,
+    resultData: Partial<Result>
+  ): Promise<Result | undefined>;
   deleteResult(id: number): Promise<boolean>;
 
   // Session store
   sessionStore: session.Store;
-  
+
   // Initialization
   initializeDatabase(): Promise<void>;
 
   // Profile methods
   getStudentProfile(studentId: number): Promise<StudentProfile | undefined>;
-  updateStudentProfile(studentId: number, data: Partial<StudentProfile>): Promise<StudentProfile>;
+  updateStudentProfile(
+    studentId: number,
+    data: Partial<StudentProfile>
+  ): Promise<StudentProfile>;
   getTeacherProfile(teacherId: number): Promise<TeacherProfile | undefined>;
-  updateTeacherProfile(teacherId: number, data: Partial<TeacherProfile>): Promise<TeacherProfile>;
+  updateTeacherProfile(
+    teacherId: number,
+    data: Partial<TeacherProfile>
+  ): Promise<TeacherProfile>;
 }
 
 // PostgreSQL implementation of the storage interface
@@ -169,52 +229,70 @@ export class Storage implements IStorage {
 
     // Check if we have any users, if not, create default users
     const existingUsers = await this.db.select().from(users);
-    
+
     if (existingUsers.length === 0) {
       // Create default faculty
-      const [newFaculty] = await this.db.insert(faculty).values({
-        name: "Physical Education Faculty"
-      }).returning();
-      
+      const [newFaculty] = await this.db
+        .insert(faculty)
+        .values({
+          name: "Physical Education Faculty",
+        })
+        .returning();
+
       // Create default admin user
-      const [adminUser] = await this.db.insert(users).values({
-        username: 'admin',
-        password: 'admin123', // This would be hashed in auth.ts
-        role: 'admin' as UserRole,
-      }).returning();
-      
+      const [adminUser] = await this.db
+        .insert(users)
+        .values({
+          username: "admin",
+          password: "admin123", // This would be hashed in auth.ts
+          role: "admin" as UserRole,
+        })
+        .returning();
+
       // Create default teacher user
-      const [teacherUser] = await this.db.insert(users).values({
-        username: 'teacher',
-        password: 'teacher123', // This would be hashed in auth.ts
-        role: 'teacher' as UserRole,
-      }).returning();
-      
+      const [teacherUser] = await this.db
+        .insert(users)
+        .values({
+          username: "teacher",
+          password: "teacher123", // This would be hashed in auth.ts
+          role: "teacher" as UserRole,
+        })
+        .returning();
+
       // Create default teacher profile
-      const [newTeacher] = await this.db.insert(teacher).values({
-        userId: teacherUser.id,
-        fullName: "John Smith",
-        position: "Senior Lecturer",
-        dateOfBirth: "1980-01-01",
-        educationalDepartment: "Physical Education",
-        phone: "+375291234567",
-        nationality: null
-      }).returning();
-      
+      const [newTeacher] = await this.db
+        .insert(teacher)
+        .values({
+          userId: teacherUser.id,
+          fullName: "John Smith",
+          position: "Senior Lecturer",
+          dateOfBirth: "1980-01-01",
+          educationalDepartment: "Physical Education",
+          phone: "+375291234567",
+          nationality: null,
+        })
+        .returning();
+
       // Create default group
-      const [newGroup] = await this.db.insert(group).values({
-        name: "PE-101",
-        teacherId: newTeacher.teacherId,
-        facultyId: newFaculty.facultyId,
-      }).returning();
-      
+      const [newGroup] = await this.db
+        .insert(group)
+        .values({
+          name: "PE-101",
+          teacherId: newTeacher.teacherId,
+          facultyId: newFaculty.facultyId,
+        })
+        .returning();
+
       // Create default student user
-      const [studentUser] = await this.db.insert(users).values({
-        username: 'student',
-        password: 'student123', // This would be hashed in auth.ts
-        role: 'student' as UserRole,
-      }).returning();
-      
+      const [studentUser] = await this.db
+        .insert(users)
+        .values({
+          username: "student",
+          password: "student123", // This would be hashed in auth.ts
+          role: "student" as UserRole,
+        })
+        .returning();
+
       // Create default student profile
       await this.db.insert(student).values({
         userId: studentUser.id,
@@ -228,35 +306,45 @@ export class Storage implements IStorage {
         nationality: "Belarusian",
         address: "Minsk, Belarus",
         schoolGraduated: "School #1",
-        educationalDepartment: "Physical Education"
+        educationalDepartment: "Physical Education",
       });
     }
   }
 
   // User operations
-  async getUser(id: number): Promise<(User & { teacher_id?: number, student_id?: number }) | undefined> {
+  async getUser(
+    id: number
+  ): Promise<
+    (User & { teacher_id?: number; student_id?: number }) | undefined
+  > {
     // First get the user
     const [user] = await this.db.select().from(users).where(eq(users.id, id));
     if (!user) return undefined;
 
     // If the user is a teacher, get their teacher_id
-    if (user.role === 'teacher') {
-      const [teacherRecord] = await this.db.select().from(teacher).where(eq(teacher.userId, id));
+    if (user.role === "teacher") {
+      const [teacherRecord] = await this.db
+        .select()
+        .from(teacher)
+        .where(eq(teacher.userId, id));
       if (teacherRecord) {
         return {
           ...user,
-          teacher_id: teacherRecord.teacherId
+          teacher_id: teacherRecord.teacherId,
         };
       }
     }
 
     // If the user is a student, get their student_id
-    if (user.role === 'student') {
-      const [studentRecord] = await this.db.select().from(student).where(eq(student.userId, id));
+    if (user.role === "student") {
+      const [studentRecord] = await this.db
+        .select()
+        .from(student)
+        .where(eq(student.userId, id));
       if (studentRecord) {
         return {
           ...user,
-          student_id: studentRecord.studentId
+          student_id: studentRecord.studentId,
         };
       }
     }
@@ -265,7 +353,10 @@ export class Storage implements IStorage {
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    const [user] = await this.db.select().from(users).where(eq(users.username, username));
+    const [user] = await this.db
+      .select()
+      .from(users)
+      .where(eq(users.username, username));
     if (!user) return undefined;
     return this.getUser(user.id);
   }
@@ -274,17 +365,31 @@ export class Storage implements IStorage {
     return await this.db.select().from(users).where(eq(users.role, role));
   }
 
-  async createUser(userData: { username: string; password: string; role?: UserRole }): Promise<User> {
-    const [user] = await this.db.insert(users).values({
-      username: userData.username,
-      password: userData.password,
-      role: userData.role || 'student',
-    }).returning();
+  async createUser(userData: {
+    username: string;
+    password: string;
+    role?: UserRole;
+  }): Promise<User> {
+    const [user] = await this.db
+      .insert(users)
+      .values({
+        username: userData.username,
+        password: userData.password,
+        role: userData.role || "student",
+      })
+      .returning();
     return user;
   }
 
-  async updateUser(id: number, userData: Partial<User>): Promise<User | undefined> {
-    const [updatedUser] = await this.db.update(users).set(userData).where(eq(users.id, id)).returning();
+  async updateUser(
+    id: number,
+    userData: Partial<User>
+  ): Promise<User | undefined> {
+    const [updatedUser] = await this.db
+      .update(users)
+      .set(userData)
+      .where(eq(users.id, id))
+      .returning();
     return updatedUser;
   }
 
@@ -299,16 +404,25 @@ export class Storage implements IStorage {
   }
 
   async getFaculty(id: number): Promise<Faculty | undefined> {
-    const [facultyRecord] = await this.db.select().from(faculty).where(eq(faculty.facultyId, id));
+    const [facultyRecord] = await this.db
+      .select()
+      .from(faculty)
+      .where(eq(faculty.facultyId, id));
     return facultyRecord;
   }
 
   async createFaculty(facultyData: InsertFaculty): Promise<Faculty> {
-    const [facultyRecord] = await this.db.insert(faculty).values(facultyData).returning();
+    const [facultyRecord] = await this.db
+      .insert(faculty)
+      .values(facultyData)
+      .returning();
     return facultyRecord;
   }
 
-  async updateFaculty(id: number, facultyData: Partial<Faculty>): Promise<Faculty | undefined> {
+  async updateFaculty(
+    id: number,
+    facultyData: Partial<Faculty>
+  ): Promise<Faculty | undefined> {
     const [updatedFaculty] = await this.db
       .update(faculty)
       .set(facultyData)
@@ -318,7 +432,9 @@ export class Storage implements IStorage {
   }
 
   async deleteFaculty(id: number): Promise<boolean> {
-    const result = await this.db.delete(faculty).where(eq(faculty.facultyId, id));
+    const result = await this.db
+      .delete(faculty)
+      .where(eq(faculty.facultyId, id));
     return result.rowCount !== null && result.rowCount > 0;
   }
 
@@ -328,20 +444,32 @@ export class Storage implements IStorage {
   }
 
   async getGroupsByFaculty(facultyId: number): Promise<Group[]> {
-    return await this.db.select().from(group).where(eq(group.facultyId, facultyId));
+    return await this.db
+      .select()
+      .from(group)
+      .where(eq(group.facultyId, facultyId));
   }
 
   async getGroup(id: number): Promise<Group | undefined> {
-    const [groupRecord] = await this.db.select().from(group).where(eq(group.groupId, id));
+    const [groupRecord] = await this.db
+      .select()
+      .from(group)
+      .where(eq(group.groupId, id));
     return groupRecord;
   }
 
   async createGroup(groupData: InsertGroup): Promise<Group> {
-    const [groupRecord] = await this.db.insert(group).values(groupData).returning();
+    const [groupRecord] = await this.db
+      .insert(group)
+      .values(groupData)
+      .returning();
     return groupRecord;
   }
 
-  async updateGroup(id: number, groupData: Partial<Group>): Promise<Group | undefined> {
+  async updateGroup(
+    id: number,
+    groupData: Partial<Group>
+  ): Promise<Group | undefined> {
     const [updatedGroup] = await this.db
       .update(group)
       .set(groupData)
@@ -361,30 +489,46 @@ export class Storage implements IStorage {
   }
 
   async getTeacher(id: number): Promise<Teacher | undefined> {
-    const [teacherRecord] = await this.db.select().from(teacher).where(eq(teacher.teacherId, id));
+    const [teacherRecord] = await this.db
+      .select()
+      .from(teacher)
+      .where(eq(teacher.teacherId, id));
     return teacherRecord;
   }
 
+  async getTeacherByUserId(id: number): Promise<Teacher | undefined> {
+    const [teacherRecord] = await this.db
+      .select()
+      .from(teacher)
+      .where(eq(teacher.userId, id));
+    return teacherRecord;
+  }
   async createTeacher(teacherData: InsertTeacher): Promise<Teacher> {
-    const [teacherRecord] = await this.db.insert(teacher).values({
-      userId: teacherData.userId,
-      fullName: teacherData.fullName,
-      position: teacherData.position,
-      dateOfBirth: teacherData.dateOfBirth,
-      educationalDepartment: teacherData.educationalDepartment,
-      phone: teacherData.phone,
-      nationality: teacherData.nationality,
-    }).returning();
-    
+    const [teacherRecord] = await this.db
+      .insert(teacher)
+      .values({
+        userId: teacherData.userId,
+        fullName: teacherData.fullName,
+        position: teacherData.position,
+        dateOfBirth: teacherData.dateOfBirth,
+        educationalDepartment: teacherData.educationalDepartment,
+        phone: teacherData.phone,
+        nationality: teacherData.nationality,
+      })
+      .returning();
+
     // If this teacher is associated with a user, update the user's role
     if (teacherData.userId) {
-      await this.updateUser(teacherData.userId, { role: 'teacher' });
+      await this.updateUser(teacherData.userId, { role: "teacher" });
     }
-    
+
     return teacherRecord;
   }
 
-  async updateTeacher(id: number, teacherData: Partial<Teacher>): Promise<Teacher | undefined> {
+  async updateTeacher(
+    id: number,
+    teacherData: Partial<Teacher>
+  ): Promise<Teacher | undefined> {
     const [updatedTeacher] = await this.db
       .update(teacher)
       .set(teacherData)
@@ -394,7 +538,9 @@ export class Storage implements IStorage {
   }
 
   async deleteTeacher(id: number): Promise<boolean> {
-    const result = await this.db.delete(teacher).where(eq(teacher.teacherId, id));
+    const result = await this.db
+      .delete(teacher)
+      .where(eq(teacher.teacherId, id));
     return result.rowCount !== null && result.rowCount > 0;
   }
 
@@ -404,38 +550,53 @@ export class Storage implements IStorage {
   }
 
   async getStudentsByGroup(groupId: number): Promise<Student[]> {
-    return await this.db.select().from(student).where(eq(student.groupId, groupId));
+    return await this.db
+      .select()
+      .from(student)
+      .where(eq(student.groupId, groupId));
   }
 
   async getStudent(id: number): Promise<Student | undefined> {
-    const [studentRecord] = await this.db.select().from(student).where(eq(student.studentId, id));
+    const [studentRecord] = await this.db
+      .select()
+      .from(student)
+      .where(eq(student.studentId, id));
     return studentRecord;
   }
 
-    async getStudentByUserId(id: number): Promise<Student | undefined> {
-    const [studentRecord] = await this.db.select().from(student).where(eq(student.userId, id));
+  async getStudentByUserId(id: number): Promise<Student | undefined> {
+    const [studentRecord] = await this.db
+      .select()
+      .from(student)
+      .where(eq(student.userId, id));
     return studentRecord;
   }
 
   async createStudent(studentData: InsertStudent): Promise<Student> {
-    const [newStudent] = await this.db.insert(student).values({
-      userId: studentData.userId,
-      fullName: studentData.fullName,
-      gender: studentData.gender,
-      dateOfBirth: studentData.dateOfBirth,
-      placeOfBirth: studentData.placeOfBirth,
-      groupId: studentData.groupId,
-      medicalGroup: studentData.medicalGroup,
-      phone: studentData.phone,
-      nationality: studentData.nationality,
-      address: studentData.address,
-      schoolGraduated: studentData.schoolGraduated,
-      educationalDepartment: studentData.educationalDepartment,
-    }).returning();
+    const [newStudent] = await this.db
+      .insert(student)
+      .values({
+        userId: studentData.userId,
+        fullName: studentData.fullName,
+        gender: studentData.gender,
+        dateOfBirth: studentData.dateOfBirth,
+        placeOfBirth: studentData.placeOfBirth,
+        groupId: studentData.groupId,
+        medicalGroup: studentData.medicalGroup,
+        phone: studentData.phone,
+        nationality: studentData.nationality,
+        address: studentData.address,
+        schoolGraduated: studentData.schoolGraduated,
+        educationalDepartment: studentData.educationalDepartment,
+      })
+      .returning();
     return newStudent;
   }
 
-  async updateStudent(id: number, studentData: Partial<Student>): Promise<Student | undefined> {
+  async updateStudent(
+    id: number,
+    studentData: Partial<Student>
+  ): Promise<Student | undefined> {
     const [updatedStudent] = await this.db
       .update(student)
       .set(studentData)
@@ -445,26 +606,37 @@ export class Storage implements IStorage {
   }
 
   async deleteStudent(id: number): Promise<boolean> {
-    const result = await this.db.delete(student).where(eq(student.studentId, id));
+    const result = await this.db
+      .delete(student)
+      .where(eq(student.studentId, id));
     return result.rowCount !== null && result.rowCount > 0;
   }
 
   // Period operations
   async getAllPeriods(): Promise<Period[]> {
-    return await this.db.select().from(period).orderBy(asc(period.periodId));
+    return await this.db.select().from(period);
   }
 
   async getPeriod(id: number): Promise<Period | undefined> {
-    const [periodRecord] = await this.db.select().from(period).where(eq(period.periodId, id));
+    const [periodRecord] = await this.db
+      .select()
+      .from(period)
+      .where(eq(period.periodId, id));
     return periodRecord;
   }
 
   async createPeriod(periodData: InsertPeriod): Promise<Period> {
-    const [periodRecord] = await this.db.insert(period).values(periodData).returning();
+    const [periodRecord] = await this.db
+      .insert(period)
+      .values(periodData)
+      .returning();
     return periodRecord;
   }
 
-  async updatePeriod(id: number, periodData: Partial<Period>): Promise<Period | undefined> {
+  async updatePeriod(
+    id: number,
+    periodData: Partial<Period>
+  ): Promise<Period | undefined> {
     const [updatedPeriod] = await this.db
       .update(period)
       .set(periodData)
@@ -479,29 +651,51 @@ export class Storage implements IStorage {
   }
 
   // Physical state operations
-  async getPhysicalStatesByStudent(studentId: number): Promise<PhysicalState[]> {
-    return await this.db.select().from(physical_state).where(eq(physical_state.studentId, studentId));
+  async getPhysicalStatesByStudent(
+    studentId: number
+  ): Promise<PhysicalState[]> {
+    return await this.db
+      .select()
+      .from(physical_state)
+      .where(eq(physical_state.studentId, studentId));
   }
 
-    async getPhysicalStates(): Promise<PhysicalState[]> {
-    return await this.db.select().from(physical_state).orderBy(desc(physical_state.stateId));
+  async getPhysicalStates(): Promise<PhysicalState[]> {
+    return await this.db
+      .select()
+      .from(physical_state)
+      .orderBy(desc(physical_state.stateId));
   }
 
-      async getPhysicalTests(): Promise<PhysicalTest[]> {
-    return await this.db.select().from(physical_tests).orderBy(desc(physical_tests.testId));
+  async getPhysicalTests(): Promise<PhysicalTest[]> {
+    return await this.db
+      .select()
+      .from(physical_tests)
+      .orderBy(desc(physical_tests.testId));
   }
 
   async getPhysicalState(id: number): Promise<PhysicalState | undefined> {
-    const [physicalStateRecord] = await this.db.select().from(physical_state).where(eq(physical_state.stateId, id));
+    const [physicalStateRecord] = await this.db
+      .select()
+      .from(physical_state)
+      .where(eq(physical_state.stateId, id));
     return physicalStateRecord;
   }
 
-  async createPhysicalState(physicalStateData: InsertPhysicalState): Promise<PhysicalState> {
-    const [physicalStateRecord] = await this.db.insert(physical_state).values(physicalStateData).returning();
+  async createPhysicalState(
+    physicalStateData: InsertPhysicalState
+  ): Promise<PhysicalState> {
+    const [physicalStateRecord] = await this.db
+      .insert(physical_state)
+      .values(physicalStateData)
+      .returning();
     return physicalStateRecord;
   }
 
-  async updatePhysicalState(id: number, physicalStateData: Partial<PhysicalState>): Promise<PhysicalState | undefined> {
+  async updatePhysicalState(
+    id: number,
+    physicalStateData: Partial<PhysicalState>
+  ): Promise<PhysicalState | undefined> {
     const [updatedPhysicalState] = await this.db
       .update(physical_state)
       .set(physicalStateData)
@@ -511,29 +705,81 @@ export class Storage implements IStorage {
   }
 
   async deletePhysicalState(id: number): Promise<boolean> {
-    const result = await this.db.delete(physical_state).where(eq(physical_state.stateId, id));
+    const result = await this.db
+      .delete(physical_state)
+      .where(eq(physical_state.stateId, id));
     return result.rowCount !== null && result.rowCount > 0;
   }
 
   // Physical tests operations
   async getPhysicalTestsByStudent(studentId: number): Promise<PhysicalTest[]> {
-    
-    return await this.db.select().from(physical_tests).where(eq(physical_tests.studentId, studentId));
+    return await this.db
+      .select()
+      .from(physical_tests)
+      .where(eq(physical_tests.studentId, studentId));
+  }
+
+  async getPhysicalTestsByTeacher(teacherId: number): Promise<PhysicalTest[]> {
+    {
+      const results = await this.db
+        .select({
+          test: physical_tests,
+        })
+        .from(physical_tests)
+        .innerJoin(student, eq(physical_tests.studentId, student.userId))
+        .innerJoin(group, eq(student.groupId, group.groupId))
+        .where(eq(group.teacherId, teacherId));
+
+      // возвращаем только данные тестов
+      return results.map((r) => r.test);
+    }
+  }
+  async getSportResultsByPeriodAndTeacher(
+    teacherId: number,
+    periodId: number
+  ): Promise<SportResult[]> {
+    {
+      const results = await this.db
+        .select({
+          test: sport_results,
+        })
+        .from(sport_results)
+        .innerJoin(student, eq(sport_results.studentId, student.userId))
+        .innerJoin(group, eq(student.groupId, group.groupId))
+        .where(
+          and(
+            eq(group.teacherId, teacherId),
+            eq(sport_results.periodId, periodId)
+          )
+        );
+
+      // возвращаем только данные тестов
+      return results.map((r) => r.test);
+    }
   }
 
   async getPhysicalTest(id: number): Promise<PhysicalTest | undefined> {
-    const [physicalTestRecord] = await this.db.select().from(physical_tests).where(eq(physical_tests.testId, id));
+    const [physicalTestRecord] = await this.db
+      .select()
+      .from(physical_tests)
+      .where(eq(physical_tests.testId, id));
     return physicalTestRecord;
   }
 
-  async createPhysicalTest(physicalTestData: InsertPhysicalTest): Promise<PhysicalTest> {
-   
-   
-    const [physicalTestRecord] = await this.db.insert(physical_tests).values(physicalTestData).returning();
+  async createPhysicalTest(
+    physicalTestData: InsertPhysicalTest
+  ): Promise<PhysicalTest> {
+    const [physicalTestRecord] = await this.db
+      .insert(physical_tests)
+      .values(physicalTestData)
+      .returning();
     return physicalTestRecord;
   }
 
-  async updatePhysicalTest(id: number, physicalTestData: Partial<PhysicalTest>): Promise<PhysicalTest | undefined> {
+  async updatePhysicalTest(
+    id: number,
+    physicalTestData: Partial<PhysicalTest>
+  ): Promise<PhysicalTest | undefined> {
     const [updatedPhysicalTest] = await this.db
       .update(physical_tests)
       .set(physicalTestData)
@@ -543,29 +789,48 @@ export class Storage implements IStorage {
   }
 
   async deletePhysicalTest(id: number): Promise<boolean> {
-    const result = await this.db.delete(physical_tests).where(eq(physical_tests.testId, id));
+    const result = await this.db
+      .delete(physical_tests)
+      .where(eq(physical_tests.testId, id));
     return result.rowCount !== null && result.rowCount > 0;
   }
 
   // Sport results operations
   async getSportResultsByStudent(studentId: number): Promise<SportResult[]> {
-    return await this.db.select().from(sport_results).where(eq(sport_results.studentId, studentId));
+    return await this.db
+      .select()
+      .from(sport_results)
+      .where(eq(sport_results.studentId, studentId));
   }
 
-    async getSportResultsByPeriod(periodId: number): Promise<SportResult[]> {
-    return await this.db.select().from(sport_results).where(eq(sport_results.periodId, periodId));
+  async getSportResultsByPeriod(periodId: number): Promise<SportResult[]> {
+    return await this.db
+      .select()
+      .from(sport_results)
+      .where(eq(sport_results.periodId, periodId));
   }
   async getSportResult(id: number): Promise<SportResult | undefined> {
-    const [sportResultRecord] = await this.db.select().from(sport_results).where(eq(sport_results.sportResultId, id));
+    const [sportResultRecord] = await this.db
+      .select()
+      .from(sport_results)
+      .where(eq(sport_results.sportResultId, id));
     return sportResultRecord;
   }
 
-  async createSportResult(sportResultData: InsertSportResult): Promise<SportResult> {
-    const [sportResultRecord] = await this.db.insert(sport_results).values(sportResultData).returning();
+  async createSportResult(
+    sportResultData: InsertSportResult
+  ): Promise<SportResult> {
+    const [sportResultRecord] = await this.db
+      .insert(sport_results)
+      .values(sportResultData)
+      .returning();
     return sportResultRecord;
   }
 
-  async updateSportResult(id: number, sportResultData: Partial<SportResult>): Promise<SportResult | undefined> {
+  async updateSportResult(
+    id: number,
+    sportResultData: Partial<SportResult>
+  ): Promise<SportResult | undefined> {
     const [updatedSportResult] = await this.db
       .update(sport_results)
       .set(sportResultData)
@@ -575,34 +840,54 @@ export class Storage implements IStorage {
   }
 
   async deleteSportResult(id: number): Promise<boolean> {
-    const result = await this.db.delete(sport_results).where(eq(sport_results.sportResultId, id));
+    const result = await this.db
+      .delete(sport_results)
+      .where(eq(sport_results.sportResultId, id));
     return result.rowCount !== null && result.rowCount > 0;
   }
 
   // Result operations
   async getResultsByStudent(studentId: number): Promise<Result[]> {
-    return await this.db.select().from(resultTable).where(eq(resultTable.studentId, studentId));
+    return await this.db
+      .select()
+      .from(resultTable)
+      .where(eq(resultTable.studentId, studentId));
   }
 
   async getResultsByGroup(groupId: number): Promise<Result[]> {
-    return await this.db.select().from(resultTable).where(eq(resultTable.groupId, groupId));
+    return await this.db
+      .select()
+      .from(resultTable)
+      .where(eq(resultTable.groupId, groupId));
   }
 
   async getResultsByPeriod(periodId: number): Promise<Result[]> {
-    return await this.db.select().from(resultTable).where(eq(resultTable.periodId, periodId));
+    return await this.db
+      .select()
+      .from(resultTable)
+      .where(eq(resultTable.periodId, periodId));
   }
 
   async getResult(id: number): Promise<Result | undefined> {
-    const [resultRecord] = await this.db.select().from(resultTable).where(eq(resultTable.resultId, id));
+    const [resultRecord] = await this.db
+      .select()
+      .from(resultTable)
+      .where(eq(resultTable.resultId, id));
     return resultRecord;
   }
 
   async createResult(resultData: InsertResult): Promise<Result> {
-    const [resultRecord] = await this.db.insert(resultTable).values(resultData).returning();
+    const [resultRecord] = await this.db
+      .insert(resultTable)
+      .values(resultData)
+      .returning();
     return resultRecord;
   }
 
-  async updateResult(id: number, resultData: Partial<Result>): Promise<Result | undefined> {
+  async updateResult(
+    id: number,
+    resultData: Partial<Result>
+  ): Promise<Result | undefined> {
     const [updatedResult] = await this.db
       .update(resultTable)
       .set(resultData)
@@ -612,17 +897,20 @@ export class Storage implements IStorage {
   }
 
   async deleteResult(id: number): Promise<boolean> {
-    const result = await this.db.delete(resultTable).where(eq(resultTable.resultId, id));
+    const result = await this.db
+      .delete(resultTable)
+      .where(eq(resultTable.resultId, id));
     return result.rowCount !== null && result.rowCount > 0;
   }
 
   // Student profile methods
-  async getStudentProfile(studentId: number): Promise<StudentProfile | undefined> {
+  async getStudentProfile(
+    studentId: number
+  ): Promise<StudentProfile | undefined> {
     const studentData = await this.getStudent(studentId);
     if (!studentData) return undefined;
 
     const profile: StudentProfile = {
-      studentId: studentData.studentId,
       fullName: studentData.fullName,
       gender: studentData.gender as "male" | "female" | "other",
       dateOfBirth: studentData.dateOfBirth,
@@ -630,7 +918,10 @@ export class Storage implements IStorage {
       address: studentData.address || "",
       nationality: studentData.nationality || "",
       schoolGraduated: studentData.schoolGraduated || "",
-      medicalGroup: studentData.medicalGroup as "basic" | "preparatory" | "special",
+      medicalGroup: studentData.medicalGroup as
+        | "basic"
+        | "preparatory"
+        | "special",
       medicalDiagnosis: studentData.medicalDiagnosis || "",
       previousIllnesses: studentData.previousIllnesses || "",
       educationalDepartment: studentData.educationalDepartment || "",
@@ -643,7 +934,10 @@ export class Storage implements IStorage {
     return profile;
   }
 
-  async updateStudentProfile(studentId: number, data: Partial<StudentProfile>): Promise<StudentProfile> {
+  async updateStudentProfile(
+    studentId: number,
+    data: Partial<StudentProfile>
+  ): Promise<StudentProfile> {
     const studentData = await this.getStudent(studentId);
     if (!studentData) {
       throw new Error("Student not found");
@@ -679,7 +973,9 @@ export class Storage implements IStorage {
   }
 
   // Teacher profile methods
-  async getTeacherProfile(teacherId: number): Promise<TeacherProfile | undefined> {
+  async getTeacherProfile(
+    teacherId: number
+  ): Promise<TeacherProfile | undefined> {
     const teacherData = await this.getTeacher(teacherId);
     if (!teacherData) return undefined;
 
@@ -695,7 +991,28 @@ export class Storage implements IStorage {
     return profile;
   }
 
-  async updateTeacherProfile(teacherId: number, data: Partial<TeacherProfile>): Promise<TeacherProfile> {
+  async getTeacherProfileByUserId(
+    userId: number
+  ): Promise<TeacherProfile | undefined> {
+    const teacherData = await this.getTeacherByUserId(userId);
+    if (!teacherData) return undefined;
+
+    const profile: TeacherProfile = {
+      fullName: teacherData.fullName,
+      position: teacherData.position || "",
+      dateOfBirth: teacherData.dateOfBirth || undefined,
+      educationalDepartment: teacherData.educationalDepartment || undefined,
+      nationality: teacherData.nationality || undefined,
+      phone: teacherData.phone || "",
+    };
+
+    return profile;
+  }
+
+  async updateTeacherProfile(
+    teacherId: number,
+    data: Partial<TeacherProfile>
+  ): Promise<TeacherProfile> {
     const teacherData = await this.getTeacher(teacherId);
     if (!teacherData) {
       throw new Error("Teacher not found");
@@ -706,9 +1023,18 @@ export class Storage implements IStorage {
       .set({
         fullName: data.fullName || teacherData.fullName,
         position: data.position || teacherData.position,
-        dateOfBirth: data.dateOfBirth === undefined ? teacherData.dateOfBirth : data.dateOfBirth,
-        educationalDepartment: data.educationalDepartment === undefined ? teacherData.educationalDepartment : data.educationalDepartment,
-        nationality: data.nationality === undefined ? teacherData.nationality : data.nationality,
+        dateOfBirth:
+          data.dateOfBirth === undefined
+            ? teacherData.dateOfBirth
+            : data.dateOfBirth,
+        educationalDepartment:
+          data.educationalDepartment === undefined
+            ? teacherData.educationalDepartment
+            : data.educationalDepartment,
+        nationality:
+          data.nationality === undefined
+            ? teacherData.nationality
+            : data.nationality,
         phone: data.phone || teacherData.phone,
       })
       .where(eq(teacher.teacherId, teacherId))

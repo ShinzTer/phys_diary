@@ -436,7 +436,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const teacherId = parseInt(req.params.teacherId);
       
       // Get the teacher record to check permissions
-      const teacher = await storage.getTeacher(teacherId);
+      const teacher = await storage.getTeacherByUserId(teacherId);
       if (!teacher) {
         return res.status(404).json({ message: "Teacher not found" });
       }
@@ -446,7 +446,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Access denied" });
       }
 
-      const profileData = await storage.getTeacherProfile(teacherId);
+      const profileData = await storage.getTeacherProfileByUserId(teacherId);
       const user = await storage.getUser(teacher.userId);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
@@ -698,7 +698,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
 
-    app.get("/api/tests/all", async (req, res) => {
+    app.get("/api/tests/all/:teacherId", async (req, res) => {
     try {
       if (!req.isAuthenticated()) {
         return res.status(401).json({ message: "Not authenticated" });
@@ -706,9 +706,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (req.user?.role !== "admin" && req.user?.role !== "teacher" ) {
         return res.status(403).json({ message: "Access denied" });
       }
-      
-      const states = await storage.getPhysicalTests();
-     console.log(states)
+      const teacherId = parseInt(req.params.teacherId);
+      const states = req.user?.role !== "teacher" ? await storage.getPhysicalTests() : await storage.getPhysicalTestsByTeacher(teacherId) ;
+  
       res.json(states);
     } catch (error) {
       res.status(500).json({ message: "Error fetching physical tests" });
@@ -800,6 +800,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+
+  app.get("/api/sport-results-teacher/:teacherId/period/:periodId", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      const teacherId = parseInt(req.params.teacherId);
+      const periodId = parseInt(req.params.periodId);
+      
+      // If not an admin or teacher, only allow access to own sport results
+      if (req.user?.role !== "admin" && req.user?.role !== "teacher" ) { //тут беда
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const results = await storage.getSportResultsByPeriodAndTeacher(teacherId, periodId);
+      res.json(results);
+    } catch (error) {
+      res.status(500).json({ message: "Error fetching sport results" });
+    }
+  });
 
    app.get("/api/sport-results-period/:periodId", async (req, res) => {
     try {
