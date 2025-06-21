@@ -213,12 +213,12 @@ console.log(studentProfile)
       let studentId: number;
       console.log(data)
       if (user?.role === "student") {
-        if (!studentProfile?.profile.studentId) {
+        if (!studentProfile?.studentId) {
           throw new Error(
             "Профиль студента не найден. Обратитесь к администратору."
           );
         }
-        studentId = studentProfile.profile.studentId;
+        studentId = studentProfile.studentId;
       } else {
         studentId = data.studentId;
       }
@@ -275,10 +275,10 @@ console.log(studentProfile)
       let studentId: number;
    console.log(studentProfile)
       if (user?.role === "student") {
-        if (!studentProfile?.student_id) {
+        if (!studentProfile?.studentId) {
           throw new Error("Профиль студента не найден");
         }
-        studentId = studentProfile.student_id;
+        studentId = studentProfile.studentId;
       } else {
         studentId = data.studentId;
       }

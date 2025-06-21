@@ -91,20 +91,22 @@ const formatTestType2 = (type: string) => {
     
     let badgeClass = "";
     switch (grade.toUpperCase()) {
-      case "A":
-      case "5":
-      case "EXCELLENT":
+      case "10":
+      case "9":
+      case "EXCELENT":
         return <Badge className="bg-green-100 text-green-800">{grade}</Badge>;
-      case "B":
-      case "4":
+      case "8":
+      case "7":
       case "GOOD":
         return <Badge className="bg-blue-100 text-blue-800">{grade}</Badge>;
-      case "C":
-      case "3":
+      case "6":
+      case "5":
+      case "4":
       case "SATISFACTORY":
         return <Badge className="bg-amber-100 text-amber-800">{grade}</Badge>;
-      case "D":
+      case "3":
       case "2":
+      case "1":
       case "POOR":
         return <Badge className="bg-red-100 text-red-800">{grade}</Badge>;
       default:
@@ -333,9 +335,12 @@ const formatTestType2 = (type: string) => {
                           <th className="px-4 py-3">Период</th>
                           <th className="px-4 py-3">Штрафные броски</th>
                           <th className="px-4 py-3">Двухшажная техника</th>
-                          <th className="px-4 py-3">Верхняя передача мяча в парах /
-                                                    Нижняя передача мяча в парах</th>
-                          <th className="px-4 py-3">Подача мяча через сетку</th>
+                          <th className="px-4 py-3">Техника быстрого ведения мяча</th>
+                          <th className="px-4 py-3">Передача мяча двумя руками над собой</th>
+                          <th className="px-4 py-3">Верхняя передача мяча в парах</th>
+                          <th className="px-4 py-3">Нижняя передача мяча в парах</th>
+                          <th className="px-4 py-3">Верхняя подача мяча через сетку (юноши).
+                                                    Верхняя, нижняя, боковая подача мяча через сетку (девушки)</th>
                           <th className="px-4 py-3">Плавание 25 м</th>
                           <th className="px-4 py-3">Плавание 50 м</th>
                           <th className="px-4 py-3">Плавание 100 м</th>
@@ -369,7 +374,16 @@ const formatTestType2 = (type: string) => {
                               {test.basketballDribble || '-'}
                             </td>
                               <td className="px-4 py-4 whitespace-nowrap">
-                              {test.volleyballPass || '-'}
+                              {test.basketballLeading || '-'}
+                            </td>
+                              <td className="px-4 py-4 whitespace-nowrap">
+                              {test.volleyballSoloPass || '-'}
+                            </td>
+                              <td className="px-4 py-4 whitespace-nowrap">
+                              {test.volleyballUpperPass || '-'}
+                            </td>
+                              <td className="px-4 py-4 whitespace-nowrap">
+                              {test.volleyballLowerPass || '-'}
                             </td>
                               <td className="px-4 py-4 whitespace-nowrap">
                               {test.volleyballServe || '-'}

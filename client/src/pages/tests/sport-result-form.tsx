@@ -62,13 +62,33 @@ interface Student {
   fullName?: string;
 }
 
+interface ResultData {
+  studentId: number;
+  basketballFreethrow?: number;
+  basketballDribble?: number;
+  basketballLeading?: number;
+  volleyballSoloPass?: number;
+  volleyballUpperPass?: number;
+  volleyballLowerPass?: number;
+  volleyballServe?: number;
+  swimming25m?: string;
+  swimming50m?: string;
+  swimming100m?: string;
+  running100m?: string;
+  running500m1000m?: string;
+  periodId: number;
+}
+
 // Form schema for test creation/editing
 const testFormSchema = z.object({
   studentId: z.number(),
   periodId: z.number(),
   basketballFreethrow: z.number().optional(),
   basketballDribble: z.number().optional(),
-  volleyballPass: z.number().optional(),
+  basketballLeading: z.number().optional(),
+  volleyballSoloPass: z.number().optional(),
+  volleyballUpperPass: z.number().optional(),
+  volleyballLowerPass: z.number().optional(),
   volleyballServe: z.number().optional(),
   swimming25m: z.number().optional(),
   swimming50m: z.number().optional(),
@@ -121,7 +141,7 @@ export default function SportResultForm() {
   });
 
   // Fetch specific test data when editing
-  const { data: testData, isLoading: isLoadingTest } = useQuery<SportResult>({
+  const { data: testData, isLoading: isLoadingTest } = useQuery<ResultData>({
     queryKey: [`/api/sport-results-id/${testId}`],
     enabled: !!isEdit && !!testId,
   });
@@ -134,7 +154,10 @@ console.log(testData?.basketballFreethrow)
       periodId: testData?.periodId ?? 0,
       basketballFreethrow: testData?.basketballFreethrow ?? 0,
       basketballDribble: testData?.basketballDribble ?? 0,
-      volleyballPass: testData?.volleyballPass ?? 0,
+      basketballLeading: testData?.basketballLeading ?? 0,
+      volleyballSoloPass: testData?.volleyballSoloPass ?? 0,
+      volleyballUpperPass: testData?.volleyballUpperPass ?? 0,
+      volleyballLowerPass: testData?.volleyballLowerPass ?? 0,
       volleyballServe: testData?.volleyballServe ?? 0,
       swimming25m: Number(testData?.swimming25m ?? 0),
       swimming50m: Number(testData?.swimming50m ?? 0),
@@ -159,15 +182,18 @@ console.log(testData?.basketballFreethrow)
         form.reset({
           studentId: testData.studentId,
           periodId: testData.periodId,
-      basketballFreethrow: testData?.basketballFreethrow ?? 0,
-      basketballDribble: testData?.basketballDribble ?? 0,
-      volleyballPass: testData?.volleyballPass ?? 0,
-      volleyballServe: testData?.volleyballServe ?? 0,
-      swimming25m: Number(testData?.swimming25m) ?? 0,
-      swimming50m: Number(testData?.swimming50m) ?? 0,
-      swimming100m: Number(testData?.swimming100m) ?? 0,
-      running100m: Number(testData?.running100m) ?? 0,
-      running500m1000m: Number(testData?.running500m1000m) ?? 0,
+        basketballFreethrow: testData?.basketballFreethrow ?? 0,
+        basketballDribble: testData?.basketballDribble ?? 0,
+        basketballLeading: testData?.basketballLeading ?? 0,
+        volleyballSoloPass: testData?.volleyballSoloPass ?? 0,
+        volleyballUpperPass: testData?.volleyballUpperPass ?? 0,
+        volleyballLowerPass: testData?.volleyballLowerPass ?? 0,
+        volleyballServe: testData?.volleyballServe ?? 0,
+        swimming25m: Number(testData?.swimming25m ?? 0),
+        swimming50m: Number(testData?.swimming50m ?? 0),
+        swimming100m: Number(testData?.swimming100m ?? 0),
+        running100m: Number(testData?.running100m ?? 0),
+        running500m1000m: Number(testData?.running500m1000m ?? 0),
         });
       }
     }
@@ -202,7 +228,7 @@ console.log(testData?.basketballFreethrow)
   const createTestMutation = useMutation({
     mutationFn: async (data: TestFormValues) => {
       let studentId: number;
-
+      console.log(data)
       if (user?.role === "student") {
         if (!studentProfile?.studentId) {
           throw new Error(
@@ -219,22 +245,25 @@ console.log(testData?.basketballFreethrow)
       }
 
       // Create test data object
-      const testData: Partial<SportResult> = {
+      const resultData: ResultData = {
         studentId: data.studentId,
         periodId: data.periodId,
         
       basketballFreethrow: data?.basketballFreethrow ?? 0,
       basketballDribble: data?.basketballDribble ?? 0,
-      volleyballPass: data?.volleyballPass ?? 0,
+      basketballLeading: data?.basketballLeading ?? 0,
+      volleyballSoloPass: data?.volleyballSoloPass ?? 0,
+      volleyballUpperPass: data?.volleyballUpperPass ?? 0,
+      volleyballLowerPass: data?.volleyballLowerPass ?? 0,
       volleyballServe: data?.volleyballServe ?? 0,
-      swimming25m: String(data?.swimming25m) ?? 0,
-      swimming50m: String(data?.swimming50m) ?? 0,
-      swimming100m: String(data?.swimming100m) ?? 0,
-      running100m: String(data?.running100m) ?? 0,
-      running500m1000m: String(data?.running500m1000m) ?? 0,
+      swimming25m: String(data?.swimming25m ?? 0),
+      swimming50m: String(data?.swimming50m ?? 0),
+      swimming100m: String(data?.swimming100m ?? 0),
+      running100m: String(data?.running100m ?? 0),
+      running500m1000m: String(data?.running500m1000m ?? 0),
       };
 
-      await apiRequest("POST", "/api/sport-results", testData);
+      await apiRequest("POST", "/api/sport-results", resultData);
     },
     onSuccess: () => {
       const studentId =
@@ -278,23 +307,24 @@ console.log(testData?.basketballFreethrow)
         throw new Error("Требуется ID студента");
       }
 
-      const testData: Partial<SportResult> = {
+      const resultData: ResultData = {
         studentId: data.studentId,
-       
         periodId: data.periodId,
-        
-      basketballFreethrow: data?.basketballFreethrow ?? 0,
-      basketballDribble: data?.basketballDribble ?? 0,
-      volleyballPass: data?.volleyballPass ?? 0,
-      volleyballServe: data?.volleyballServe ?? 0,
-      swimming25m: String(data?.swimming25m) ?? 0,
-      swimming50m: String(data?.swimming50m) ?? 0,
-      swimming100m: String(data?.swimming100m) ?? 0,
-      running100m: String(data?.running100m) ?? 0,
-      running500m1000m: String(data?.running500m1000m) ?? 0,
+        basketballFreethrow: data?.basketballFreethrow ?? 0,
+        basketballDribble: data?.basketballDribble ?? 0,
+        basketballLeading: data?.basketballLeading ?? 0,
+        volleyballSoloPass: data?.volleyballSoloPass ?? 0,
+        volleyballUpperPass: data?.volleyballUpperPass ?? 0,
+        volleyballLowerPass: data?.volleyballLowerPass ?? 0,
+        volleyballServe: data?.volleyballServe ?? 0,
+        swimming25m: String(data?.swimming25m ?? 0),
+        swimming50m: String(data?.swimming50m ?? 0),
+        swimming100m: String(data?.swimming100m ?? 0),
+        running100m: String(data?.running100m ?? 0),
+        running500m1000m: String(data?.running500m1000m ?? 0),
       };
 
-      await apiRequest("PUT", `/api/sport-results/${testId}`, testData);
+      await apiRequest("PUT", `/api/sport-results/${testId}`, resultData);
     },
     onSuccess: () => {
       const studentId =
@@ -476,14 +506,16 @@ console.log(testData?.basketballFreethrow)
                       {[
                         { name: "Штрафные броски", key: "basketballFreethrow" },
                         { name: "Двухшажная техника", key: "basketballDribble" },
-                        { name: "Верхняя передача мяча в парах /\nНижняя передача мяча в парах", key: "volleyballPass" },
-                        { name: "Подача мяча через сетку", key: "volleyballServe" },
+                        { name: "Техника быстрого ведения мяча", key: "basketballLeading" },
+                        { name: "Передача мяча двумя руками над собой", key: "volleyballSoloPass" },
+                        { name: "Верхняя передача мяча в парах", key: "volleyballUpperPass" },
+                        { name: "Нижняя передача мяча в парах", key: "volleyballLowerPass" },
+                        { name: "Верхняя подача мяча через сетку (юноши).\nВерхняя, нижняя, боковая подача мяча через сетку (девушки)", key: "volleyballServe" },
                         { name: "Плавание 25 м", key: "swimming25m" },
                         { name: "Плавание 50 м", key: "swimming50m" },
                         { name: "Плавание 100 м", key: "swimming100m" },
                         { name: "Бег 100 м", key: "running100m" },
-                        { name: "Бег 500/1000 м", key: "running500m1000m" },
-                        
+                        { name: "Бег 500 (девушки)\n1000 м (юноши)", key: "running500m1000m" },
                       ].map((test) => (
                         <tr key={test.key} className="border-t border-gray-100">
                           <td className="p-2 font-medium">{test.name}</td>
@@ -493,7 +525,7 @@ console.log(testData?.basketballFreethrow)
                               name={test.key as keyof TestFormValues}
                               render={({ field }) => (
                                 <Input
-                                  type="number"
+                                  type={/\d/.test(test.key) ? "text" : "number"}
                                   step={/\d/.test(test.key) ? "0.01" : "1"}
                                   value={field.value ?? ""}
                                   onChange={(e) => {
