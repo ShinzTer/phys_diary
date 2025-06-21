@@ -289,78 +289,66 @@ export default function SampleForm() {
                   />
                 )}
 
-                {/* Sample type selection */}
-                <FormField
-                  control={form.control}
-                  name="sampleType"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Тип пробы</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Выберите тип пробы" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <div className="px-2 py-1.5 text-sm font-semibold text-muted-foreground">
-                            Выберите тип пробы
-                          </div>
-                          {SAMPLE_TYPES.map((type) => (
-                            <SelectItem key={type} value={type}>
-                              {formatSampleType(type)}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+              
+ <CardContent className="space-y-4 py-2">
+                {/* Табличный ввод */}
+                <div className="overflow-x-auto">
+                  <table className="w-full table-auto border border-gray-200 text-sm">
+                    <thead className="bg-muted">
+                      <tr>
+                        <th className="p-2 text-left">Название теста</th>
+                        <th className="p-2 text-left">Результат</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {[
+                        { name: "Рост", key: "height" },
+                        { name: "Вес", key: "weight" },
+                        { name: "Весоростовой индекс Кетле", key: "ketleIndex" },
+                          { name: "Окружность грудной клетки", key: "chestCircumference" },  
+                        { name: "Окружность талии", key: "waistCircumference" },
+                        { name: "Осанка", key: "posture" },
+                        { name: "Жизненная емкость легких", key: "vitalCapacity" },
+                        { name: "Сила кисти", key: "handStrength" },
+                        { name: "Ортостатическая проба", key: "orthostaticTest" },
+                        { name: "Проба Штанге", key: "shtangeTest" },
+                          { name: "Проба Генчи", key: "genchiTest" },
+                            { name: "Проба Мартине-Кушелевского", key: "martineTest" },
+                          { name: "Частота сердечных сокращений", key: "heartRate" },
+                          { name: "Артериальное давление", key: "bloodPressure" },
+                            { name: "Пульсовое давление", key: "pulsePressure" },
+                      ].map((test) => (
+                        <tr key={test.key} className="border-t border-gray-100">
+                          <td className="p-2 font-medium">{test.name}</td>
+                          <td className="p-2">
+                            <FormField
+                              control={form.control}
+                              name={test.key as keyof SampleFormValues}
+                              render={({ field }) => (
+                                <Input
+                                  type="number"
+                                  step={test.key === "longJump" ? "0.01" : "1"}
+                                  value={field.value ?? ""}
+                                  onChange={(e) => {
+                                    const inputValue = e.target.value;
+                                    field.onChange(
+                                      inputValue === ""
+                                        ? undefined
+                                        : Number(inputValue)
+                                    );
+                                  }}
+                                />
+                              )}
+                            />
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+                
 
-                {/* Sample value */}
-                <FormField
-                  control={form.control}
-                  name="value"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Значение</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Введите значение измерения"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        Введите значение измерения с соответствующими единицами
-                        (например, "180 см", "75 кг")
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {/* Notes */}
-                <FormField
-                  control={form.control}
-                  name="notes"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Примечания</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="Дополнительные примечания о измерении"
-                          className="resize-none"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
               </CardContent>
               <CardFooter className="flex justify-between">
                 <Button

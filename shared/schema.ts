@@ -87,10 +87,12 @@ export const physical_state = pgTable("physical_state", {
   handStrength: integer("hand_strength"),
   orthostaticTest: numeric("orthostatic_test", { precision: 10, scale: 2 }),
   shtangeTest: integer("shtange_test"),
+  genchiTest: integer("genchi_test"),
   martineTest: integer("martine_test"),
   heartRate: integer("heart_rate"),
   bloodPressure: integer("blood_pressure"),
   pulsePressure: integer("pulse_pressure"),
+  periodId: integer("period_id").notNull().references(() => period.periodId),
 });
 
 // Physical tests table
