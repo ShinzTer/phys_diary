@@ -327,7 +327,6 @@ export default function SampleForm() {
                               render={({ field }) => (
                                 <Input
                                   type="number"
-                                  step={test.key === "longJump" ? "0.01" : "1"}
                                   value={field.value ?? ""}
                                   onChange={(e) => {
                                     const inputValue = e.target.value;
