@@ -89,16 +89,16 @@ export default function FacultyManagement() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/faculties"] });
       toast({
-        title: "Faculty created",
-        description: "The faculty has been successfully created."
+        title: "Факультет создан",
+        description: "Создание факультета выполнено успешно."
       });
       setIsCreateDialogOpen(false);
       createForm.reset();
     },
     onError: (error) => {
       toast({
-        title: "Error",
-        description: error.message || "Failed to create faculty",
+        title: "Ошибка",
+        description: error.message || "Не удалось создать факультет",
         variant: "destructive"
       });
     }
@@ -112,15 +112,15 @@ export default function FacultyManagement() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/faculties"] });
       toast({
-        title: "Faculty updated",
-        description: "The faculty has been successfully updated."
+        title: "Факультет обновлен",
+        description: "Обновление факультета выполнено успешно."
       });
       setIsEditDialogOpen(false);
     },
     onError: (error) => {
       toast({
-        title: "Error",
-        description: error.message || "Failed to update faculty",
+        title: "Ошибка",
+        description: error.message || "Не удалось обновить факультет",
         variant: "destructive"
       });
     }
@@ -134,15 +134,15 @@ export default function FacultyManagement() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/faculties"] });
       toast({
-        title: "Faculty deleted",
-        description: "The faculty has been successfully deleted."
+        title: "Факультет удален",
+        description: "Удаление факультета выполнено успешно."
       });
       setIsDeleteDialogOpen(false);
     },
     onError: (error) => {
       toast({
-        title: "Error",
-        description: error.message || "Failed to delete faculty",
+        title: "Ошибка",
+        description: error.message || "Не удалось удалить факультет",
         variant: "destructive"
       });
     }
@@ -207,14 +207,14 @@ export default function FacultyManagement() {
       <div className="container mx-auto px-4 py-6">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
           <div>
-            <h2 className="text-2xl font-semibold">Faculty Management</h2>
-            <p className="text-gray-500">Create, view, edit, and manage faculties</p>
+            <h2 className="text-2xl font-semibold">Управление факультетами</h2>
+            <p className="text-gray-500">Создание, просмотр, редактирование и управление факультетами</p>
           </div>
           <div className="mt-4 md:mt-0 flex flex-col sm:flex-row gap-3">
             <div className="relative">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
               <Input
-                placeholder="Search faculties..."
+                placeholder="Поиск факультетов..."
                 className="pl-9 w-full sm:w-64"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -222,16 +222,16 @@ export default function FacultyManagement() {
             </div>
             <Button onClick={() => setIsCreateDialogOpen(true)}>
               <Plus className="mr-2 h-4 w-4" />
-              Add Faculty
+              Добавить факультет
             </Button>
           </div>
         </div>
 
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-lg">Faculties</CardTitle>
+            <CardTitle className="text-lg">Факультеты</CardTitle>
             <CardDescription>
-              Manage faculties in the system
+              Управление факультетами в системе
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -243,10 +243,10 @@ export default function FacultyManagement() {
               <>
                 {(!filteredFaculties || filteredFaculties.length === 0) ? (
                   <div className="text-center py-12">
-                    <p className="text-gray-500 mb-4">No faculties found matching your search criteria.</p>
+                    <p className="text-gray-500 mb-4">Не найдено факультетов, соответствующих вашему критерию поиска.</p>
                     <Button onClick={() => setIsCreateDialogOpen(true)}>
                       <Plus className="mr-2 h-4 w-4" />
-                      Create New Faculty
+                      Добавить новый факультет
                     </Button>
                   </div>
                 ) : (
@@ -255,9 +255,9 @@ export default function FacultyManagement() {
                       <thead>
                         <tr className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           <th className="px-4 py-3">ID</th>
-                          <th className="px-4 py-3">Name</th>
-                          <th className="px-4 py-3">Description</th>
-                          <th className="px-4 py-3 text-right">Actions</th>
+                          <th className="px-4 py-3">Название</th>
+                          <th className="px-4 py-3">Описание</th>
+                          <th className="px-4 py-3 text-right">Действия</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-200">
@@ -285,17 +285,17 @@ export default function FacultyManagement() {
                                   </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
-                                  <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                  <DropdownMenuLabel>Действия</DropdownMenuLabel>
                                   <DropdownMenuItem onClick={() => handleEditFaculty(faculty)}>
                                     <Edit className="mr-2 h-4 w-4" />
-                                    Edit
+                                    Редактировать
                                   </DropdownMenuItem>
                                   <DropdownMenuItem 
                                     onClick={() => handleDeleteFaculty(faculty)}
                                     className="text-red-600"
                                   >
                                     <Trash2 className="mr-2 h-4 w-4" />
-                                    Delete
+                                    Удалить
                                   </DropdownMenuItem>
                                 </DropdownMenuContent>
                               </DropdownMenu>
@@ -315,9 +315,9 @@ export default function FacultyManagement() {
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle>Create New Faculty</DialogTitle>
+              <DialogTitle>Добавить новый факультет</DialogTitle>
               <DialogDescription>
-                Add a new faculty to the system
+                Добавьте новый факультет в систему
               </DialogDescription>
             </DialogHeader>
             <Form {...createForm}>
@@ -327,9 +327,9 @@ export default function FacultyManagement() {
                   name="name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Faculty Name</FormLabel>
+                      <FormLabel>Название факультета</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter faculty name" {...field} />
+                        <Input placeholder="Введите название факультета" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -340,16 +340,16 @@ export default function FacultyManagement() {
                   name="description"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Description</FormLabel>
+                      <FormLabel>Описание</FormLabel>
                       <FormControl>
                         <Textarea 
-                          placeholder="Enter faculty description" 
+                          placeholder="Введите описание факультета" 
                           className="resize-none" 
                           {...field} 
                         />
                       </FormControl>
                       <FormDescription>
-                        A brief description of the faculty (optional)
+                        Краткое описание факультета (необязательно)
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -357,16 +357,16 @@ export default function FacultyManagement() {
                 />
                 <DialogFooter>
                   <Button type="button" variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-                    Cancel
+                    Отмена
                   </Button>
                   <Button type="submit" disabled={createFacultyMutation.isPending}>
                     {createFacultyMutation.isPending ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Creating...
+                        Создание...
                       </>
                     ) : (
-                      'Create Faculty'
+                      'Создать факультет'
                     )}
                   </Button>
                 </DialogFooter>
@@ -379,9 +379,9 @@ export default function FacultyManagement() {
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle>Edit Faculty</DialogTitle>
+              <DialogTitle>Редактировать факультет</DialogTitle>
               <DialogDescription>
-                Update faculty information
+                Обновите информацию о факультете
               </DialogDescription>
             </DialogHeader>
             <Form {...editForm}>
@@ -391,9 +391,9 @@ export default function FacultyManagement() {
                   name="name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Faculty Name</FormLabel>
+                      <FormLabel>Название факультета</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter faculty name" {...field} />
+                        <Input placeholder="Введите название факультета" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -404,16 +404,16 @@ export default function FacultyManagement() {
                   name="description"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Description</FormLabel>
+                      <FormLabel>Описание</FormLabel>
                       <FormControl>
                         <Textarea 
-                          placeholder="Enter faculty description" 
+                          placeholder="Введите описание факультета" 
                           className="resize-none" 
                           {...field} 
                         />
                       </FormControl>
                       <FormDescription>
-                        A brief description of the faculty (optional)
+                        Краткое описание факультета (необязательно)
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -421,16 +421,16 @@ export default function FacultyManagement() {
                 />
                 <DialogFooter>
                   <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-                    Cancel
+                    Отмена
                   </Button>
                   <Button type="submit" disabled={updateFacultyMutation.isPending}>
                     {updateFacultyMutation.isPending ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Updating...
+                        Обновление...
                       </>
                     ) : (
-                      'Update Faculty'
+                      'Обновить факультет'
                     )}
                   </Button>
                 </DialogFooter>
@@ -443,15 +443,13 @@ export default function FacultyManagement() {
         <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+              <AlertDialogTitle>Вы уверены?</AlertDialogTitle>
               <AlertDialogDescription>
-                This will permanently delete the faculty{' '}
-                <span className="font-semibold">{selectedFaculty?.name}</span>.
-                This action cannot be undone, and may affect students and groups associated with this faculty.
+                Это действие не может быть отменено и может повлиять на студентов и группы, связанные с этим факультетом.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogCancel>Отмена</AlertDialogCancel>
               <AlertDialogAction
                 onClick={confirmDelete}
                 className="bg-red-600 hover:bg-red-700"
@@ -459,10 +457,10 @@ export default function FacultyManagement() {
                 {deleteFacultyMutation.isPending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Deleting...
+                    Удаление...
                   </>
                 ) : (
-                  'Delete Faculty'
+                  'Удалить факультет'
                 )}
               </AlertDialogAction>
             </AlertDialogFooter>

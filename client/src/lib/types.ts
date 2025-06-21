@@ -24,11 +24,11 @@ export interface TeacherProfile extends BaseProfile {
 }
 
 export interface StudentProfile extends BaseProfile {
-  gender: "male" | "female" | "other";
+  gender: "М" | "Ж" | "Другое";
   placeOfBirth?: string;
   address: string;
   schoolGraduated?: string;
-  medicalGroup: "basic" | "preparatory" | "special";
+  medicalGroup: "Основная" | "Подготовительная" | "Специальная";
   medicalDiagnosis?: string;
   previousIllnesses?: string;
   activeSports?: string;
@@ -40,11 +40,11 @@ export interface Student {
   studentId: number;
   userId: number;
   fullName: string;
-  gender: "male" | "female" | "other";
+  gender: "М" | "Ж" | "Другое";
   dateOfBirth: string;
   placeOfBirth?: string;
   groupId: number;
-  medicalGroup: "basic" | "preparatory" | "special";
+  medicalGroup: "Основная" | "Подготовительная" | "Специальная";
   medicalDiagnosis?: string;
   previousIllnesses?: string;
   activeSports?: string;

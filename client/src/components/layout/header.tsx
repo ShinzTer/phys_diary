@@ -44,7 +44,7 @@ export default function Header({ toggleSidebar }: HeaderProps) {
             <Menu className="h-6 w-6" />
           </button>
           <Link href="/">
-            <h1 className="text-xl font-semibold cursor-pointer">Physical Education Control System</h1>
+            <h1 className="text-xl font-semibold cursor-pointer">Система контроля физического воспитания</h1>
           </Link>
         </div>
         
@@ -65,23 +65,23 @@ export default function Header({ toggleSidebar }: HeaderProps) {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuLabel>
-                  <div className="font-normal text-sm text-muted-foreground">Signed in as</div>
+                  <div className="font-normal text-sm text-muted-foreground">Вход в систему как</div>
                   <div className="font-medium">{user?.username}</div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
                   <Link href="/profile" className="cursor-pointer">
-                    My Profile
+                    Мой профиль
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link href="/settings" className="cursor-pointer">
-                    Settings
+                    Настройки
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout} className="text-destructive cursor-pointer">
-                  Log out
+                  Выйти
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

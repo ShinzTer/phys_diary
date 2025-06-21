@@ -60,8 +60,8 @@ export default function EditProfile() {
   useEffect(() => {
     if (user?.role === "admin") {
       toast({
-        title: "Access Restricted",
-        description: "Admin users don't have a profile page.",
+        title: "Доступ ограничен",
+        description: "Администраторы не имеют страницы профиля.",
         variant: "destructive"
       });
       navigate('/');
@@ -95,15 +95,15 @@ export default function EditProfile() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/profile/${user?.role}/${userRecord?.teacherId || userRecord?.studentId}`] });
       toast({
-        title: "Profile updated",
-        description: "Your profile has been updated successfully."
+        title: "Профиль обновлен",
+        description: "Ваш профиль был успешно обновлен."
       });
       navigate('/profile');
     },
     onError: (error) => {
       toast({
-        title: "Error",
-        description: error.message || "Failed to update profile",
+        title: "Ошибка",
+        description: error.message || "Не удалось обновить профиль",
         variant: "destructive"
       });
     }
@@ -151,7 +151,7 @@ export default function EditProfile() {
       // Set each field value
       Object.entries(formattedProfile).forEach(([key, value]) => {
         if (value !== undefined && value !== null) {
-          form.setValue(key as keyof ProfileFormValues, value);
+          form.setValue(key as keyof ProfileFormValues, value.toString());
         }
       });
     }
@@ -185,11 +185,11 @@ export default function EditProfile() {
         <div className="flex items-center mb-6">
           <Button variant="ghost" onClick={navigateToProfile} className="mr-2">
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back
+            Назад
           </Button>
           <div>
-            <h2 className="text-2xl font-semibold">Edit Profile</h2>
-            <p className="text-gray-500">Update your personal information</p>
+            <h2 className="text-2xl font-semibold">Редактировать профиль</h2>
+            <p className="text-gray-500">Обновите вашу личную информацию</p>
           </div>
         </div>
 
@@ -197,20 +197,20 @@ export default function EditProfile() {
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Edit Profile Information</CardTitle>
+                <CardTitle>Редактировать информацию о профиле</CardTitle>
                 <CardDescription>
-                  Please fill out your profile information accurately
+                  Пожалуйста, заполните вашу информацию о профиле
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <Tabs defaultValue="personal" value={activeTab} onValueChange={handleTabChange}>
                   <TabsList className="mb-4">
-                    <TabsTrigger value="personal">Personal</TabsTrigger>
-                    <TabsTrigger value="education">Education</TabsTrigger>
+                    <TabsTrigger value="personal">Личная информация</TabsTrigger>
+                    <TabsTrigger value="education">Образование</TabsTrigger>
                     {user?.role === "student" && (
                       <>
-                        <TabsTrigger value="medical">Medical</TabsTrigger>
-                        <TabsTrigger value="sports">Sports</TabsTrigger>
+                        <TabsTrigger value="medical">Мед. информация</TabsTrigger>
+                        <TabsTrigger value="sports">Спорт</TabsTrigger>
                       </>
                     )}
                   </TabsList>
@@ -223,7 +223,7 @@ export default function EditProfile() {
                           name="fullName"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Full Name</FormLabel>
+                              <FormLabel>ФИО</FormLabel>
                               <FormControl>
                                 <Input placeholder="John Doe" {...field} />
                               </FormControl>
@@ -238,20 +238,20 @@ export default function EditProfile() {
                             name="gender"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Gender</FormLabel>
+                                <FormLabel>Пол</FormLabel>
                                 <Select 
                                   onValueChange={field.onChange} 
                                   defaultValue={field.value}
                                 >
                                   <FormControl>
                                     <SelectTrigger>
-                                      <SelectValue placeholder="Select gender" />
+                                      <SelectValue placeholder="Выберите пол" />
                                     </SelectTrigger>
                                   </FormControl>
                                   <SelectContent>
-                                    <SelectItem value="male">Male</SelectItem>
-                                    <SelectItem value="female">Female</SelectItem>
-                                    <SelectItem value="other">Other</SelectItem>
+                                    <SelectItem value="male">Мужской</SelectItem>
+                                    <SelectItem value="female">Женский</SelectItem>
+                                    <SelectItem value="other">Другое</SelectItem>
                                   </SelectContent>
                                 </Select>
                                 <FormMessage />
@@ -266,7 +266,7 @@ export default function EditProfile() {
                             name="position"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Position</FormLabel>
+                                <FormLabel>Должность</FormLabel>
                                 <FormControl>
                                   <Input placeholder="Senior Lecturer" {...field} />
                                 </FormControl>
@@ -281,7 +281,7 @@ export default function EditProfile() {
                           name="dateOfBirth"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Date of Birth</FormLabel>
+                              <FormLabel>Дата рождения</FormLabel>
                               <FormControl>
                                 <Input type="date" {...field} />
                               </FormControl>
@@ -295,11 +295,11 @@ export default function EditProfile() {
                           name="phone"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Phone Number</FormLabel>
+                              <FormLabel>Номер телефона</FormLabel>
                               <FormControl>
                                 <Input placeholder="+375XXXXXXXXX" {...field} />
                               </FormControl>
-                              <FormDescription>Format: +375*********</FormDescription>
+                              <FormDescription>Формат: +375*********</FormDescription>
                               <FormMessage />
                             </FormItem>
                           )}
@@ -311,7 +311,7 @@ export default function EditProfile() {
                             name="address"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Address</FormLabel>
+                                <FormLabel>Адрес</FormLabel>
                                 <FormControl>
                                   <Input placeholder="123 Main St" {...field} />
                                 </FormControl>
@@ -326,7 +326,7 @@ export default function EditProfile() {
                           name="nationality"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Nationality</FormLabel>
+                              <FormLabel>Национальность</FormLabel>
                               <FormControl>
                                 <Input placeholder="Belarusian" {...field} />
                               </FormControl>
@@ -345,7 +345,7 @@ export default function EditProfile() {
                         name="educationalDepartment"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Educational Department</FormLabel>
+                            <FormLabel>Образовательное подразделение</FormLabel>
                             <FormControl>
                               <Input placeholder="Department name" {...field} />
                             </FormControl>
@@ -360,7 +360,7 @@ export default function EditProfile() {
                           name="schoolGraduated"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>School Graduated</FormLabel>
+                              <FormLabel>Учебное заведение</FormLabel>
                               <FormControl>
                                 <Input placeholder="Previous school name" {...field} />
                               </FormControl>
@@ -381,14 +381,14 @@ export default function EditProfile() {
                             name="medicalGroup"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Medical Group</FormLabel>
+                                <FormLabel>Медицинская группа</FormLabel>
                                 <Select 
                                   onValueChange={field.onChange} 
                                   defaultValue={field.value}
                                 >
                                   <FormControl>
                                     <SelectTrigger>
-                                      <SelectValue placeholder="Select medical group" />
+                                      <SelectValue placeholder="Выберите медицинскую группу" />
                                     </SelectTrigger>
                                   </FormControl>
                                   <SelectContent>
@@ -399,7 +399,7 @@ export default function EditProfile() {
                                     ))}
                                   </SelectContent>
                                 </Select>
-                                <FormDescription>Your assigned medical category</FormDescription>
+                                <FormDescription>Ваша медицинская группа</FormDescription>
                                 <FormMessage />
                               </FormItem>
                             )}
@@ -410,10 +410,10 @@ export default function EditProfile() {
                             name="medicalDiagnosis"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Medical Diagnosis</FormLabel>
+                                <FormLabel>Медицинский диагноз</FormLabel>
                                 <FormControl>
                                   <Textarea 
-                                    placeholder="Enter any medical diagnoses" 
+                                    placeholder="Введите все свои медицинские диагнозы" 
                                     className="resize-none" 
                                     {...field} 
                                   />
@@ -428,10 +428,10 @@ export default function EditProfile() {
                             name="previousIllnesses"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Previous Illnesses</FormLabel>
+                                <FormLabel>Предыдущие болезни</FormLabel>
                                 <FormControl>
                                   <Textarea 
-                                    placeholder="List any previous illnesses" 
+                                    placeholder="Перечислите любые предыдущие болезни" 
                                     className="resize-none" 
                                     {...field} 
                                   />
@@ -450,10 +450,10 @@ export default function EditProfile() {
                             name="activeSports"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Currently Engaged In (Sports)</FormLabel>
+                                <FormLabel>Текущие виды спорта</FormLabel>
                                 <FormControl>
                                   <Textarea 
-                                    placeholder="List sports you are currently engaged in" 
+                                    placeholder="Перечислите все виды спорта, которыми вы занимались" 
                                     className="resize-none" 
                                     {...field} 
                                   />
@@ -468,7 +468,7 @@ export default function EditProfile() {
                             name="previousSports"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Previously Engaged In (Sports)</FormLabel>
+                                <FormLabel>Предыдущие виды спорта</FormLabel>
                                 <FormControl>
                                   <Textarea 
                                     placeholder="List sports you were previously engaged in" 
@@ -486,10 +486,10 @@ export default function EditProfile() {
                             name="additionalInfo"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Additional Information</FormLabel>
+                                <FormLabel>Дополнительная информация</FormLabel>
                                 <FormControl>
                                   <Textarea 
-                                    placeholder="Any additional information about yourself" 
+                                    placeholder="Введите любую дополнительную информацию о себе" 
                                     className="resize-none" 
                                     {...field} 
                                   />
@@ -514,7 +514,7 @@ export default function EditProfile() {
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   )}
                   <Save className="mr-2 h-4 w-4" />
-                  Save Changes
+                  Сохранить изменения
                 </Button>
               </CardFooter>
             </Card>

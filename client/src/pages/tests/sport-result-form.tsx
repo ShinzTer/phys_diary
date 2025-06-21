@@ -206,7 +206,7 @@ console.log(testData?.basketballFreethrow)
       if (user?.role === "student") {
         if (!studentProfile?.studentId) {
           throw new Error(
-            "Student profile not found. Please contact your administrator."
+            "Профиль студента не найден. Пожалуйста, свяжитесь с администратором."
           );
         }
         studentId = studentProfile.studentId;
@@ -215,7 +215,7 @@ console.log(testData?.basketballFreethrow)
       }
 
       if (!studentId) {
-        throw new Error("Student ID is required");
+        throw new Error("Требуется ID студента");
       }
 
       // Create test data object
@@ -246,15 +246,15 @@ console.log(testData?.basketballFreethrow)
       });
       queryClient.invalidateQueries({ queryKey: ["/api/sport-results"] });
       toast({
-        title: "Test recorded",
-        description: "Your test result has been successfully recorded.",
+        title: "Тест записан",
+        description: "Результат теста был успешно записан.",
       });
       navigate("/tests");
     },
     onError: (error) => {
       toast({
-        title: "Error",
-        description: error.message || "Failed to record test",
+        title: "Ошибка",
+        description: error.message || "Ошибка в записи результата теста",
         variant: "destructive",
       });
     },
@@ -267,7 +267,7 @@ console.log(testData?.basketballFreethrow)
 
       if (user?.role === "student") {
         if (!studentProfile?.studentId) {
-          throw new Error("Student profile not found");
+          throw new Error("Профиль студента не найден");
         }
         studentId = studentProfile.studentId;
       } else {
@@ -275,7 +275,7 @@ console.log(testData?.basketballFreethrow)
       }
 
       if (!studentId) {
-        throw new Error("Student ID is required");
+        throw new Error("Требуется ID студента");
       }
 
       const testData: Partial<SportResult> = {
@@ -306,17 +306,17 @@ console.log(testData?.basketballFreethrow)
       });
       queryClient.invalidateQueries({ queryKey: ["/api/sport-results"] });
       toast({
-        title: isGrading ? "Test graded" : "Test updated",
+        title: isGrading ? "Тест оценен" : "Тест обновлён",
         description: isGrading
-          ? "The test has been successfully graded."
-          : "The test has been successfully updated.",
+          ? "Тест был успешно оценен."
+          : "Тест был успешно обновлён.",
       });
       navigate("/tests");
     },
     onError: (error) => {
       toast({
-        title: "Error",
-        description: error.message || "Failed to update test",
+        title: "Ошибка",
+        description: error.message || "Ошибка обновления теста",
         variant: "destructive",
       });
     },
@@ -343,9 +343,9 @@ console.log(testData?.basketballFreethrow)
 
   const pageTitle = isEdit
     ? isGrading
-      ? "Grade Test"
-      : "Edit Test Record"
-    : "Record New Test";
+      ? "Выставить оценку теста"
+      : "Изменить результаты теста"
+    : "Записать новый тест";
 
   return (
     <MainLayout>
@@ -364,9 +364,9 @@ console.log(testData?.basketballFreethrow)
             <p className="text-gray-500">
               {isEdit
                 ? isGrading
-                  ? "Assign a grade to this test"
-                  : "Update test information"
-                : "Record a new physical test or control exercise"}
+                  ? "Выставить оценку данному тесту"
+                  : "Обновить информацию о тесте"
+                : "Записать результаты тестов или проб"}
             </p>
           </div>
         </div>
@@ -377,9 +377,9 @@ console.log(testData?.basketballFreethrow)
             <CardDescription>
               {isEdit
                 ? isGrading
-                  ? "Review and grade this test result"
-                  : "Make changes to the test record"
-                : "Fill in the details for the new test"}
+                  ? "Выставить оценку данному тесту"
+                  : "Обновить информацию о тесте"
+                : "Записать результаты тестов или проб"}
             </CardDescription>
           </CardHeader>
           <Form {...form} >
@@ -404,7 +404,7 @@ console.log(testData?.basketballFreethrow)
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select a student" />
+                            <SelectValue placeholder="Выберите студента" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -419,7 +419,7 @@ console.log(testData?.basketballFreethrow)
                         </SelectContent>
                       </Select>
                       <FormDescription>
-                        Select the student for whom this test is being recorded
+                        Выберите студента для записи теста
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -432,7 +432,7 @@ console.log(testData?.basketballFreethrow)
                 name="periodId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Period</FormLabel>
+                    <FormLabel>Период</FormLabel>
                     <Select
                       onValueChange={(value) => field.onChange(parseInt(value))}
                       defaultValue={field.value.toString()}
@@ -440,7 +440,7 @@ console.log(testData?.basketballFreethrow)
                     >
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select a student" />
+                          <SelectValue placeholder="Выберите студента" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -455,7 +455,7 @@ console.log(testData?.basketballFreethrow)
                       </SelectContent>
                     </Select>
                     <FormDescription>
-                      Select the student for whom this test is being recorded
+                    Выберите студента для записи теста
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -468,21 +468,21 @@ console.log(testData?.basketballFreethrow)
                   <table className="w-full table-auto border border-gray-200 text-sm">
                     <thead className="bg-muted">
                       <tr>
-                        <th className="p-2 text-left">Test Name</th>
-                        <th className="p-2 text-left">Result</th>
+                        <th className="p-2 text-left">Название теста</th>
+                        <th className="p-2 text-left">Результат</th>
                       </tr>
                     </thead>
                     <tbody>
                       {[
-                        { name: "Basketball Freethrow", key: "basketballFreethrow" },
-                        { name: "Basketball Dribble", key: "basketballDribble" },
-                        { name: "Volleyball Pass", key: "volleyballPass" },
-                        { name: "Volleyball Serve", key: "volleyballServe" },
-                        { name: "Swimming 25m", key: "swimming25m" },
-                        { name: "Swimming 50m", key: "swimming50m" },
-                        { name: "Swimming 100m", key: "swimming100m" },
-                        { name: "Running 100m", key: "running100m" },
-                        { name: "Running 500m/1000m", key: "running500m1000m" },
+                        { name: "Штрафные броски", key: "basketballFreethrow" },
+                        { name: "Двухшажная техника", key: "basketballDribble" },
+                        { name: "Верхняя передача мяча в парах /\nНижняя передача мяча в парах", key: "volleyballPass" },
+                        { name: "Подача мяча через сетку", key: "volleyballServe" },
+                        { name: "Плавание 25 м", key: "swimming25m" },
+                        { name: "Плавание 50 м", key: "swimming50m" },
+                        { name: "Плавание 100 м", key: "swimming100m" },
+                        { name: "Бег 100 м", key: "running100m" },
+                        { name: "Бег 500/1000 м", key: "running500m1000m" },
                         
                       ].map((test) => (
                         <tr key={test.key} className="border-t border-gray-100">
@@ -521,7 +521,7 @@ console.log(testData?.basketballFreethrow)
                   variant="outline"
                   onClick={() => navigate("/tests")}
                 >
-                  Cancel
+                  Отмена
                 </Button>
                 <Button
                   type="submit"
@@ -535,18 +535,18 @@ console.log(testData?.basketballFreethrow)
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       {isEdit
                         ? isGrading
-                          ? "Saving Grade..."
-                          : "Updating..."
-                        : "Saving..."}
+                          ? "Сохранение оценки..."
+                          : "Обновление..."
+                        : "Сохранение..."}
                     </>
                   ) : (
                     <>
                       <Save className="mr-2 h-4 w-4" />
                       {isEdit
                         ? isGrading
-                          ? "Save Grade"
-                          : "Update Test"
-                        : "Save Test"}
+                          ? "Сохранить оценку"
+                          : "Обновить тест"
+                        : "Сохранить тест"}
                     </>
                   )}
                 </Button>

@@ -19,7 +19,7 @@ export default function MobileNav() {
             isActive("/") ? "text-primary" : "text-gray-500"
           )}>
             <Home size={20} />
-            <span className="text-xs mt-1">Dashboard</span>
+            <span className="text-xs mt-1">Главная</span>
           </a>
         </Link>
         
@@ -29,7 +29,7 @@ export default function MobileNav() {
             isActive("/students") ? "text-primary" : "text-gray-500"
           )}>
             <Users size={20} />
-            <span className="text-xs mt-1">Students</span>
+            <span className="text-xs mt-1">Студенты</span>
           </a>
         </Link>
         
@@ -39,7 +39,7 @@ export default function MobileNav() {
             isActive("/tests") || isActive("/samples") ? "text-primary" : "text-gray-500"
           )}>
             <Activity size={20} />
-            <span className="text-xs mt-1">Tests</span>
+            <span className="text-xs mt-1">Тесты</span>
           </a>
         </Link>
         
@@ -49,7 +49,7 @@ export default function MobileNav() {
             isActive("/profile") ? "text-primary" : "text-gray-500"
           )}>
             <User size={20} />
-            <span className="text-xs mt-1">Profile</span>
+            <span className="text-xs mt-1">Профиль</span>
           </a>
         </Link>
       </div>

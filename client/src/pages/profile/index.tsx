@@ -73,11 +73,11 @@ export default function Profile() {
     <MainLayout>
       <div className="container mx-auto py-6 space-y-6">
         <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold">Profile</h1>
+          <h1 className="text-3xl font-bold">Профиль</h1>
           <Link href="/profile/edit">
             <Button>
               <Edit className="h-4 w-4 mr-2" />
-              Edit Profile
+              Редактировать профиль
             </Button>
           </Link>
         </div>
@@ -86,7 +86,7 @@ export default function Profile() {
           {/* Basic Info Card */}
           <Card>
             <CardHeader>
-              <CardTitle>Basic Information</CardTitle>
+              <CardTitle>Основная информация</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center space-x-4">
@@ -103,11 +103,11 @@ export default function Profile() {
                 <div className="space-y-2">
                   <div className="flex items-center text-sm">
                     <UserCheck className="h-4 w-4 mr-2" />
-                    <span>Medical Group: {(profile as StudentProfile)?.medicalGroup}</span>
+                    <span>Медицинская группа: {(profile as StudentProfile)?.medicalGroup}</span>
                   </div>
                   <div className="flex items-center text-sm">
                     <Calendar className="h-4 w-4 mr-2" />
-                    <span>Date of Birth: {profile?.dateOfBirth ? format(new Date(profile.dateOfBirth), 'PP') : 'Not set'}</span>
+                    <span>Дата рождения: {profile?.dateOfBirth ? format(new Date(profile.dateOfBirth), 'PP') : 'Не установлено'}</span>
                   </div>
                 </div>
               )}
@@ -116,12 +116,12 @@ export default function Profile() {
                 <div className="space-y-2">
                   <div className="flex items-center text-sm">
                     <Award className="h-4 w-4 mr-2" />
-                    <span>Position: {(profile as TeacherProfile)?.position}</span>
+                    <span>Должность: {(profile as TeacherProfile)?.position}</span>
                   </div>
                   {profile?.dateOfBirth && (
                     <div className="flex items-center text-sm">
                       <Calendar className="h-4 w-4 mr-2" />
-                      <span>Date of Birth: {format(new Date(profile.dateOfBirth), 'PP')}</span>
+                      <span>Дата рождения: {format(new Date(profile.dateOfBirth), 'PP')}</span>
                     </div>
                   )}
                 </div>
@@ -135,8 +135,8 @@ export default function Profile() {
               {/* Physical Tests Card */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Physical Tests</CardTitle>
-                  <CardDescription>Recent test results</CardDescription>
+                  <CardTitle>Физические тесты</CardTitle>
+                  <CardDescription>Последние результаты тестов</CardDescription>
                 </CardHeader>
                 <CardContent>
                   {tests && tests.length > 0 ? (
@@ -144,7 +144,7 @@ export default function Profile() {
                       {/* Render test results */}
                     </div>
                   ) : (
-                    <p className="text-sm text-muted-foreground">No test results available</p>
+                    <p className="text-sm text-muted-foreground">Нет последних результатов</p>
                   )}
                 </CardContent>
               </Card>
@@ -152,8 +152,8 @@ export default function Profile() {
               {/* Physical State Card */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Physical State</CardTitle>
-                  <CardDescription>Recent measurements</CardDescription>
+                  <CardTitle>Физические пробы</CardTitle>
+                  <CardDescription>Последние измерения</CardDescription>
                 </CardHeader>
                 <CardContent>
                   {samples && samples.length > 0 ? (
@@ -161,7 +161,7 @@ export default function Profile() {
                       {/* Render physical state measurements */}
                     </div>
                   ) : (
-                    <p className="text-sm text-muted-foreground">No measurements available</p>
+                    <p className="text-sm text-muted-foreground">Нет последних измерений</p>
                   )}
                 </CardContent>
               </Card>
@@ -173,22 +173,22 @@ export default function Profile() {
               {/* Teacher Stats Card */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Teaching Stats</CardTitle>
-                  <CardDescription>Current semester</CardDescription>
+                  <CardTitle>Статистика преподавания</CardTitle>
+                  <CardDescription>Текущий семестр</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
                     <div className="flex items-center text-sm">
                       <Users className="h-4 w-4 mr-2" />
-                      <span>Students: 120</span>
+                      <span>Студенты: 120</span>
                     </div>
                     <div className="flex items-center text-sm">
                       <BookOpen className="h-4 w-4 mr-2" />
-                      <span>Groups: 4</span>
+                      <span>Группы: 4</span>
                     </div>
                     <div className="flex items-center text-sm">
                       <Activity className="h-4 w-4 mr-2" />
-                      <span>Tests Conducted: 240</span>
+                      <span>Проведенные тесты: 240</span>
                     </div>
                   </div>
                 </CardContent>
@@ -197,11 +197,11 @@ export default function Profile() {
               {/* Schedule Card */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Schedule</CardTitle>
-                  <CardDescription>Upcoming classes</CardDescription>
+                  <CardTitle>Расписание</CardTitle>
+                  <CardDescription>Предстоящие занятия</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm text-muted-foreground">No upcoming classes</p>
+                  <p className="text-sm text-muted-foreground">Нет предстоящих занятий</p>
                 </CardContent>
               </Card>
             </>

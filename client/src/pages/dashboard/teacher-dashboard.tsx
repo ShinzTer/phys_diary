@@ -60,7 +60,7 @@ export default function TeacherDashboard() {
   return (
     <div className="container mx-auto px-4 py-6">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-semibold">Teacher Dashboard</h2>
+        <h2 className="text-2xl font-semibold">Панель преподавателя</h2>
         <div className="flex space-x-2">
           <Button variant="outline" size="icon">
             <SlidersHorizontal className="h-4 w-4" />
@@ -68,7 +68,7 @@ export default function TeacherDashboard() {
           <div className="relative">
             <Input
               type="text"
-              placeholder="Search students..."
+              placeholder="Поиск студентов..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10 w-64"
@@ -90,7 +90,7 @@ export default function TeacherDashboard() {
               <CardContent className="p-6">
                 <div className="flex justify-between items-start">
                   <div>
-                    <p className="text-sm text-gray-500">Total Students</p>
+                    <p className="text-sm text-gray-500">Всего студентов</p>
                     <p className="text-2xl font-semibold">{students?.length || 0}</p>
                   </div>
                   <div className="p-2 bg-blue-100 rounded-md">
@@ -108,7 +108,7 @@ export default function TeacherDashboard() {
               <CardContent className="p-6">
                 <div className="flex justify-between items-start">
                   <div>
-                    <p className="text-sm text-gray-500">Pending Assessments</p>
+                    <p className="text-sm text-gray-500">Ожидаемые оценки</p>
                     <p className="text-2xl font-semibold">{pendingAssessments}</p>
                   </div>
                   <div className="p-2 bg-amber-100 rounded-md">
@@ -126,7 +126,7 @@ export default function TeacherDashboard() {
               <CardContent className="p-6">
                 <div className="flex justify-between items-start">
                   <div>
-                    <p className="text-sm text-gray-500">Average Performance</p>
+                    <p className="text-sm text-gray-500">Средняя успеваемость</p>
                     <p className="text-2xl font-semibold">{averagePerformance}%</p>
                   </div>
                   <div className="p-2 bg-green-100 rounded-md">
@@ -144,7 +144,7 @@ export default function TeacherDashboard() {
               <CardContent className="p-6">
                 <div className="flex justify-between items-start">
                   <div>
-                    <p className="text-sm text-gray-500">Medical Exemptions</p>
+                    <p className="text-sm text-gray-500">Медицинские исключения</p>
                     <p className="text-2xl font-semibold">{medicalExemptions}</p>
                   </div>
                   <div className="p-2 bg-red-100 rounded-md">
@@ -164,25 +164,25 @@ export default function TeacherDashboard() {
             <div className="lg:col-span-2">
               <Card>
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-lg">Recent Student Activities</CardTitle>
+                  <CardTitle className="text-lg">Последние активности студентов</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="overflow-x-auto">
                     <table className="min-w-full divide-y divide-gray-200">
                       <thead>
                         <tr className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          <th className="px-4 py-3">Student</th>
-                          <th className="px-4 py-3">Test/Sample</th>
-                          <th className="px-4 py-3">Result</th>
-                          <th className="px-4 py-3">Date</th>
-                          <th className="px-4 py-3">Status</th>
+                          <th className="px-4 py-3">Студент</th>
+                          <th className="px-4 py-3">Тест/Проба</th>
+                          <th className="px-4 py-3">Результат</th>
+                          <th className="px-4 py-3">Дата</th>
+                          <th className="px-4 py-3">Статус</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-200">
                         {/* Empty state if no data */}
                         <tr>
                           <td colSpan={5} className="px-4 py-6 text-center text-gray-500">
-                            No recent activities to display
+                            Последние активности отсутствуют
                           </td>
                         </tr>
                       </tbody>
@@ -190,7 +190,7 @@ export default function TeacherDashboard() {
                   </div>
                   <div className="mt-4 text-center">
                     <Button variant="link" className="text-primary text-sm">
-                      View all activities
+                      Посмотреть все активности
                     </Button>
                   </div>
                 </CardContent>
@@ -200,7 +200,7 @@ export default function TeacherDashboard() {
             <div>
               <Card>
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-lg">Upcoming Tasks</CardTitle>
+                  <CardTitle className="text-lg">Предстоящие задания</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
@@ -209,8 +209,8 @@ export default function TeacherDashboard() {
                         <FileText className="h-4 w-4 text-primary" />
                       </div>
                       <div>
-                        <p className="text-sm font-medium">Assess Swimming Tests</p>
-                        <p className="text-xs text-gray-500">Due in 2 days</p>
+                        <p className="text-sm font-medium">Оценить тесты плавания</p>
+                        <p className="text-xs text-gray-500">Срок: 2 дня</p>
                         <div className="mt-2 flex items-center">
                           <span className="text-xs text-gray-500 mr-3">Progress: 4/12</span>
                           <Progress value={33} className="h-1.5 w-24" />
@@ -223,8 +223,8 @@ export default function TeacherDashboard() {
                         <Activity className="h-4 w-4 text-red-500" />
                       </div>
                       <div>
-                        <p className="text-sm font-medium">End-of-term Reports</p>
-                        <p className="text-xs text-gray-500">Due tomorrow</p>
+                        <p className="text-sm font-medium">Отчеты на конец семестра</p>
+                        <p className="text-xs text-gray-500">Срок: завтра</p>
                         <div className="mt-2 flex items-center">
                           <span className="text-xs text-gray-500 mr-3">Progress: 18/25</span>
                           <Progress value={72} className="h-1.5 w-24" />
@@ -237,16 +237,16 @@ export default function TeacherDashboard() {
                         <TrendingUp className="h-4 w-4 text-green-500" />
                       </div>
                       <div>
-                        <p className="text-sm font-medium">Update Medical Statuses</p>
-                        <p className="text-xs text-gray-500">By Friday</p>
-                        <p className="text-xs mt-1.5 text-red-500 font-medium">3 pending certificates</p>
+                        <p className="text-sm font-medium">Обновить медицинские статусы</p>
+                        <p className="text-xs text-gray-500">К пятнице</p>
+                        <p className="text-xs mt-1.5 text-red-500 font-medium">3 ожидающих сертификатов</p>
                       </div>
                     </div>
                   </div>
                   
                   <div className="mt-4 text-center">
                     <Button variant="link" className="text-primary text-sm">
-                      View all tasks
+                      Посмотреть все задания
                     </Button>
                   </div>
                 </CardContent>
@@ -257,7 +257,7 @@ export default function TeacherDashboard() {
           {/* Student Progress */}
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-lg">Student Progress</CardTitle>
+              <CardTitle className="text-lg">Прогресс студентов</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -274,7 +274,7 @@ export default function TeacherDashboard() {
                       <div className="flex justify-between">
                         <p className="text-sm font-medium">{student.fullName || student.username}</p>
                         <p className="text-xs text-gray-500">
-                          {student.groupId ? `Group ${student.groupId}` : "No Group"}
+                          {student.groupId ? `Группа ${student.groupId}` : "Нет группы"}
                         </p>
                       </div>
                       <Progress 
@@ -292,7 +292,7 @@ export default function TeacherDashboard() {
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem asChild>
                           <Link href={`/students/${student.id}`}>
-                            View Profile
+                            Посмотреть профиль
                           </Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem>Send Message</DropdownMenuItem>
@@ -304,7 +304,7 @@ export default function TeacherDashboard() {
                 
                 {filteredStudents?.length === 0 && (
                   <div className="text-center py-4 text-gray-500">
-                    No students found matching your search
+                    Нет студентов, соответствующих вашему поиску
                   </div>
                 )}
               </div>
@@ -312,7 +312,7 @@ export default function TeacherDashboard() {
               <div className="mt-4 text-center">
                 <Link href="/students">
                   <Button variant="link" className="text-primary text-sm">
-                    View all students
+                    Посмотреть всех студентов
                   </Button>
                 </Link>
               </div>

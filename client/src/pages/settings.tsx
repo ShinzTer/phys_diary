@@ -46,11 +46,11 @@ import { Switch } from "@/components/ui/switch";
 
 // Password change form schema
 const passwordFormSchema = z.object({
-  currentPassword: z.string().min(1, "Current password is required"),
-  newPassword: z.string().min(6, "New password must be at least 6 characters"),
-  confirmPassword: z.string().min(1, "Please confirm your new password"),
+  currentPassword: z.string().min(1, "Нынешний пароль является обязательным"),
+  newPassword: z.string().min(6, "Новый пароль, по крайней мере 6 символов"),
+  confirmPassword: z.string().min(1, "Подтвердите новый пароль"),
 }).refine(data => data.newPassword === data.confirmPassword, {
-  message: "Passwords do not match",
+  message: "Пароли не совпадают",
   path: ["confirmPassword"],
 });
 
@@ -145,15 +145,15 @@ export default function Settings() {
     },
     onSuccess: () => {
       toast({
-        title: "Password updated",
-        description: "Your password has been successfully changed."
+        title: "Пароль обновлён",
+        description: "Ваш пароль был успешно изменён."
       });
       passwordForm.reset();
     },
     onError: (error) => {
       toast({
-        title: "Error",
-        description: error.message || "Failed to change password",
+        title: "Ошибка",
+        description: error.message || "Ошибка в изменении пароля",
         variant: "destructive"
       });
     }
@@ -170,8 +170,8 @@ export default function Settings() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/profile/${user?.id}`] });
       toast({
-        title: "Settings updated",
-        description: "Your visual preferences have been saved."
+        title: "Настройки обновлены",
+        description: "Выбор визуальных настроек сохранён."
       });
 
       // Apply visual settings to the application
@@ -179,8 +179,8 @@ export default function Settings() {
     },
     onError: (error) => {
       toast({
-        title: "Error",
-        description: error.message || "Failed to update settings",
+        title: "Ошибка",
+        description: error.message || "Ошибка в сохранении настроек",
         variant: "destructive"
       });
     }
@@ -322,28 +322,28 @@ export default function Settings() {
     <MainLayout>
       <div className="container mx-auto px-4 py-6">
         <div className="mb-6">
-          <h2 className="text-2xl font-semibold">Settings</h2>
-          <p className="text-gray-500">Manage your account preferences and settings</p>
+          <h2 className="text-2xl font-semibold">Настройки</h2>
+          <p className="text-gray-500">Изменение настроек для своего аккаунта</p>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="mb-6">
             <TabsTrigger value="appearance">
               <Palette className="h-4 w-4 mr-2" />
-              Appearance
+              Внешний вид
             </TabsTrigger>
             <TabsTrigger value="account">
               <Eye className="h-4 w-4 mr-2" />
-              Account
+              Аккаунт
             </TabsTrigger>
           </TabsList>
           
           <TabsContent value="appearance">
             <Card>
               <CardHeader>
-                <CardTitle>Visual Preferences</CardTitle>
+                <CardTitle>Визуальные предпочтения</CardTitle>
                 <CardDescription>
-                  Customize the appearance of the application
+                  Изменение внешнего вида приложения
                 </CardDescription>
               </CardHeader>
               <Form {...visualSettingsForm}>
@@ -354,7 +354,7 @@ export default function Settings() {
                       name="theme"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Theme</FormLabel>
+                          <FormLabel>Тема</FormLabel>
                           <div className="flex flex-wrap gap-4">
                             <RadioGroup 
                               onValueChange={field.onChange} 
@@ -367,7 +367,7 @@ export default function Settings() {
                                 </FormControl>
                                 <FormLabel className="font-normal cursor-pointer flex items-center">
                                   <Sun className="h-4 w-4 mr-1" />
-                                  Light
+                                  Светлая
                                 </FormLabel>
                               </FormItem>
                               <FormItem className="flex items-center space-x-1 space-y-0">
@@ -376,7 +376,7 @@ export default function Settings() {
                                 </FormControl>
                                 <FormLabel className="font-normal cursor-pointer flex items-center">
                                   <Moon className="h-4 w-4 mr-1" />
-                                  Dark
+                                  Тёмная
                                 </FormLabel>
                               </FormItem>
                               <FormItem className="flex items-center space-x-1 space-y-0">
@@ -385,7 +385,7 @@ export default function Settings() {
                                 </FormControl>
                                 <FormLabel className="font-normal cursor-pointer flex items-center">
                                   <Monitor className="h-4 w-4 mr-1" />
-                                  System
+                                  Как в системе
                                 </FormLabel>
                               </FormItem>
                             </RadioGroup>
@@ -400,7 +400,7 @@ export default function Settings() {
                       name="colorScheme"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Color Scheme</FormLabel>
+                          <FormLabel>Цветовая схема</FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
                               <SelectTrigger>
@@ -408,15 +408,15 @@ export default function Settings() {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="blue">Blue</SelectItem>
-                              <SelectItem value="green">Green</SelectItem>
-                              <SelectItem value="purple">Purple</SelectItem>
-                              <SelectItem value="orange">Orange</SelectItem>
-                              <SelectItem value="red">Red</SelectItem>
+                              <SelectItem value="blue">Синяя</SelectItem>
+                              <SelectItem value="green">Зелёная</SelectItem>
+                              <SelectItem value="purple">Фиолетовая</SelectItem>
+                              <SelectItem value="orange">Оранжевая</SelectItem>
+                              <SelectItem value="red">Красная</SelectItem>
                             </SelectContent>
                           </Select>
                           <FormDescription>
-                            The primary color used throughout the application
+                            Основной цвет используется по всему приложению
                           </FormDescription>
                           <FormMessage />
                         </FormItem>
@@ -428,7 +428,7 @@ export default function Settings() {
                       name="fontSize"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Font Size</FormLabel>
+                          <FormLabel>Размер шрифта</FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
                               <SelectTrigger>
@@ -436,10 +436,10 @@ export default function Settings() {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="small">Small</SelectItem>
-                              <SelectItem value="medium">Medium (Default)</SelectItem>
-                              <SelectItem value="large">Large</SelectItem>
-                              <SelectItem value="extra-large">Extra Large</SelectItem>
+                              <SelectItem value="small">Маленький</SelectItem>
+                              <SelectItem value="medium">Средний (По умолчанию)</SelectItem>
+                              <SelectItem value="large">Большой</SelectItem>
+                              <SelectItem value="extra-large">Очень большой</SelectItem>
                             </SelectContent>
                           </Select>
                           <FormMessage />
@@ -453,9 +453,9 @@ export default function Settings() {
                       render={({ field }) => (
                         <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                           <div className="space-y-0.5">
-                            <FormLabel className="text-base">Reduce Motion</FormLabel>
+                            <FormLabel className="text-base">Упрощённые анимации</FormLabel>
                             <FormDescription>
-                              Minimize animated effects throughout the application
+                              Минимизировать анимированность приложения
                             </FormDescription>
                           </div>
                           <FormControl>
@@ -473,7 +473,7 @@ export default function Settings() {
                       name="contrastMode"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Contrast Mode</FormLabel>
+                          <FormLabel>Контрастность</FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
                               <SelectTrigger>
@@ -481,12 +481,12 @@ export default function Settings() {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="normal">Normal</SelectItem>
-                              <SelectItem value="high">High Contrast</SelectItem>
+                              <SelectItem value="normal">Обычная</SelectItem>
+                              <SelectItem value="high">Высококонтрастная</SelectItem>
                             </SelectContent>
                           </Select>
                           <FormDescription>
-                            Increase contrast for better visibility
+                            Повысить контрастность для лучшей сличаемости
                           </FormDescription>
                           <FormMessage />
                         </FormItem>
@@ -501,12 +501,12 @@ export default function Settings() {
                       {updateVisualSettingsMutation.isPending ? (
                         <>
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Saving...
+                          Сохранение...
                         </>
                       ) : (
                         <>
                           <Save className="mr-2 h-4 w-4" />
-                          Save Preferences
+                          Сохранить настройки
                         </>
                       )}
                     </Button>
@@ -519,9 +519,9 @@ export default function Settings() {
           <TabsContent value="account">
             <Card>
               <CardHeader>
-                <CardTitle>Change Password</CardTitle>
+                <CardTitle>Смена пароля</CardTitle>
                 <CardDescription>
-                  Update your account password
+                  Обновить пароль аккаунта
                 </CardDescription>
               </CardHeader>
               <Form {...passwordForm}>
@@ -532,9 +532,9 @@ export default function Settings() {
                       name="currentPassword"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Current Password</FormLabel>
+                          <FormLabel>Текущий пароль</FormLabel>
                           <FormControl>
-                            <Input type="password" placeholder="Enter your current password" {...field} />
+                            <Input type="password" placeholder="Введите свой текущий пароль" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -545,12 +545,12 @@ export default function Settings() {
                       name="newPassword"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>New Password</FormLabel>
+                          <FormLabel>Новый пароль</FormLabel>
                           <FormControl>
-                            <Input type="password" placeholder="Enter your new password" {...field} />
+                            <Input type="password" placeholder="Введите новый пароль" {...field} />
                           </FormControl>
                           <FormDescription>
-                            Password must be at least 6 characters long
+                            Пароль должен быть длинной минимум в 6 символов
                           </FormDescription>
                           <FormMessage />
                         </FormItem>
@@ -561,9 +561,9 @@ export default function Settings() {
                       name="confirmPassword"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Confirm New Password</FormLabel>
+                          <FormLabel>Подтвердть пароль</FormLabel>
                           <FormControl>
-                            <Input type="password" placeholder="Confirm your new password" {...field} />
+                            <Input type="password" placeholder="Подтвердите новый пароль" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -578,10 +578,10 @@ export default function Settings() {
                       {changePasswordMutation.isPending ? (
                         <>
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Changing Password...
+                          Изменение пароля...
                         </>
                       ) : (
-                        "Change Password"
+                        "Изменение пароля"
                       )}
                     </Button>
                   </CardFooter>

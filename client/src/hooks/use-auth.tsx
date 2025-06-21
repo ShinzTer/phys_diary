@@ -25,14 +25,14 @@ type AuthContextType = {
 };
 
 const loginSchema = z.object({
-  username: z.string().min(1, "Username is required"),
-  password: z.string().min(1, "Password is required"),
+  username: z.string().min(1, "Имя пользователя является обязательным"),
+  password: z.string().min(1, "Пароль является обязательным"),
 });
 
 const registerSchema = insertUserSchema.extend({
-  confirmPassword: z.string().min(1, "Confirm password is required"),
+  confirmPassword: z.string().min(1, "Подтверждение пароля является обязательным"),
 }).refine(data => data.password === data.confirmPassword, {
-  message: "Passwords do not match",
+  message: "Пароли не совпадают",
   path: ["confirmPassword"],
 });
 
@@ -77,13 +77,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     onSuccess: (user: UserWithoutPassword) => {
       queryClient.setQueryData(["/api/user"], user);
       toast({
-        title: "Login successful",
-        description: `Welcome back, ${user.username}!`,
+        title: "Вход в систему выполнен успешно",
+        description: `Добро пожаловать, ${user.username}!`,
       });
     },
     onError: (error: Error) => {
       toast({
-        title: "Login failed",
+        title: "Вход в систему не выполнен",
         description: error.message,
         variant: "destructive",
       });
@@ -99,13 +99,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     onSuccess: (user: UserWithoutPassword) => {
       queryClient.setQueryData(["/api/user"], user);
       toast({
-        title: "Registration successful",
-        description: `Welcome, ${user.username}!`,
+        title: "Регистрация выполнена успешно",
+        description: `Добро пожаловать, ${user.username}!`,
       });
     },
     onError: (error: Error) => {
       toast({
-        title: "Registration failed",
+        title: "Регистрация не выполнена",
         description: error.message,
         variant: "destructive",
       });
@@ -119,13 +119,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     onSuccess: () => {
       queryClient.setQueryData(["/api/user"], null);
       toast({
-        title: "Logged out",
-        description: "You have been successfully logged out.",
+        title: "Выход из системы выполнен успешно",
+        description: "Вы успешно вышли из системы.",
       });
     },
     onError: (error: Error) => {
       toast({
-        title: "Logout failed",
+        title: "Выход из системы не выполнен",
         description: error.message,
         variant: "destructive",
       });
@@ -151,7 +151,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 export function useAuth() {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider");
+    throw new Error("useAuth должен использоваться в AuthProvider");
   }
   return context;
 }

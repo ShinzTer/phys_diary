@@ -21,7 +21,7 @@ const profileSchema = z.object({
   fullName: z.string().min(1, "Full name is required"),
   position: z.string().min(1, "Position is required"),
   dateOfBirth: z.string().min(1, "Date of birth is required"),
-  educationalDepartment: z.string().min(1, "Educational department is required"),
+  educationalDepartment: z.string().min(1, "Образовательное подразделение является обязательным"),
   phone: z.string()
     .regex(/^\+375\d{9}$/, "Phone number must be in format: +375*********")
     .min(13, "Phone number must be 13 characters long")
@@ -119,7 +119,7 @@ export function ProfileForm({ id, role, isEditable = true }: ProfileFormProps) {
   if (error) {
     return (
       <div className="text-center py-10">
-        <p className="text-red-500">Error loading profile: {error.message}</p>
+        <p className="text-red-500">Ошибка загрузки профиля: {error.message}</p>
       </div>
     );
   }
@@ -127,15 +127,15 @@ export function ProfileForm({ id, role, isEditable = true }: ProfileFormProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Profile Information</CardTitle>
-        <CardDescription>Update your personal information</CardDescription>
+        <CardTitle>Информация о профиле</CardTitle>
+        <CardDescription>Обновите вашу личную информацию</CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             {/* Personal Information Section */}
             <div>
-              <h3 className="text-lg font-medium">Personal Information</h3>
+              <h3 className="text-lg font-medium">Личная информация</h3>
               <Separator className="my-3" />
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField
@@ -143,7 +143,7 @@ export function ProfileForm({ id, role, isEditable = true }: ProfileFormProps) {
                   name="fullName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Full Name</FormLabel>
+                      <FormLabel>ФИО</FormLabel>
                       <FormControl>
                         <Input
                           {...field}
@@ -161,12 +161,12 @@ export function ProfileForm({ id, role, isEditable = true }: ProfileFormProps) {
                   name="position"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Position</FormLabel>
+                      <FormLabel>Должность</FormLabel>
                       <FormControl>
                         <Input
                           {...field}
                           disabled={!isEditable}
-                          placeholder="Enter your position"
+                          placeholder="Введите вашу должность"
                         />
                       </FormControl>
                       <FormMessage />
@@ -179,7 +179,7 @@ export function ProfileForm({ id, role, isEditable = true }: ProfileFormProps) {
                   name="dateOfBirth"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Date of Birth</FormLabel>
+                      <FormLabel>Дата рождения</FormLabel>
                       <FormControl>
                         <Input
                           {...field}
@@ -197,12 +197,12 @@ export function ProfileForm({ id, role, isEditable = true }: ProfileFormProps) {
                   name="phone"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Phone Number</FormLabel>
+                      <FormLabel>Номер телефона</FormLabel>
                       <FormControl>
                         <Input
                           {...field}
                           disabled={!isEditable}
-                          placeholder="+375XXXXXXXXX"
+                          placeholder="+375*********"
                         />
                       </FormControl>
                       <FormMessage />
@@ -214,7 +214,7 @@ export function ProfileForm({ id, role, isEditable = true }: ProfileFormProps) {
 
             {/* Professional Information Section */}
             <div>
-              <h3 className="text-lg font-medium">Professional Information</h3>
+              <h3 className="text-lg font-medium">Профессиональная информация</h3>
               <Separator className="my-3" />
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField
@@ -222,12 +222,12 @@ export function ProfileForm({ id, role, isEditable = true }: ProfileFormProps) {
                   name="educationalDepartment"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Educational Department</FormLabel>
+                      <FormLabel>Образовательное подразделение</FormLabel>
                       <FormControl>
                         <Input
                           {...field}
                           disabled={!isEditable}
-                          placeholder="Enter your department"
+                          placeholder="Введите ваше подразделение"
                         />
                       </FormControl>
                       <FormMessage />
@@ -240,12 +240,12 @@ export function ProfileForm({ id, role, isEditable = true }: ProfileFormProps) {
                   name="nationality"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Nationality</FormLabel>
+                      <FormLabel>Национальность</FormLabel>
                       <FormControl>
                         <Input
                           {...field}
                           disabled={!isEditable}
-                          placeholder="Enter your nationality"
+                          placeholder="Введите вашу национальность"
                         />
                       </FormControl>
                       <FormMessage />
@@ -265,7 +265,7 @@ export function ProfileForm({ id, role, isEditable = true }: ProfileFormProps) {
                   {updateProfileMutation.isPending ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
-                    "Save Profile"
+                    "Сохранить профиль"
                   )}
                 </Button>
               </div>

@@ -12,8 +12,8 @@ export default function Dashboard() {
     <MainLayout>
       <div className="container mx-auto px-4 py-6">
         <div className="mb-6">
-          <h2 className="text-2xl font-semibold">Dashboard</h2>
-          <p className="text-gray-500">Welcome, {user.fullName || user.username}</p>
+          <h2 className="text-2xl font-semibold">Главная страница</h2>
+          <p className="text-gray-500">Добро пожаловать, {user.fullName || user.username}</p>
         </div>
         
         {/* Dashboard content based on role */}
@@ -28,19 +28,19 @@ export default function Dashboard() {
 function AdminDashboard() {
   return (
     <div>
-      <h2 className="text-lg font-semibold mb-4">Admin Dashboard</h2>
+      <h2 className="text-lg font-semibold mb-4">Панель администратора</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-lg flex items-center">
               <Users className="h-5 w-5 mr-2 text-blue-500" />
-              User Management
+              Управление пользователями
             </CardTitle>
-            <CardDescription>Manage system users</CardDescription>
+            <CardDescription>Управление пользователями системы</CardDescription>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-gray-500">
-              Add, edit, or remove users with different roles: administrators, teachers, and students.
+              Добавить, изменить или удалить пользователей разных ролей: администраторы, преподаватели и студенты.
             </p>
           </CardContent>
         </Card>
@@ -49,13 +49,13 @@ function AdminDashboard() {
           <CardHeader className="pb-2">
             <CardTitle className="text-lg flex items-center">
               <BookOpen className="h-5 w-5 mr-2 text-indigo-500" />
-              Faculties
+              факультеты
             </CardTitle>
-            <CardDescription>Manage faculty information</CardDescription>
+            <CardDescription>Управление факультетами</CardDescription>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-gray-500">
-              Organize faculties and departments within the educational institution.
+              Организация факультетов в рамках учебного заведения.
             </p>
           </CardContent>
         </Card>
@@ -64,13 +64,13 @@ function AdminDashboard() {
           <CardHeader className="pb-2">
             <CardTitle className="text-lg flex items-center">
               <Users className="h-5 w-5 mr-2 text-green-500" />
-              Groups
+              Группы
             </CardTitle>
-            <CardDescription>Manage student groups</CardDescription>
+            <CardDescription>Управление группами</CardDescription>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-gray-500">
-              Create and manage student groups associated with faculties.
+              Создание и управление группами студентов, связанными с факультетами.
             </p>
           </CardContent>
         </Card>
@@ -82,19 +82,19 @@ function AdminDashboard() {
 function TeacherDashboard() {
   return (
     <div>
-      <h2 className="text-lg font-semibold mb-4">Teacher Dashboard</h2>
+      <h2 className="text-lg font-semibold mb-4">Панель преподавателя</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-lg flex items-center">
               <Users className="h-5 w-5 mr-2 text-blue-500" />
-              Student Profiles
+              Профили студентов
             </CardTitle>
-            <CardDescription>Review student information</CardDescription>
+            <CardDescription>Просмотреть информацию студента</CardDescription>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-gray-500">
-              Access and review detailed profiles of your students.
+              Получение доступа к деталям профиля своих студентов.
             </p>
           </CardContent>
         </Card>
@@ -103,13 +103,13 @@ function TeacherDashboard() {
           <CardHeader className="pb-2">
             <CardTitle className="text-lg flex items-center">
               <ClipboardList className="h-5 w-5 mr-2 text-indigo-500" />
-              Assessment
+              Оценка
             </CardTitle>
-            <CardDescription>Evaluate student performance</CardDescription>
+            <CardDescription>Оценить результаты студента</CardDescription>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-gray-500">
-              Record and assess student test results, samples, and exercise performance.
+              Запись и оценивание результатов выполнения тестов и проб учащихся.
             </p>
           </CardContent>
         </Card>
@@ -118,13 +118,13 @@ function TeacherDashboard() {
           <CardHeader className="pb-2">
             <CardTitle className="text-lg flex items-center">
               <FileBarChart className="h-5 w-5 mr-2 text-green-500" />
-              Reports
+              Отчёты
             </CardTitle>
-            <CardDescription>Generate performance reports</CardDescription>
+            <CardDescription>Создать отчёт</CardDescription>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-gray-500">
-              Create and analyze reports based on student performance data.
+              Создать и проанализировать отчёты, основанные на резульататах нормативов.
             </p>
           </CardContent>
         </Card>
@@ -136,19 +136,19 @@ function TeacherDashboard() {
 function StudentDashboard() {
   return (
     <div>
-      <h2 className="text-lg font-semibold mb-4">Student Dashboard</h2>
+      <h2 className="text-lg font-semibold mb-4">Панель студента</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-lg flex items-center">
               <Activity className="h-5 w-5 mr-2 text-blue-500" />
-              My Profile
+              Мой профиль
             </CardTitle>
-            <CardDescription>Personal information</CardDescription>
+            <CardDescription>Персональная информация</CardDescription>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-gray-500">
-              View and update your personal information, education details, and physical records.
+              Просмотр и изменение персональной информации, образования, и физического состояния.
             </p>
           </CardContent>
         </Card>
@@ -157,13 +157,13 @@ function StudentDashboard() {
           <CardHeader className="pb-2">
             <CardTitle className="text-lg flex items-center">
               <Dumbbell className="h-5 w-5 mr-2 text-indigo-500" />
-              My Results
+              Мои результаты
             </CardTitle>
-            <CardDescription>Performance data</CardDescription>
+            <CardDescription>Данные о нормативах</CardDescription>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-gray-500">
-              Track your results in tests, physical measurements, and control exercises.
+              Проследите свои нормативы в физических тестах, пробах и контрольных упражнениях.
             </p>
           </CardContent>
         </Card>
@@ -172,13 +172,13 @@ function StudentDashboard() {
           <CardHeader className="pb-2">
             <CardTitle className="text-lg flex items-center">
               <Users className="h-5 w-5 mr-2 text-green-500" />
-              Teachers
+              Преподаватели
             </CardTitle>
-            <CardDescription>View teacher information</CardDescription>
+            <CardDescription>Просмотреть информацию о преподавателе</CardDescription>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-gray-500">
-              See a list of your teachers and their contact information.
+              Просмотреть список своих преподавателей и информацию о них.
             </p>
           </CardContent>
         </Card>

@@ -148,10 +148,10 @@ export function SampleForm({ sample, studentId, assessmentMode = true }: SampleF
                   <SelectValue placeholder="Select assessment" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="excellent">Excellent</SelectItem>
-                  <SelectItem value="good">Good</SelectItem>
-                  <SelectItem value="satisfactory">Satisfactory</SelectItem>
-                  <SelectItem value="poor">Poor</SelectItem>
+                  <SelectItem value="excellent">Замечательно</SelectItem>
+                  <SelectItem value="good">Хорошо</SelectItem>
+                  <SelectItem value="satisfactory">Удовлетворительно</SelectItem>
+                  <SelectItem value="poor">Плохо</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -173,12 +173,12 @@ export function SampleForm({ sample, studentId, assessmentMode = true }: SampleF
         {latestPreviousResult && (
           <div className="mt-4 text-gray-500 text-sm">
             <p>
-              <span className="font-medium">Previous:</span>{" "}
+              <span className="font-medium">Предыдущее значение:</span>{" "}
               {latestPreviousResult.value} {sample.unit}{" "}
               ({new Date(latestPreviousResult.assessedAt).toLocaleDateString()})
             </p>
             <p>
-              <span className="font-medium">Historical average:</span>{" "}
+              <span className="font-medium">Среднее значение:</span>{" "}
               {historicalAverage} {sample.unit}
             </p>
           </div>

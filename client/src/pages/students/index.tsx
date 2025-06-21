@@ -119,15 +119,15 @@ export default function Students() {
 
   // Get faculty and group names
   const getFacultyName = (facultyId?: number) => {
-    if (!facultyId) return "Not Assigned";
+    if (!facultyId) return "Не назначен";
     const faculty = faculties.find((f: Faculty) => f.facultyId === facultyId);
-    return faculty ? faculty.name : "Not Found";
+    return faculty ? faculty.name : "Не найден";
   };
 
   const getGroupName = (groupId?: number) => {
-    if (!groupId) return "Not Assigned";
+    if (!groupId) return "Не назначен";
     const group = groups.find((g: Group) => g.groupId === groupId); //.data
-    return group ? group.name : "Not Found";
+    return group ? group.name : "Не найден";
   };
 
   const getMedicalGroupBadge = (medicalGroup?: string) => {
@@ -135,11 +135,11 @@ export default function Students() {
     
     switch (medicalGroup) {
       case "basic":
-        return <Badge className="bg-green-100 text-green-800">Basic</Badge>;
+        return <Badge className="bg-green-100 text-green-800">Основная</Badge>;
       case "preparatory":
-        return <Badge className="bg-amber-100 text-amber-800">Preparatory</Badge>;
+        return <Badge className="bg-amber-100 text-amber-800">Подготовительная</Badge>;
       case "special":
-        return <Badge className="bg-red-100 text-red-800">Special</Badge>;
+        return <Badge className="bg-red-100 text-red-800">Специальная</Badge>;
       default:
         return <Badge className="bg-gray-100 text-gray-800">{medicalGroup}</Badge>;
     }
@@ -150,14 +150,14 @@ export default function Students() {
       <div className="container mx-auto px-4 py-6">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
           <div>
-            <h2 className="text-2xl font-semibold">Students</h2>
-            <p className="text-gray-500">View and manage student information</p>
+            <h2 className="text-2xl font-semibold">Студенты</h2>
+            <p className="text-gray-500">Просмотр и управление информацией о студентах</p>
           </div>
           <div className="mt-4 md:mt-0 flex flex-col sm:flex-row gap-3">
             <div className="relative">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
               <Input
-                placeholder="Search students..."
+                placeholder="Поиск студентов..."
                 className="pl-9 w-full sm:w-64"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -168,10 +168,10 @@ export default function Students() {
               onValueChange={setMedicalGroupFilter}
             >
               <SelectTrigger className="w-full sm:w-48">
-                <SelectValue placeholder="Filter by medical group" />
+                <SelectValue placeholder="Фильтр по медицинской группе" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Medical Groups</SelectItem>
+                <SelectItem value="all">Все медицинские группы</SelectItem>
                 {MEDICAL_GROUP_TYPES.map(type => (
                   <SelectItem key={type} value={type} className="capitalize">
                     {type}
@@ -190,41 +190,41 @@ export default function Students() {
           <Card>
             <CardHeader className="pb-3">
               <div className="flex justify-between items-center">
-                <CardTitle className="text-lg">Student List</CardTitle>
+                <CardTitle className="text-lg">Список студентов</CardTitle>
                 <div className="flex gap-2">
                   <Button variant="outline" size="sm">
                     <SlidersHorizontal className="h-4 w-4 mr-2" />
-                    Filters
+                    Фильтры
                   </Button>
                   {user?.role === "admin" && (
                     <Link href="/admin/users">
                       <Button size="sm">
                         <UserPlus className="h-4 w-4 mr-2" />
-                        Add Student
+                        Добавить студента
                       </Button>
                     </Link>
                   )}
                 </div>
               </div>
               <CardDescription>
-                {filteredStudents?.length || 0} {filteredStudents?.length === 1 ? "student" : "students"} found
+                {filteredStudents?.length || 0} {filteredStudents?.length === 1 ? "студент" : "студентов"} найдено
               </CardDescription>
             </CardHeader>
             <CardContent>
               {filteredStudents?.length === 0 ? (
                 <div className="text-center py-12">
-                  <p className="text-gray-500">No students found matching your search criteria.</p>
+                  <p className="text-gray-500">Не найдено студентов, соответствующих вашему поиску.</p>
                 </div>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead>
                       <tr className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        <th className="px-4 py-3">Student</th>
-                        <th className="px-4 py-3">Faculty / Group</th>
-                        <th className="px-4 py-3">Medical Group</th>
-                        <th className="px-4 py-3">Profile Completion</th>
-                        <th className="px-4 py-3 text-right">Actions</th>
+                        <th className="px-4 py-3">Студент</th>
+                        <th className="px-4 py-3">Факультет / Группа</th>
+                        <th className="px-4 py-3">Медицинская группа</th>
+                        <th className="px-4 py-3">Завершение профиля</th>
+                        <th className="px-4 py-3 text-right">Действия</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200">
@@ -276,12 +276,12 @@ export default function Students() {
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
-                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                <DropdownMenuLabel>Действия</DropdownMenuLabel>
                                 <DropdownMenuItem asChild>
                                   <Link href={`/students/${student.id}`}>
                                     <div className="w-full flex items-center">
                                       <Eye className="mr-2 h-4 w-4" />
-                                      View Profile
+                                      Просмотр профиля
                                     </div>
                                   </Link>
                                 </DropdownMenuItem>
@@ -289,7 +289,7 @@ export default function Students() {
                                   <Link href={`/tests/${student.id}`}>
                                     <div className="w-full flex items-center">
                                       <FileText className="mr-2 h-4 w-4" />
-                                      View Tests
+                                      Просмотр тестов
                                     </div>
                                   </Link>
                                 </DropdownMenuItem>
@@ -298,7 +298,7 @@ export default function Students() {
                                   <Link href={`/reports?userId=${student.id}`}>
                                     <div className="w-full flex items-center">
                                       <FileText className="mr-2 h-4 w-4" />
-                                      Generate Report
+                                      Генерация отчета
                                     </div>
                                   </Link>
                                 </DropdownMenuItem>

@@ -289,14 +289,14 @@ export default function GroupManagement() {
       <div className="container mx-auto px-4 py-6">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
           <div>
-            <h2 className="text-2xl font-semibold">Group Management</h2>
-            <p className="text-gray-500">Create, view, edit, and manage student groups</p>
+            <h2 className="text-2xl font-semibold">Управление группами</h2>
+            <p className="text-gray-500">Создание, просмотр, редактирование и управление группами студентов</p>
           </div>
           <div className="mt-4 md:mt-0 flex flex-col sm:flex-row gap-3">
             <div className="relative">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
               <Input
-                placeholder="Search groups..."
+                placeholder="Поиск групп..."
                 className="pl-9 w-full sm:w-64"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -304,7 +304,7 @@ export default function GroupManagement() {
             </div>
             <Button onClick={() => setIsCreateDialogOpen(true)}>
               <Plus className="mr-2 h-4 w-4" />
-              Add Group
+              Добавить группу
             </Button>
           </div>
         </div>
@@ -312,17 +312,17 @@ export default function GroupManagement() {
         <Card>
           <CardHeader className="pb-3">
             <div className="flex justify-between items-center">
-              <CardTitle className="text-lg">Student Groups</CardTitle>
+              <CardTitle className="text-lg">Группы студентов</CardTitle>
               <div className="mb-4">
                 <Select
                   value={facultyFilter}
                   onValueChange={setFacultyFilter}
                 >
                   <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="All faculties" />
+                    <SelectValue placeholder="Все факультеты" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All faculties</SelectItem>
+                    <SelectItem value="all">Все факультеты</SelectItem>
                     {validFaculties.map((faculty) => (
                       <SelectItem 
                         key={faculty.facultyId} 
@@ -336,7 +336,7 @@ export default function GroupManagement() {
               </div>
             </div>
             <CardDescription>
-              Manage student groups in the system
+              Управление группами студентов в системе
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -348,10 +348,10 @@ export default function GroupManagement() {
               <>
                 {(!filteredGroups || filteredGroups.length === 0) ? (
                   <div className="text-center py-12">
-                    <p className="text-gray-500 mb-4">No groups found matching your search criteria.</p>
+                    <p className="text-gray-500 mb-4">Не найдено групп, соответствующих вашему критерию поиска.</p>
                     <Button onClick={() => setIsCreateDialogOpen(true)}>
                       <Plus className="mr-2 h-4 w-4" />
-                      Create New Group
+                      Добавить новую группу
                     </Button>
                   </div>
                 ) : (
@@ -360,10 +360,10 @@ export default function GroupManagement() {
                       <thead>
                         <tr className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           <th className="px-4 py-3">ID</th>
-                          <th className="px-4 py-3">Group Name</th>
-                          <th className="px-4 py-3">Faculty</th>
-                          <th className="px-4 py-3">Teacher</th>
-                          <th className="px-4 py-3 text-right">Actions</th>
+                          <th className="px-4 py-3">Название группы</th>
+                          <th className="px-4 py-3">Факультет</th>
+                          <th className="px-4 py-3">Преподаватель</th>
+                          <th className="px-4 py-3 text-right">Действия</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-200">
@@ -398,17 +398,17 @@ export default function GroupManagement() {
                                   </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
-                                  <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                  <DropdownMenuLabel>Действия</DropdownMenuLabel>
                                   <DropdownMenuItem onClick={() => handleEditGroup(group)}>
                                     <Edit className="mr-2 h-4 w-4" />
-                                    Edit
+                                    Редактировать
                                   </DropdownMenuItem>
                                   <DropdownMenuItem 
                                     onClick={() => handleDeleteGroup(group)}
                                     className="text-red-600"
                                   >
                                     <Trash2 className="mr-2 h-4 w-4" />
-                                    Delete
+                                    Удалить
                                   </DropdownMenuItem>
                                 </DropdownMenuContent>
                               </DropdownMenu>
@@ -428,9 +428,9 @@ export default function GroupManagement() {
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Create New Group</DialogTitle>
+              <DialogTitle>Добавить новую группу</DialogTitle>
               <DialogDescription>
-                Add a new student group to the system
+                Добавьте новую группу в систему
               </DialogDescription>
             </DialogHeader>
             <Form {...createForm}>
@@ -440,9 +440,9 @@ export default function GroupManagement() {
                   name="name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Group Name</FormLabel>
+                      <FormLabel>Название группы</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter group name" {...field} />
+                        <Input placeholder="Введите название группы" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -453,11 +453,11 @@ export default function GroupManagement() {
                   name="facultyId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Faculty</FormLabel>
+                      <FormLabel>Факультет</FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select a faculty" />
+                            <SelectValue placeholder="Выберите факультет" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -480,11 +480,11 @@ export default function GroupManagement() {
                   name="teacherId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Teacher</FormLabel>
+                      <FormLabel>Преподаватель</FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select a teacher" />
+                            <SelectValue placeholder="Выберите преподавателя" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -504,16 +504,16 @@ export default function GroupManagement() {
                 />
                 <DialogFooter>
                   <Button type="button" variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-                    Cancel
+                    Отмена
                   </Button>
                   <Button type="submit" disabled={createGroupMutation.isPending}>
                     {createGroupMutation.isPending ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Creating...
+                        Создание...
                       </>
                     ) : (
-                      'Create Group'
+                      'Создать группу'
                     )}
                   </Button>
                 </DialogFooter>
@@ -526,9 +526,9 @@ export default function GroupManagement() {
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Edit Group</DialogTitle>
+              <DialogTitle>Редактировать группу</DialogTitle>
               <DialogDescription>
-                Modify the group details
+                Измените детали группы
               </DialogDescription>
             </DialogHeader>
             <Form {...editForm}>
@@ -538,9 +538,9 @@ export default function GroupManagement() {
                   name="name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Group Name</FormLabel>
+                      <FormLabel>Название группы</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter group name" {...field} />
+                        <Input placeholder="Введите название группы" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -551,11 +551,11 @@ export default function GroupManagement() {
                   name="facultyId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Faculty</FormLabel>
+                      <FormLabel>Факультет</FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select a faculty" />
+                            <SelectValue placeholder="Выберите факультет" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -578,11 +578,11 @@ export default function GroupManagement() {
                   name="teacherId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Teacher</FormLabel>
+                      <FormLabel>Преподаватель</FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select a teacher" />
+                            <SelectValue placeholder="Выберите преподавателя" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -602,16 +602,16 @@ export default function GroupManagement() {
                 />
                 <DialogFooter>
                   <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-                    Cancel
+                    Отмена
                   </Button>
                   <Button type="submit" disabled={updateGroupMutation.isPending}>
                     {updateGroupMutation.isPending ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Updating...
+                        Обновление...
                       </>
                     ) : (
-                      'Update Group'
+                      'Обновить группу'
                     )}
                   </Button>
                 </DialogFooter>
@@ -624,23 +624,23 @@ export default function GroupManagement() {
         <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Delete Group</DialogTitle>
+              <DialogTitle>Удалить группу</DialogTitle>
               <DialogDescription>
-                Are you sure you want to delete this group? This action cannot be undone.
+                Вы уверены, что хотите удалить эту группу? Это действие не может быть отменено.
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
-                Cancel
+                Отмена
               </Button>
               <Button type="button" variant="destructive" onClick={confirmDelete} disabled={deleteGroupMutation.isPending}>
                 {deleteGroupMutation.isPending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Deleting...
+                    Удаление...
                   </>
                 ) : (
-                  'Delete Group'
+                  'Удалить группу'
                 )}
               </Button>
             </DialogFooter>

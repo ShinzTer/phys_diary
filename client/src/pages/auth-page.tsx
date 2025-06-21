@@ -46,9 +46,9 @@ export default function AuthPage() {
       <div className="flex-1 flex items-center justify-center p-6 bg-white">
         <Card className="w-full max-w-md">
           <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl font-bold">Welcome</CardTitle>
+            <CardTitle className="text-2xl font-bold">Добро пожаловать</CardTitle>
             <CardDescription>
-              Sign in to access the Physical Education Control System
+              Войдите для доступа к системе физического воспитания
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -59,9 +59,9 @@ export default function AuthPage() {
                   name="username"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Username</FormLabel>
+                      <FormLabel>Логин</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter your username" {...field} />
+                        <Input placeholder="Введите свой логин" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -72,9 +72,9 @@ export default function AuthPage() {
                   name="password"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Password</FormLabel>
+                      <FormLabel>Пароль</FormLabel>
                       <FormControl>
-                        <Input type="password" placeholder="Enter your password" {...field} />
+                        <Input type="password" placeholder="Введите свой пароль" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -88,10 +88,10 @@ export default function AuthPage() {
                   {loginMutation.isPending ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Please wait
+                      Пожалуйста, подождите
                     </>
                   ) : (
-                    "Log in"
+                    "Войти"
                   )}
                 </Button>
               </form>
@@ -101,7 +101,7 @@ export default function AuthPage() {
           <CardFooter className="flex flex-col space-y-2">
             <div className="text-sm text-center text-gray-500 mt-2">
               <p>
-                Default users for demo:<br />
+                Стандартные пользователи для разработки:<br />
                 admin/admin123, teacher/teacher123, student/student123
               </p>
             </div>
@@ -112,9 +112,9 @@ export default function AuthPage() {
       {/* Right side - Hero section */}
       <div className="flex-1 bg-gradient-to-br from-primary to-primary-dark flex flex-col justify-center p-10 text-white">
         <div className="max-w-lg mx-auto">
-          <h1 className="text-4xl font-bold mb-6">Physical Education Control System</h1>
+          <h1 className="text-4xl font-bold mb-6">Система контроля физического воспитания</h1>
           <p className="text-lg mb-6">
-            A comprehensive system to track and manage physical education data for students, teachers, and administrators.
+            Комплексная система отслеживания данных по физическому воспитанию и управлению ими для студентов, преподавателей и администраторов.
           </p>
           <div className="space-y-4">
             <div className="flex items-start space-x-3">
@@ -124,8 +124,8 @@ export default function AuthPage() {
                 </svg>
               </div>
               <div>
-                <h3 className="font-semibold text-lg">Physical Tests & Measurements</h3>
-                <p className="opacity-90">Track physical tests, health samples, and performance metrics</p>
+                <h3 className="font-semibold text-lg">Физические тесты, пробы и контрольные упражнения</h3>
+                <p className="opacity-90">Отслеживайте и заполняйте результаты выполнения всех видов нормативов</p>
               </div>
             </div>
             <div className="flex items-start space-x-3">
@@ -135,19 +135,8 @@ export default function AuthPage() {
                 </svg>
               </div>
               <div>
-                <h3 className="font-semibold text-lg">Performance Analytics</h3>
-                <p className="opacity-90">Visualize progress and identify areas for improvement</p>
-              </div>
-            </div>
-            <div className="flex items-start space-x-3">
-              <div className="bg-white/20 p-2 rounded-full">
-                <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                </svg>
-              </div>
-              <div>
-                <h3 className="font-semibold text-lg">Role-Based Access</h3>
-                <p className="opacity-90">Specialized features for students, teachers, and administrators</p>
+                <h3 className="font-semibold text-lg">Подведение отчётности</h3>
+                <p className="opacity-90">Формируйте отчёты по выполненным нормативам и оценивайте их</p>
               </div>
             </div>
           </div>

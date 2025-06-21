@@ -38,15 +38,15 @@ export function ProtectedRoute({
     return (
       <Route path={path}>
         <div className="flex items-center justify-center min-h-screen flex-col">
-          <h1 className="text-2xl font-bold mb-4">Access Denied</h1>
+          <h1 className="text-2xl font-bold mb-4">Доступ запрещен</h1>
           <p className="text-gray-600">
-            You don't have permission to access this page.
+            У вас нет разрешения на доступ к этой странице.
           </p>
           <button
             onClick={() => window.history.back()}
             className="mt-4 px-4 py-2 bg-primary text-white rounded-md"
           >
-            Go Back
+            Вернуться назад
           </button>
         </div>
       </Route>

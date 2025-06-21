@@ -33,8 +33,8 @@ export async function apiRequest(method: string, path: string, data?: any) {
   const response = await fetch(url, options);
   
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ message: 'An error occurred' }));
-    throw new Error(error.message || 'An error occurred');
+    const error = await response.json().catch(() => ({ message: 'Произошла ошибка' }));
+    throw new Error(error.message || 'Произошла ошибка');
   }
 
   // Check if the response has content

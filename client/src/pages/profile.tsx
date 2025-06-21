@@ -72,7 +72,7 @@ export default function ProfilePage() {
       <MainLayout>
         <div className="flex items-center justify-center h-full">
           <div className="text-red-500">
-            Error loading user record: {(recordError as Error).message}
+            Ошибка загрузки записей пользователя: {(recordError as Error).message}
           </div>
         </div>
       </MainLayout>
@@ -84,7 +84,7 @@ export default function ProfilePage() {
       <MainLayout>
         <div className="flex items-center justify-center h-full">
           <div className="text-red-500">
-            Error loading profile: {(profileError as Error).message}
+            Ошибка загрузки профиля: {(profileError as Error).message}
           </div>
         </div>
       </MainLayout>
@@ -95,7 +95,7 @@ export default function ProfilePage() {
     return (
       <MainLayout>
         <div className="flex items-center justify-center h-full">
-          <div className="text-red-500">Profile not found</div>
+          <div className="text-red-500">Профиль не найден</div>
         </div>
       </MainLayout>
     );
@@ -105,49 +105,49 @@ export default function ProfilePage() {
     <MainLayout>
       <div className="container mx-auto py-8">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold">My Profile</h1>
+          <h1 className="text-3xl font-bold">Мой профиль</h1>
           <Button onClick={() => navigate("/profile/edit")} variant="outline">
             <Edit className="h-4 w-4 mr-2" />
-            Edit Profile
+            Редактировать профиль
           </Button>
         </div>
         <div className="grid gap-6">
           {profile.role === "teacher" ? (
             <div>
               <h2 className="text-xl font-semibold mb-4">
-                Teacher Information
+                Информация преподавателя
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm text-gray-500">Full Name</p>
+                  <p className="text-sm text-gray-500">ФИО</p>
                   <p className="text-lg">{profile.profile.fullName}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Position</p>
+                  <p className="text-sm text-gray-500">Должность</p>
                   <p className="text-lg">
                     {(profile.profile as Teacher).position}
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Phone</p>
+                  <p className="text-sm text-gray-500">Телефон</p>
                   <p className="text-lg">{profile.profile.phone}</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">
-                    Educational Department
+                    Образовательное подразделение
                   </p>
                   <p className="text-lg">
                     {profile.profile.educationalDepartment || "-"}
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Nationality</p>
+                  <p className="text-sm text-gray-500">Национальность</p>
                   <p className="text-lg">
                     {profile.profile.nationality || "-"}
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Date of Birth</p>
+                  <p className="text-sm text-gray-500">Дата рождения</p>
                   <p className="text-lg">
                     {profile.profile.dateOfBirth || "-"}
                   </p>
@@ -157,45 +157,45 @@ export default function ProfilePage() {
           ) : ( //Добавить адрес и т.д.
             <div>
               <h2 className="text-xl font-semibold mb-4">
-                Student Information
+                Информация студента
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm text-gray-500">Full Name</p>
+                  <p className="text-sm text-gray-500">ФИО</p>
                   <p className="text-lg">{profile.profile.fullName}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Medical Group</p>
+                  <p className="text-sm text-gray-500">Мед. группа</p>
                   <p className="text-lg">
                     {(profile.profile as Student).medicalGroup}
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Phone</p>
+                  <p className="text-sm text-gray-500">Телефон</p>
                   <p className="text-lg">{profile.profile.phone}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Address</p>
+                  <p className="text-sm text-gray-500">Адрес</p>
                   <p className="text-lg">
                     {(profile.profile as Student).address || "-"}
                   </p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">
-                    Educational Department
+                    Образовательное подразделение
                   </p>
                   <p className="text-lg">
                     {profile.profile.educationalDepartment || "-"}
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Nationality</p>
+                  <p className="text-sm text-gray-500">Национальность</p>
                   <p className="text-lg">
                     {profile.profile.nationality || "-"}
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Date of Birth</p>
+                  <p className="text-sm text-gray-500">Дата рождения</p>
                   <p className="text-lg">
                     {profile.profile.dateOfBirth || "-"}
                   </p>

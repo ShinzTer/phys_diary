@@ -215,7 +215,7 @@ console.log(studentProfile)
       if (user?.role === "student") {
         if (!studentProfile?.profile.studentId) {
           throw new Error(
-            "Student profile not found. Please contact your administrator."
+            "Профиль студента не найден. Обратитесь к администратору."
           );
         }
         studentId = studentProfile.profile.studentId;
@@ -224,7 +224,7 @@ console.log(studentProfile)
       }
 
       if (!studentId) {
-        throw new Error("Student ID is required");
+        throw new Error("Требуется ID студента");
       }
 
       // Create test data object
@@ -255,15 +255,15 @@ console.log(studentProfile)
       });
       queryClient.invalidateQueries({ queryKey: ["/api/physical-tests"] });
       toast({
-        title: "Test recorded",
-        description: "Your test result has been successfully recorded.",
+        title: "Тест записан",
+        description: "Результат теста успешно записан.",
       });
       navigate("/tests");
     },
     onError: (error) => {
       toast({
-        title: "Error",
-        description: error.message || "Failed to record test",
+        title: "Ошибка",
+        description: error.message || "Ошибка в записи теста",
         variant: "destructive",
       });
     },
@@ -276,7 +276,7 @@ console.log(studentProfile)
    console.log(studentProfile)
       if (user?.role === "student") {
         if (!studentProfile?.student_id) {
-          throw new Error("Student profile not found");
+          throw new Error("Профиль студента не найден");
         }
         studentId = studentProfile.student_id;
       } else {
@@ -284,7 +284,7 @@ console.log(studentProfile)
       }
 
       if (!studentId) {
-        throw new Error("Student ID is required");
+        throw new Error("Требуется ID студента");
       }
 
       const testData: TestData = {
@@ -314,17 +314,17 @@ console.log(studentProfile)
       });
       queryClient.invalidateQueries({ queryKey: ["/api/physical-tests"] });
       toast({
-        title: isGrading ? "Test graded" : "Test updated",
+        title: isGrading ? "Тест оценен" : "Тест обновлён",
         description: isGrading
-          ? "The test has been successfully graded."
-          : "The test has been successfully updated.",
+          ? "Тест был оценен успешно."
+          : "Тест был успешно обновлён.",
       });
       navigate("/tests");
     },
     onError: (error) => {
       toast({
-        title: "Error",
-        description: error.message || "Failed to update test",
+        title: "Ошибка",
+        description: error.message || "Ошибка в записи теста",
         variant: "destructive",
       });
     },
@@ -352,9 +352,9 @@ console.log(studentProfile)
 
   const pageTitle = isEdit
     ? isGrading
-      ? "Grade Test"
-      : "Edit Test Record"
-    : "Record New Test";
+      ? "Оценить тест"
+      : "Изменить результат теста"
+    : "Запись нового теста";
 
   return (
     <MainLayout>
@@ -373,9 +373,9 @@ console.log(studentProfile)
             <p className="text-gray-500">
               {isEdit
                 ? isGrading
-                  ? "Assign a grade to this test"
-                  : "Update test information"
-                : "Record a new physical test or control exercise"}
+                  ? "Назначить оценку тесту"
+                  : "Обновить результаты теста"
+                : "Записать новый тест или пробу"}
             </p>
           </div>
         </div>
@@ -386,9 +386,9 @@ console.log(studentProfile)
             <CardDescription>
               {isEdit
                 ? isGrading
-                  ? "Review and grade this test result"
-                  : "Make changes to the test record"
-                : "Fill in the details for the new test"}
+                  ? "Просмотреть и оценить результаты теста"
+                  : "Изменить результаты теста"
+                : "Заполнить новую запись теста"}
             </CardDescription>
           </CardHeader>
           <Form {...form}>
@@ -413,7 +413,7 @@ console.log(studentProfile)
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select a student" />
+                            <SelectValue placeholder="Выбрать студента" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -428,7 +428,7 @@ console.log(studentProfile)
                         </SelectContent>
                       </Select>
                       <FormDescription className="py-2">
-                        Select the student for whom this test is being recorded
+                        Выберите студента для записи результатов теста
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -441,7 +441,7 @@ console.log(studentProfile)
                 name="periodId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Period</FormLabel>
+                    <FormLabel>Период обучения</FormLabel>
                     <Select
                       onValueChange={(value) => field.onChange(parseInt(value))}
                       defaultValue={field.value.toString()}
@@ -449,7 +449,7 @@ console.log(studentProfile)
                     >
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select a student" />
+                          <SelectValue placeholder="Выберите студента" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -464,7 +464,7 @@ console.log(studentProfile)
                       </SelectContent>
                     </Select>
                     <FormDescription className="py-2">
-                      Select the student for whom this test is being recorded
+                    Выберите студента для записи результатов теста
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -477,21 +477,21 @@ console.log(studentProfile)
                   <table className="w-full table-auto border border-gray-200 text-sm">
                     <thead className="bg-muted">
                       <tr>
-                        <th className="p-2 text-left">Test Name</th>
-                        <th className="p-2 text-left">Result</th>
+                        <th className="p-2 text-left">Название теста</th>
+                        <th className="p-2 text-left">Результат</th>
                       </tr>
                     </thead>
                     <tbody>
                       {[
-                        { name: "Push-Ups", key: "pushUps" },
-                        { name: "Leg Hold", key: "legHold" },
-                        { name: "Tapping Test", key: "tappingTest" },
-                        { name: "Running in Place", key: "runningInPlace" },
-                        { name: "Half Squat", key: "halfSquat" },
-                        { name: "Pull-Ups", key: "pullUps" },
-                        { name: "Plank", key: "plank" },
-                        { name: "Forward Bend", key: "forwardBend" },
-                        { name: "Long Jump", key: "longJump" },
+                        { name: "Отжимания", key: "pushUps" },
+                        { name: "Удержание ног над полом", key: "legHold" },
+                        { name: "Теппинг–тест", key: "tappingTest" },
+                        { name: "Бег на месте", key: "runningInPlace" },
+                        { name: "Полуприсед в статике", key: "halfSquat" },
+                        { name: "Подтягивания", key: "pullUps" },
+                        { name: "Планка", key: "plank" },
+                        { name: "Наклон вперед из положения сидя", key: "forwardBend" },
+                        { name: "Прыжок в длину", key: "longJump" },
                       ].map((test) => (
                         <tr key={test.key} className="border-t border-gray-100">
                           <td className="p-2 font-medium">{test.name}</td>
@@ -529,7 +529,7 @@ console.log(studentProfile)
                   variant="outline"
                   onClick={() => navigate("/tests")}
                 >
-                  Cancel
+                  Отмена
                 </Button>
                 <Button
                   type="submit"
@@ -543,18 +543,18 @@ console.log(studentProfile)
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       {isEdit
                         ? isGrading
-                          ? "Saving Grade..."
-                          : "Updating..."
-                        : "Saving..."}
+                          ? "Сохранение оценки..."
+                          : "Обновление..."
+                        : "Сохранение..."}
                     </>
                   ) : (
                     <>
                       <Save className="mr-2 h-4 w-4" />
                       {isEdit
                         ? isGrading
-                          ? "Save Grade"
-                          : "Update Test"
-                        : "Save Test"}
+                          ? "Сохранить оценку"
+                          : "Обновить тест"
+                        : "Сохранить тест"}
                     </>
                   )}
                 </Button>

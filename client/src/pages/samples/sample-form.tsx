@@ -144,16 +144,16 @@ export default function SampleForm() {
       });
       queryClient.invalidateQueries({ queryKey: ["/api/physical-states"] });
       toast({
-        title: "Sample recorded",
+        title: "Проба записана",
         description:
-          "Your physical measurement has been successfully recorded.",
+          "Ваше физическое измерение успешно записано.",
       });
       navigate("/samples");
     },
     onError: (error) => {
       toast({
-        title: "Error",
-        description: error.message || "Failed to record sample",
+        title: "Ошибка",
+        description: error.message || "Не удалось записать пробу",
         variant: "destructive",
       });
     },
@@ -178,15 +178,15 @@ export default function SampleForm() {
       });
       queryClient.invalidateQueries({ queryKey: ["/api/physical-states"] });
       toast({
-        title: "Sample updated",
-        description: "The physical measurement has been successfully updated.",
+        title: "Проба обновлена",
+        description: "Физическое измерение успешно обновлено.",
       });
       navigate("/samples");
     },
     onError: (error) => {
       toast({
-        title: "Error",
-        description: error.message || "Failed to update sample",
+        title: "Ошибка",
+        description: error.message || "Не удалось обновить пробу",
         variant: "destructive",
       });
     },
@@ -221,16 +221,16 @@ export default function SampleForm() {
             className="mr-2"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back
+            Назад
           </Button>
           <div>
             <h2 className="text-2xl font-semibold">
-              {isEdit ? "Edit Sample" : "Record New Sample"}
+              {isEdit ? "Редактировать пробу" : "Записать новую пробу"}
             </h2>
             <p className="text-gray-500">
               {isEdit
-                ? "Update physical measurement information"
-                : "Record a new physical measurement or health indicator"}
+                ? "Обновить информацию о физическом измерении"
+                : "Записать новое физическое измерение или показатель здоровья"}
             </p>
           </div>
         </div>
@@ -238,12 +238,12 @@ export default function SampleForm() {
         <Card className="max-w-2xl mx-auto">
           <CardHeader>
             <CardTitle>
-              {isEdit ? "Edit Sample" : "Record New Sample"}
+              {isEdit ? "Редактировать пробу" : "Записать новую пробу"}
             </CardTitle>
             <CardDescription>
               {isEdit
-                ? "Make changes to the sample record"
-                : "Fill in the details for the new physical measurement"}
+                ? "Внесите изменения в запись пробы"
+                : "Заполните детали для нового физического измерения"}
             </CardDescription>
           </CardHeader>
           <Form {...form}>
@@ -256,7 +256,7 @@ export default function SampleForm() {
                     name="userId"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Student</FormLabel>
+                        <FormLabel>Студент</FormLabel>
                         <Select
                           onValueChange={(value) =>
                             field.onChange(parseInt(value))
@@ -266,7 +266,7 @@ export default function SampleForm() {
                         >
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="Select a student" />
+                              <SelectValue placeholder="Выберите студента" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
@@ -281,8 +281,7 @@ export default function SampleForm() {
                           </SelectContent>
                         </Select>
                         <FormDescription>
-                          Select the student for whom this measurement is being
-                          recorded
+                          Выберите студента, для которого записывается это измерение
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -296,19 +295,19 @@ export default function SampleForm() {
                   name="sampleType"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Sample Type</FormLabel>
+                      <FormLabel>Тип пробы</FormLabel>
                       <Select
                         onValueChange={field.onChange}
                         defaultValue={field.value}
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select sample type" />
+                            <SelectValue placeholder="Выберите тип пробы" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
                           <div className="px-2 py-1.5 text-sm font-semibold text-muted-foreground">
-                            Select a sample type
+                            Выберите тип пробы
                           </div>
                           {SAMPLE_TYPES.map((type) => (
                             <SelectItem key={type} value={type}>
@@ -328,16 +327,16 @@ export default function SampleForm() {
                   name="value"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Value</FormLabel>
+                      <FormLabel>Значение</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="Enter measurement value"
+                          placeholder="Введите значение измерения"
                           {...field}
                         />
                       </FormControl>
                       <FormDescription>
-                        Enter the measurement value with appropriate units
-                        (e.g., "180 cm", "75 kg")
+                        Введите значение измерения с соответствующими единицами
+                        (например, "180 см", "75 кг")
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -350,10 +349,10 @@ export default function SampleForm() {
                   name="notes"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Notes</FormLabel>
+                      <FormLabel>Примечания</FormLabel>
                       <FormControl>
                         <Textarea
-                          placeholder="Additional notes about the measurement"
+                          placeholder="Дополнительные примечания о измерении"
                           className="resize-none"
                           {...field}
                         />
@@ -369,7 +368,7 @@ export default function SampleForm() {
                   variant="outline"
                   onClick={() => navigate("/samples")}
                 >
-                  Cancel
+                  Отмена
                 </Button>
                 <Button
                   type="submit"
@@ -382,12 +381,12 @@ export default function SampleForm() {
                   updateSampleMutation.isPending ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      {isEdit ? "Updating..." : "Saving..."}
+                      {isEdit ? "Обновление..." : "Сохранение..."}
                     </>
                   ) : (
                     <>
                       <Save className="mr-2 h-4 w-4" />
-                      {isEdit ? "Update Sample" : "Save Sample"}
+                      {isEdit ? "Обновить пробу" : "Сохранить пробу"}
                     </>
                   )}
                 </Button>

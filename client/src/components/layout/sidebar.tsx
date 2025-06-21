@@ -73,7 +73,7 @@ export default function Sidebar({ isMobileSidebarOpen }: SidebarProps) {
         <nav className="flex-1 overflow-y-auto py-4">
           {/* Main menu */}
           <div className="px-4 mb-2">
-            <p className="text-xs uppercase text-muted-foreground font-medium">Main menu</p>
+            <p className="text-xs uppercase text-muted-foreground font-medium">Главное меню</p>
           </div>
           <ul className="space-y-1">
             <li>
@@ -85,7 +85,7 @@ export default function Sidebar({ isMobileSidebarOpen }: SidebarProps) {
                 )}
               >
                 <Home size={18} className={isActive("/") ? "text-primary" : "text-muted-foreground"} />
-                <span>Dashboard</span>
+                <span>Главная</span>
               </Link>
             </li>
             
@@ -98,7 +98,7 @@ export default function Sidebar({ isMobileSidebarOpen }: SidebarProps) {
                 )}
               >
                 <User size={18} className={isActive("/profile") ? "text-primary" : "text-muted-foreground"} />
-                <span>My Profile</span>
+                <span>Мой профиль</span>
               </Link>
             </li>
             
@@ -112,7 +112,7 @@ export default function Sidebar({ isMobileSidebarOpen }: SidebarProps) {
                   )}
                 >
                   <Users size={18} className={isActive("/students") ? "text-primary" : "text-muted-foreground"} />
-                  <span>Students</span>
+                  <span>Студенты</span>
                 </Link>
               </li>
             )}
@@ -123,7 +123,7 @@ export default function Sidebar({ isMobileSidebarOpen }: SidebarProps) {
                   <AccordionTrigger className="py-3 px-4 hover:bg-accent hover:text-accent-foreground hover:no-underline text-sm font-medium">
                     <div className="flex items-center space-x-3">
                       <Activity size={18} className="text-muted-foreground" />
-                      <span>Tests & Samples</span>
+                      <span>Тесты и пробы</span>
                     </div>
                   </AccordionTrigger>
                   <AccordionContent className="pt-0 pb-1">
@@ -136,7 +136,7 @@ export default function Sidebar({ isMobileSidebarOpen }: SidebarProps) {
                             isActive("/tests") && "text-primary bg-accent"
                           )}
                         >
-                          Physical Tests
+                          Физические тесты
                         </Link>
                       </li>
                       <li>
@@ -147,7 +147,7 @@ export default function Sidebar({ isMobileSidebarOpen }: SidebarProps) {
                             isActive("/samples") && "text-primary bg-accent"
                           )}
                         >
-                          Health Samples
+                          Физические пробы
                         </Link>
                       </li>
                     </ul>
@@ -166,7 +166,7 @@ export default function Sidebar({ isMobileSidebarOpen }: SidebarProps) {
                   )}
                 >
                   <BarChart size={18} className={isActive("/reports") ? "text-primary" : "text-muted-foreground"} />
-                  <span>Reports</span>
+                  <span>Отчеты</span>
                 </Link>
               </li>
             )}
@@ -180,7 +180,7 @@ export default function Sidebar({ isMobileSidebarOpen }: SidebarProps) {
                 )}
               >
                 <Settings size={18} className={isActive("/settings") ? "text-primary" : "text-muted-foreground"} />
-                <span>Settings</span>
+                <span>Настройки</span>
               </Link>
             </li>
           </ul>
@@ -189,7 +189,7 @@ export default function Sidebar({ isMobileSidebarOpen }: SidebarProps) {
           {user?.role === "admin" && (
             <>
               <div className="px-4 mb-2 mt-6">
-                <p className="text-xs uppercase text-muted-foreground font-medium">Administration</p>
+                <p className="text-xs uppercase text-muted-foreground font-medium">Администрирование</p>
               </div>
               <ul className="space-y-1">
                 <li>
@@ -201,7 +201,7 @@ export default function Sidebar({ isMobileSidebarOpen }: SidebarProps) {
                     )}
                   >
                     <Laptop size={18} className={isActive("/admin/users") ? "text-primary" : "text-muted-foreground"} />
-                    <span>User Management</span>
+                    <span>Управление пользователями</span>
                   </Link>
                 </li>
                 <li>
@@ -213,7 +213,7 @@ export default function Sidebar({ isMobileSidebarOpen }: SidebarProps) {
                     )}
                   >
                     <Building2 size={18} className={isActive("/admin/faculties") ? "text-primary" : "text-muted-foreground"} />
-                    <span>Faculties</span>
+                    <span>Факультеты</span>
                   </Link>
                 </li>
                 <li>
@@ -225,7 +225,7 @@ export default function Sidebar({ isMobileSidebarOpen }: SidebarProps) {
                     )}
                   >
                     <Briefcase size={18} className={isActive("/admin/groups") ? "text-primary" : "text-muted-foreground"} />
-                    <span>Groups</span>
+                    <span>Группы</span>
                   </Link>
                 </li>
               </ul>
@@ -240,7 +240,7 @@ export default function Sidebar({ isMobileSidebarOpen }: SidebarProps) {
             className="flex items-center space-x-3 text-sm font-medium text-muted-foreground hover:text-red-500 transition-colors"
           >
             <LogOut size={18} />
-            <span>Log out</span>
+            <span>Выйти</span>
           </button>
         </div>
       </div>

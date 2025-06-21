@@ -211,27 +211,27 @@ export type InsertResult = z.infer<typeof insertResultSchema>;
 
 // Medical Group Types (kept for compatibility)
 export const MEDICAL_GROUP_TYPES = [
-  "basic",
-  "preparatory", 
-  "special"
+  "основная",
+  "подготовительная", 
+  "специальная"
 ] as const;
 
 export type MedicalGroupType = typeof MEDICAL_GROUP_TYPES[number];
 
 //Periods of study
 export const PERIODS_OF_STUDY = [
-  "first_course_beginning",
-  "semester_1",
-  "semester_2",
-  "second_course_beginning",
-  "semester_3",
-  "semester_4",
-  "third_course_beginning",
-  "semester_5",
-  "semester_6",
-  "fourth_course_beginning",
-  "semester_7",
-  "semester_8",
+  "начало_первого_курса",
+  "первый_семестр",
+  "второй_семестр",
+  "начало_второго_курса",
+  "третий_семестр",
+  "четвертый_семестр",
+  "начало_третьего_курса",
+  "пятый_семестр",
+  "шестой_семестр",
+  "начало_четвертого_курса",
+  "седьмой_семестр",
+  "восьмой_семестр",
 ] as const;
 
 // Physical Test types

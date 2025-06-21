@@ -87,7 +87,7 @@ const formatTestType2 = (type: string) => {
 
   // Get grade badge
   const getGradeBadge = (grade?: string) => {
-    if (!grade) return <Badge variant="outline">Pending</Badge>;
+    if (!grade) return <Badge variant="outline">Не назначен</Badge>;
     
     let badgeClass = "";
     switch (grade.toUpperCase()) {
@@ -117,14 +117,14 @@ const formatTestType2 = (type: string) => {
       <div className="container mx-auto px-4 py-6">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
           <div>
-            <h2 className="text-2xl font-semibold">Physical Tests</h2>
-            <p className="text-gray-500">View and manage physical test results</p>
+            <h2 className="text-2xl font-semibold">Физические тесты</h2>
+            <p className="text-gray-500">Просмотр и управление результатами физических тестов</p>
           </div>
           <div className="mt-4 md:mt-0 flex flex-col sm:flex-row gap-3">
             <div className="relative">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
               <Input
-                placeholder="Search tests..."
+                placeholder="Поиск тестов..."
                 className="pl-9 w-full sm:w-64"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -133,7 +133,7 @@ const formatTestType2 = (type: string) => {
             <Link href="/tests/new">
               <Button>
                 <Plus className="mr-2 h-4 w-4" />
-                Record Test
+                Записать тест
               </Button>
             </Link>
           </div>
@@ -142,16 +142,16 @@ const formatTestType2 = (type: string) => {
         <Card>
           <CardHeader className="pb-3">
             <div className="flex justify-between items-center">
-              <CardTitle className="text-lg">Test Records</CardTitle>
+              <CardTitle className="text-lg">Записи тестов</CardTitle>
               <div className="flex gap-2">
                   <div className="space-y-2">
-                <label className="text-sm font-medium">Period</label>
+                <label className="text-sm font-medium">Период</label>
                 <Select value={periodFilter} onValueChange={setPeriodFilter}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select Period" />
+                    <SelectValue placeholder="Выберите период" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Select Period</SelectItem>
+                    <SelectItem value="all">Выберите период</SelectItem>
                     {periods?.map((student) => {
                       if (!student?.periodId) return null; // Skip if no valid ID
                       return (
@@ -173,18 +173,18 @@ const formatTestType2 = (type: string) => {
                 <div className="text-center py-12">
                       
                       <h3 className="text-lg font-medium text-gray-900 mb-2">
-                        Select a period
+                        Выберите период
                       </h3>
                       <p className="text-gray-500 max-w-md mx-auto">
-                        Please select a period from the filters panel to
-                        watch records.
+                        Пожалуйста, выберите период из 
+                        фильтров для просмотра записей.
                       </p>
                     </div>
              ) : (
             <Tabs defaultValue="tests" value={activeTab} onValueChange={setActiveTab}>
               <TabsList>
-                <TabsTrigger value="tests">Physical Tests</TabsTrigger>
-                <TabsTrigger value="exercises">Control Exercises</TabsTrigger>
+                <TabsTrigger value="tests">Физические тесты</TabsTrigger>
+                <TabsTrigger value="exercises">Контрольные упражнения</TabsTrigger>
               </TabsList>
             
           <TabsContent value="tests" className="m-0">
@@ -198,11 +198,11 @@ const formatTestType2 = (type: string) => {
               <>
                 {(!filteredTests || filteredTests.length === 0) ? (
                   <div className="text-center py-12">
-                    <p className="text-gray-500 mb-4">No test records found.</p>
+                    <p className="text-gray-500 mb-4">Не найдено записей тестов.</p>
                     <Link href="/tests/new">
                       <Button>
                         <Plus className="mr-2 h-4 w-4" />
-                        Record New Test
+                        Записать новый тест
                       </Button>
                     </Link>
                   </div>
@@ -211,19 +211,19 @@ const formatTestType2 = (type: string) => {
                     <table className="w-full">
                       <thead>
                         <tr className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        
-                          <th className="px-4 py-3">Student</th>
-                          
-                          <th className="px-4 py-3">Date</th>
-                          <th className="px-4 py-3">Period</th>
-                          <th className="px-4 py-3">Push ups</th>
-                          <th className="px-4 py-3">Pull ups</th>
-                          <th className="px-4 py-3">Leg hold</th>
-                          <th className="px-4 py-3">Tapping test</th>
-                          <th className="px-4 py-3">Running in place</th>
-                          <th className="px-4 py-3">Plank</th>
-                          <th className="px-4 py-3">Forward Bend</th>
-                           <th className="px-4 py-3">Long jump</th>
+
+                          <th className="px-4 py-3">Студент</th>
+                          <th className="px-4 py-3">Дата</th>
+                          <th className="px-4 py-3">Период</th>
+                          <th className="px-4 py-3">Отжимания</th>
+                          <th className="px-4 py-3">Подтягивания</th>
+                          <th className="px-4 py-3">Удержание ног над полом</th>
+                          <th className="px-4 py-3">Теппинг–тест</th>
+                          <th className="px-4 py-3">Бег на месте</th>
+                          <th className="px-4 py-3">Планка</th>
+                          <th className="px-4 py-3">Наклон вперед из положения сидя</th>
+                          <th className="px-4 py-3">Прыжок в длину</th>
+
                           {/* <th className="px-4 py-3">
                             <div className="flex items-center">
                               Grade
@@ -231,7 +231,7 @@ const formatTestType2 = (type: string) => {
                             </div>
                           </th>
                           <th className="px-4 py-3">Notes</th> */}
-                          <th className="px-4 py-3 text-right">Actions</th>
+                          <th className="px-4 py-3 text-right">Действия</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-200">
@@ -279,15 +279,15 @@ const formatTestType2 = (type: string) => {
                                   </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
-                                  <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                  <DropdownMenuLabel>Действия</DropdownMenuLabel>
                                   <DropdownMenuItem onClick={() => navigate(`/tests/edit/${test.testId}`)}>
                                     <Pencil className="mr-2 h-4 w-4" />
-                                    Edit
+                                    Редактировать
                                   </DropdownMenuItem>
                                   {user?.role === "teacher"  && (
                                     <DropdownMenuItem onClick={() => navigate(`/tests/edit/${test.testId}?grade=true`)}>
                                       <Star className="mr-2 h-4 w-4" />
-                                      Assign Grade
+                                      Выставить оценку
                                     </DropdownMenuItem>
                                   )}
                                 </DropdownMenuContent>
@@ -315,11 +315,11 @@ const formatTestType2 = (type: string) => {
               <>
                 {(!filteredSportResults || filteredSportResults.length === 0) ? (
                   <div className="text-center py-12">
-                    <p className="text-gray-500 mb-4">No test records found.</p>
+                    <p className="text-gray-500 mb-4">Не найдено записей тестов.</p>
                     <Link href="/tests/new">
                       <Button>
                         <Plus className="mr-2 h-4 w-4" />
-                        Record New Test
+                        Записать новый тест
                       </Button>
                     </Link>
                   </div>
@@ -329,17 +329,18 @@ const formatTestType2 = (type: string) => {
                       <thead>
                         <tr className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         
-                          <th className="px-4 py-3">Student</th>
-                          <th className="px-4 py-3">Period</th>
-                          <th className="px-4 py-3">Basketball freethrow</th>
-                          <th className="px-4 py-3">Basketball dribble</th>
-                          <th className="px-4 py-3">Volleyball pass</th>
-                          <th className="px-4 py-3">Volleyball serve</th>
-                          <th className="px-4 py-3">Swimming 25 m</th>
-                          <th className="px-4 py-3">Swimming 50 m</th>
-                          <th className="px-4 py-3">Swimming 100 m</th>
-                          <th className="px-4 py-3">Running 100 m</th>
-                          <th className="px-4 py-3">Running 500/1000 m</th>
+                          <th className="px-4 py-3">Студент</th>
+                          <th className="px-4 py-3">Период</th>
+                          <th className="px-4 py-3">Штрафные броски</th>
+                          <th className="px-4 py-3">Двухшажная техника</th>
+                          <th className="px-4 py-3">Верхняя передача мяча в парах /
+                                                    Нижняя передача мяча в парах</th>
+                          <th className="px-4 py-3">Подача мяча через сетку</th>
+                          <th className="px-4 py-3">Плавание 25 м</th>
+                          <th className="px-4 py-3">Плавание 50 м</th>
+                          <th className="px-4 py-3">Плавание 100 м</th>
+                          <th className="px-4 py-3">Бег 100 м</th>
+                          <th className="px-4 py-3">Бег 500/1000 м</th>
 
                           {/* <th className="px-4 py-3">
                             <div className="flex items-center">
@@ -348,7 +349,7 @@ const formatTestType2 = (type: string) => {
                             </div>
                           </th>
                           <th className="px-4 py-3">Notes</th> */}
-                          <th className="px-4 py-3 text-right">Actions</th>
+                          <th className="px-4 py-3 text-right">Действия</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-200">
@@ -396,7 +397,7 @@ const formatTestType2 = (type: string) => {
                                   </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
-                                  <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                  <DropdownMenuLabel>Действия</DropdownMenuLabel>
                                   <DropdownMenuItem onClick={() => navigate(`/tests/edit/${test.sportResultId}`)}>
                                     <Pencil className="mr-2 h-4 w-4" />
                                     Edit
@@ -404,7 +405,7 @@ const formatTestType2 = (type: string) => {
                                   {user?.role === "teacher"  && (
                                     <DropdownMenuItem onClick={() => navigate(`/tests/edit/${test.sportResultId}?grade=true`)}>
                                       <Star className="mr-2 h-4 w-4" />
-                                      Assign Grade
+                                      Выставить оценку
                                     </DropdownMenuItem>
                                   )}
                                 </DropdownMenuContent>

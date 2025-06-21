@@ -16,7 +16,7 @@ import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogHeader, Di
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Loader2, Pencil, MoreHorizontal, Trash2, Plus, Search, Filter } from "lucide-react";
-import { User, InsertUser, insertUserSchema } from "@shared/schema";
+import { User, InsertUser, insertUserSchema, student } from "@shared/schema";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -39,8 +39,7 @@ export default function UsersPage() {
   // Filter users based on search and role
   const filteredUsers = users.filter(user => {
     const matchesSearch = !searchTerm || 
-      (user.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.fullName?.toLowerCase().includes(searchTerm.toLowerCase()));
+      (user.username?.toLowerCase().includes(searchTerm.toLowerCase()));
     
     const matchesRole = !roleFilter || user.role === roleFilter;
     
@@ -53,10 +52,9 @@ export default function UsersPage() {
       username: true,
       password: true,
       role: true,
-      fullName: true,
     })
     .refine(data => data.password.length >= 6, {
-      message: "Password must be at least 6 characters",
+      message: "Пароль должен быть не менее 6 символов",
       path: ["password"],
     });
 
@@ -69,13 +67,11 @@ export default function UsersPage() {
       username: "",
       password: "",
       role: "student",
-      fullName: "",
     },
   });
 
   // Edit user form schema
   const editUserSchema = z.object({
-    fullName: z.string().min(1, "Full name is required"),
     role: z.enum(["admin", "teacher", "student"]),
   });
 
@@ -85,7 +81,6 @@ export default function UsersPage() {
   const editForm = useForm<EditUserFormValues>({
     resolver: zodResolver(editUserSchema),
     defaultValues: {
-      fullName: "",
       role: "student",
     },
   });
@@ -94,7 +89,6 @@ export default function UsersPage() {
   useEffect(() => {
     if (selectedUser && isEditDialogOpen) {
       editForm.reset({
-        fullName: selectedUser.fullName || "",
         role: selectedUser.role,
       });
     }
@@ -108,8 +102,8 @@ export default function UsersPage() {
     },
     onSuccess: () => {
       toast({
-        title: "User created",
-        description: "The user has been created successfully.",
+        title: "Пользователь создан",
+        description: "Пользователь успешно создан.",
       });
       setIsCreateDialogOpen(false);
       createForm.reset();
@@ -117,7 +111,7 @@ export default function UsersPage() {
     },
     onError: (error: Error) => {
       toast({
-        title: "Error creating user",
+        title: "Ошибка при создании пользователя",
         description: error.message,
         variant: "destructive",
       });
@@ -132,8 +126,8 @@ export default function UsersPage() {
     },
     onSuccess: () => {
       toast({
-        title: "User updated",
-        description: "The user has been updated successfully.",
+        title: "Пользователь обновлен",
+        description: "Пользователь успешно обновлен.",
       });
       setIsEditDialogOpen(false);
       setSelectedUser(null);
@@ -141,7 +135,7 @@ export default function UsersPage() {
     },
     onError: (error: Error) => {
       toast({
-        title: "Error updating user",
+        title: "Ошибка при обновлении пользователя",
         description: error.message,
         variant: "destructive",
       });
@@ -155,8 +149,8 @@ export default function UsersPage() {
     },
     onSuccess: () => {
       toast({
-        title: "User deleted",
-        description: "The user has been deleted successfully.",
+        title: "Пользователь удален",
+        description: "Пользователь успешно удален.",
       });
       setIsDeleteDialogOpen(false);
       setSelectedUser(null);
@@ -164,7 +158,7 @@ export default function UsersPage() {
     },
     onError: (error: Error) => {
       toast({
-        title: "Error deleting user",
+        title: "Ошибка при удалении пользователя",
         description: error.message,
         variant: "destructive",
       });
@@ -268,35 +262,35 @@ export default function UsersPage() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Username</TableHead>
-                        <TableHead>Full Name</TableHead>
-                        <TableHead>Role</TableHead>
-                        <TableHead>Date Created</TableHead>
-                        <TableHead className="w-[100px]">Actions</TableHead>
+                        <TableHead>Логин</TableHead>
+                        <TableHead>Имя пользователя</TableHead>
+                        <TableHead>Роль</TableHead>
+                        <TableHead>Дата создания</TableHead>
+                        <TableHead className="w-[100px]">Действия</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {filteredUsers.length === 0 ? (
                         <TableRow>
                           <TableCell colSpan={5} className="text-center h-24 text-gray-500">
-                            No users found
+                            Пользователи не найдены
                           </TableCell>
                         </TableRow>
                       ) : (
                         filteredUsers.map((user) => (
                           <TableRow key={user.id}>
                             <TableCell className="font-medium">{user.username}</TableCell>
-                            <TableCell>{user.fullName || "-"}</TableCell>
+                            <TableCell>{"-"}</TableCell>
                             <TableCell className="capitalize">{user.role}</TableCell>
                             <TableCell>
-                              {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : "-"}
+                              {"-"}
                             </TableCell>
                             <TableCell>
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                   <Button variant="ghost" size="sm">
                                     <MoreHorizontal className="h-4 w-4" />
-                                    <span className="sr-only">Menu</span>
+                                    <span className="sr-only">Меню</span>
                                   </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
@@ -307,7 +301,7 @@ export default function UsersPage() {
                                     }}
                                   >
                                     <Pencil className="mr-2 h-4 w-4" />
-                                    Edit
+                                    Редактировать
                                   </DropdownMenuItem>
                                   <DropdownMenuItem
                                     className="text-red-500 focus:text-red-500"
@@ -317,7 +311,7 @@ export default function UsersPage() {
                                     }}
                                   >
                                     <Trash2 className="mr-2 h-4 w-4" />
-                                    Delete
+                                    Удалить
                                   </DropdownMenuItem>
                                 </DropdownMenuContent>
                               </DropdownMenu>
@@ -338,9 +332,9 @@ export default function UsersPage() {
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Create New User</DialogTitle>
+            <DialogTitle>Создать нового пользователя</DialogTitle>
             <DialogDescription>
-              Add a new user to the system. They will receive login credentials.
+              Добавьте нового пользователя в систему. Он получит логин и пароль.
             </DialogDescription>
           </DialogHeader>
           
@@ -351,9 +345,9 @@ export default function UsersPage() {
                 name="username"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Username</FormLabel>
+                    <FormLabel>Логин</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter username" {...field} />
+                      <Input placeholder="Введите логин" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -365,46 +359,32 @@ export default function UsersPage() {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Password</FormLabel>
+                    <FormLabel>Пароль</FormLabel>
                     <FormControl>
-                      <Input type="password" placeholder="Enter password" {...field} />
+                      <Input type="password" placeholder="Введите пароль" {...field} />
                     </FormControl>
-                    <FormDescription>Must be at least 6 characters.</FormDescription>
+                    <FormDescription>Должен быть не менее 6 символов.</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              
-              <FormField
-                control={createForm.control}
-                name="fullName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Full Name</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter full name" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
+                            
               <FormField
                 control={createForm.control}
                 name="role"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Role</FormLabel>
+                    <FormLabel>Роль</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select role" />
+                          <SelectValue placeholder="Выберите роль" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="admin">Administrator</SelectItem>
-                        <SelectItem value="teacher">Teacher</SelectItem>
-                        <SelectItem value="student">Student</SelectItem>
+                        <SelectItem value="admin">Администратор</SelectItem>
+                        <SelectItem value="teacher">Преподаватель</SelectItem>
+                        <SelectItem value="student">Студент</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -418,16 +398,16 @@ export default function UsersPage() {
                   variant="outline"
                   onClick={() => setIsCreateDialogOpen(false)}
                 >
-                  Cancel
+                  Отмена
                 </Button>
                 <Button type="submit" disabled={createUserMutation.isPending}>
                   {createUserMutation.isPending ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Creating...
+                      Создание...
                     </>
                   ) : (
-                    "Create User"
+                    "Создать пользователя"
                   )}
                 </Button>
               </DialogFooter>
@@ -440,44 +420,31 @@ export default function UsersPage() {
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Edit User</DialogTitle>
+            <DialogTitle>Редактировать пользователя</DialogTitle>
             <DialogDescription>
-              Update user information for {selectedUser?.username}
+              Обновите информацию о пользователе {selectedUser?.username}
             </DialogDescription>
           </DialogHeader>
           
           <Form {...editForm}>
             <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="space-y-4">
-              <FormField
-                control={editForm.control}
-                name="fullName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Full Name</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter full name" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
+                      
               <FormField
                 control={editForm.control}
                 name="role"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Role</FormLabel>
+                    <FormLabel>Роль</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select role" />
+                          <SelectValue placeholder="Выберите роль" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="admin">Administrator</SelectItem>
-                        <SelectItem value="teacher">Teacher</SelectItem>
-                        <SelectItem value="student">Student</SelectItem>
+                        <SelectItem value="admin">Администратор</SelectItem>
+                        <SelectItem value="teacher">Преподаватель</SelectItem>
+                        <SelectItem value="student">Студент</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -491,16 +458,16 @@ export default function UsersPage() {
                   variant="outline"
                   onClick={() => setIsEditDialogOpen(false)}
                 >
-                  Cancel
+                  Отмена
                 </Button>
                 <Button type="submit" disabled={editUserMutation.isPending}>
                   {editUserMutation.isPending ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Updating...
+                      Обновление...
                     </>
                   ) : (
-                    "Update User"
+                    "Обновить пользователя"
                   )}
                 </Button>
               </DialogFooter>
@@ -513,9 +480,9 @@ export default function UsersPage() {
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete User</DialogTitle>
+            <DialogTitle>Удалить пользователя</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete the user "{selectedUser?.username}"? This action cannot be undone.
+              Вы уверены, что хотите удалить пользователя "{selectedUser?.username}"? Это действие не может быть отменено.
             </DialogDescription>
           </DialogHeader>
           
@@ -525,7 +492,7 @@ export default function UsersPage() {
               variant="outline"
               onClick={() => setIsDeleteDialogOpen(false)}
             >
-              Cancel
+              Отмена
             </Button>
             <Button
               type="button"
@@ -536,10 +503,10 @@ export default function UsersPage() {
               {deleteUserMutation.isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Deleting...
+                  Удаление...
                 </>
               ) : (
-                "Delete User"
+                "Удалить пользователя"
               )}
             </Button>
           </DialogFooter>

@@ -126,7 +126,7 @@ export default function Reports() {
           : "/api/groups";
 
       const res = await fetch(url, { credentials: "include" });
-      if (!res.ok) throw new Error("Failed to fetch groups");
+      if (!res.ok) throw new Error("Не удалось получить группы");
       return res.json();
     },
   });
@@ -153,7 +153,7 @@ export default function Reports() {
       const res = await fetch(`/api/physical-tests/${selectedUser}`, {
         credentials: "include",
       });
-      if (!res.ok) throw new Error("Failed to fetch tests");
+      if (!res.ok) throw new Error("Не удалось получить тесты");
       return res.json();
     },
   });
@@ -168,7 +168,7 @@ const filteredTests = tests?.filter(test => test.periodId === Number(selectedDat
       const res = await fetch(`/api/samples/${selectedUser}`, {
         credentials: "include",
       });
-      if (!res.ok) throw new Error("Failed to fetch samples");
+      if (!res.ok) throw new Error("Не удалось получить пробы");
       return res.json();
     },
   });
@@ -354,15 +354,15 @@ const filteredTests = tests?.filter(test => test.periodId === Number(selectedDat
       <div className="container mx-auto px-4 py-6">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
           <div>
-            <h2 className="text-2xl font-semibold">Reports</h2>
+            <h2 className="text-2xl font-semibold">Отчеты</h2>
             <p className="text-gray-500">
-              Generate and view student performance reports
+              Генерируйте и просматривайте отчеты о прогрессе студентов
             </p>
           </div>
           <div className="mt-4 md:mt-0">
             <Button onClick={generateReport} disabled={!selectedUser}>
               <FileText className="mr-2 h-4 w-4" />
-              Generate Report
+              Сгенерировать отчет
             </Button>
           </div>
         </div>
@@ -371,21 +371,21 @@ const filteredTests = tests?.filter(test => test.periodId === Number(selectedDat
           {/* Filters Panel */}
           <Card className="lg:col-span-1">
             <CardHeader>
-              <CardTitle className="text-lg">Report Filters</CardTitle>
-              <CardDescription>Select criteria for your report</CardDescription>
+              <CardTitle className="text-lg">Фильтры отчета</CardTitle>
+              <CardDescription>Выберите критерии для вашего отчета</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium">Faculty</label>
+                <label className="text-sm font-medium">Факультет</label>
                 <Select
                   value={selectedFaculty}
                   onValueChange={setSelectedFaculty}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="All Faculties" />
+                    <SelectValue placeholder="Все факультеты" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Faculties</SelectItem>
+                    <SelectItem value="all">Все факультеты</SelectItem>
                     {faculties?.map((faculty) => {
                       // Handle both possible faculty ID structures and ensure we have a valid ID
                       const facultyId =
@@ -407,7 +407,7 @@ const filteredTests = tests?.filter(test => test.periodId === Number(selectedDat
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium">Group</label>
+                <label className="text-sm font-medium">Группа</label>
                 <Select
                   value={selectedGroup}
                   onValueChange={(groupId) => {
@@ -422,10 +422,10 @@ const filteredTests = tests?.filter(test => test.periodId === Number(selectedDat
                   }}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="All Groups" />
+                    <SelectValue placeholder="Все группы" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Groups</SelectItem>
+                    <SelectItem value="all">Все группы</SelectItem>
                     {groups?.map((group) => {
                       //.data
                       if (!group?.groupId) return null; // Skip if no valid ID
@@ -443,13 +443,13 @@ const filteredTests = tests?.filter(test => test.periodId === Number(selectedDat
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium">Student</label>
+                <label className="text-sm font-medium">Студент</label>
                 <Select value={selectedUser} onValueChange={setSelectedUser}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select Student" />
+                    <SelectValue placeholder="Выберите студента" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Select Student</SelectItem>
+                    <SelectItem value="all">Выберите студента</SelectItem>
                     {students?.map((student) => {
                       if (!student?.userId) return null; // Skip if no valid ID
                       return (
@@ -466,13 +466,13 @@ const filteredTests = tests?.filter(test => test.periodId === Number(selectedDat
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium">Date Range</label>
+                <label className="text-sm font-medium">Период</label>
                 <Select
                   value={selectedDateRange}
                   onValueChange={setSelectedDateRange}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select Date Range" />
+                    <SelectValue placeholder="Выберите период" />
                   </SelectTrigger>
                   <SelectContent>
                     {periods.map((period) => (
@@ -485,24 +485,24 @@ const filteredTests = tests?.filter(test => test.periodId === Number(selectedDat
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium">Report Type</label>
+                <label className="text-sm font-medium">Тип отчета</label>
                 <Select
                   value={selectedReportType}
                   onValueChange={setSelectedReportType}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select Report Type" />
+                    <SelectValue placeholder="Выберите тип отчета" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="performance">
-                      Performance Analysis
+                      Анализ производительности
                     </SelectItem>
-                    <SelectItem value="progress">Progress Over Time</SelectItem>
+                    <SelectItem value="progress">Прогресс по времени</SelectItem>
                     <SelectItem value="medical">
-                      Medical Group Distribution
+                      Распределение по медицинским группам
                     </SelectItem>
                     <SelectItem value="samples">
-                      Physical Measurements
+                      Физические измерения
                     </SelectItem>
                   </SelectContent>
                 </Select>
@@ -516,7 +516,7 @@ const filteredTests = tests?.filter(test => test.periodId === Number(selectedDat
                 disabled={!selectedUser}
               >
                 <Download className="mr-2 h-4 w-4" />
-                Export as PDF
+                Экспортировать как PDF
               </Button>
             </CardFooter>
           </Card>
@@ -559,11 +559,11 @@ const filteredTests = tests?.filter(test => test.periodId === Number(selectedDat
                     <div className="text-center py-12">
                       <Users className="h-16 w-16 text-gray-300 mx-auto mb-4" />
                       <h3 className="text-lg font-medium text-gray-900 mb-2">
-                        Select a Student
+                        Выберите студента
                       </h3>
                       <p className="text-gray-500 max-w-md mx-auto">
-                        Please select a student from the filters panel to
-                        generate a report.
+                        Пожалуйста, выберите студента из 
+                        панели фильтров для генерации отчета.
                       </p>
                     </div>
                   ) : (
@@ -571,7 +571,7 @@ const filteredTests = tests?.filter(test => test.periodId === Number(selectedDat
                       {selectedReportType === "performance" && (
                         <div>
                           <h3 className="text-lg font-medium mb-4">
-                            Performance by Test Type
+                            Производительность по типу теста
                           </h3>
                           <div className="h-80">
                             <ResponsiveContainer width="100%" height="100%">
@@ -591,19 +591,19 @@ const filteredTests = tests?.filter(test => test.periodId === Number(selectedDat
                                 <Legend />
                                 <Bar
                                   dataKey="value"
-                                  name="Performance Score"
+                                  name="Оценка производительности"
                                   fill="#1565C0"
                                 />
                               </ReBarChart>
                             </ResponsiveContainer>
                           </div>
                           <div className="mt-6">
-                            <h4 className="font-medium mb-2">Summary</h4>
+                            <h4 className="font-medium mb-2">Сводка</h4>
                             <p className="text-gray-600">
-                              This chart shows the student's performance across
-                              different physical tests. Higher scores indicate
-                              better performance relative to standards for the
-                              student's age and gender.
+                              Этот график показывает производительность студента
+                              по разным физическим тестам. Более высокие оценки
+                              указывают на лучшую производительность по сравнению
+                              со стандартами для возраста и пола студента.
                             </p>
                           </div>
                         </div>
@@ -612,7 +612,7 @@ const filteredTests = tests?.filter(test => test.periodId === Number(selectedDat
                       {selectedReportType === "progress" && (
                         <div>
                           <h3 className="text-lg font-medium mb-4">
-                            Progress Over Time
+                            Прогресс по времени
                           </h3>
                           <div className="h-80">
                             <ResponsiveContainer width="100%" height="100%">
@@ -655,19 +655,20 @@ const filteredTests = tests?.filter(test => test.periodId === Number(selectedDat
                                   stroke="#1565C0"
                                   fillOpacity={1}
                                   fill="url(#colorPerformance)"
-                                  name="Performance"
+                                  name="Производительность"
                                 />
                               </AreaChart>
                             </ResponsiveContainer>
                           </div>
                           <div className="mt-6">
                             <h4 className="font-medium mb-2">
-                              Progress Analysis
+                              Анализ прогресса
                             </h4>
                             <p className="text-gray-600">
-                              This chart tracks the student's performance over
-                              time, showing improvement trends across all test
-                              categories combined.
+                              Этот график отслеживает прогресс студента
+                              по разным физическим тестам. Более высокие оценки
+                              указывают на лучшую производительность по сравнению
+                              со стандартами для возраста и пола студента.
                             </p>
                           </div>
                         </div>
@@ -676,7 +677,7 @@ const filteredTests = tests?.filter(test => test.periodId === Number(selectedDat
                       {selectedReportType === "medical" && (
                         <div>
                           <h3 className="text-lg font-medium mb-4">
-                            Medical Group Distribution
+                            Распределение по медицинским группам
                           </h3>
                           <div className="h-80">
                             <ResponsiveContainer width="100%" height="100%">
@@ -707,13 +708,13 @@ const filteredTests = tests?.filter(test => test.periodId === Number(selectedDat
                           </div>
                           <div className="mt-6">
                             <h4 className="font-medium mb-2">
-                              Medical Group Analysis
+                              Анализ по медицинским группам
                             </h4>
                             <p className="text-gray-600">
-                              This chart shows the distribution of students
-                              across different medical groups. Understanding
-                              this distribution helps in planning appropriate
-                              physical education activities.
+                              Этот график показывает распределение студентов
+                              по разным медицинским группам. Понимание
+                              этого распределения помогает в планировании
+                              подходящих физических упражнений.
                             </p>
                           </div>
                         </div>
@@ -722,7 +723,7 @@ const filteredTests = tests?.filter(test => test.periodId === Number(selectedDat
                       {selectedReportType === "samples" && (
                         <div>
                           <h3 className="text-lg font-medium mb-4">
-                            Physical Measurement Trends
+                            Тренды физических измерений
                           </h3>
                           <div className="h-80">
                             <ResponsiveContainer width="100%" height="100%">
@@ -765,19 +766,19 @@ const filteredTests = tests?.filter(test => test.periodId === Number(selectedDat
                                   stroke="#4CAF50"
                                   fillOpacity={1}
                                   fill="url(#colorValue)"
-                                  name="Measurement Value"
+                                  name="Значение измерения"
                                 />
                               </AreaChart>
                             </ResponsiveContainer>
                           </div>
                           <div className="mt-6">
                             <h4 className="font-medium mb-2">
-                              Measurement Analysis
+                              Анализ измерений
                             </h4>
                             <p className="text-gray-600">
-                              This chart shows trends in physical measurements
-                              over time, helping to track growth, fitness
-                              levels, and health indicators.
+                              Этот график показывает тренды в физических измерениях
+                              во времени, помогая отслеживать рост, уровни
+                              физической подготовки и показатели здоровья.
                             </p>
                           </div>
                         </div>

@@ -38,10 +38,10 @@ export default function StudentDashboard() {
   return (
     <div className="container mx-auto px-4 py-6">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-semibold">Student Dashboard</h2>
+        <h2 className="text-2xl font-semibold">Панель студента</h2>
         <Link href="/profile">
           <Button variant="outline">
-            View Full Profile
+            Посмотреть полную информацию
           </Button>
         </Link>
       </div>
@@ -63,13 +63,13 @@ export default function StudentDashboard() {
                     </svg>
                   </div>
                   <div>
-                    <p className="font-medium text-amber-700">Your profile is incomplete</p>
-                    <p className="text-sm text-amber-600">Please complete your profile to access all features.</p>
+                    <p className="font-medium text-amber-700">Заполнение информации профиля не завершено</p>
+                    <p className="text-sm text-amber-600">Пожалуйста, заполните свою информацию для доступа ко всем функциям.</p>
                   </div>
                 </div>
                 <Link href="/profile/edit">
                   <Button size="sm" className="bg-amber-500 hover:bg-amber-600">
-                    Complete Profile
+                    Завершить заполнение профиля
                   </Button>
                 </Link>
               </CardContent>
@@ -82,7 +82,7 @@ export default function StudentDashboard() {
               <CardContent className="p-6">
                 <div className="flex justify-between items-start">
                   <div>
-                    <p className="text-sm text-gray-500">Physical Tests</p>
+                    <p className="text-sm text-gray-500">Физические тесты</p>
                     <p className="text-2xl font-semibold">{tests?.length || 0}</p>
                   </div>
                   <div className="p-2 bg-blue-100 rounded-md">
@@ -92,7 +92,7 @@ export default function StudentDashboard() {
                 <div className="mt-4">
                   <Link href="/tests">
                     <Button size="sm" variant="link" className="p-0 h-auto text-primary">
-                      View all tests <ArrowUpRight className="ml-1 h-3 w-3" />
+                      Посмотреть все тесты <ArrowUpRight className="ml-1 h-3 w-3" />
                     </Button>
                   </Link>
                 </div>
@@ -103,7 +103,7 @@ export default function StudentDashboard() {
               <CardContent className="p-6">
                 <div className="flex justify-between items-start">
                   <div>
-                    <p className="text-sm text-gray-500">Health Samples</p>
+                    <p className="text-sm text-gray-500">Физические пробы</p>
                     <p className="text-2xl font-semibold">{samples?.length || 0}</p>
                   </div>
                   <div className="p-2 bg-green-100 rounded-md">
@@ -113,7 +113,7 @@ export default function StudentDashboard() {
                 <div className="mt-4">
                   <Link href="/samples">
                     <Button size="sm" variant="link" className="p-0 h-auto text-primary">
-                      View all samples <ArrowUpRight className="ml-1 h-3 w-3" />
+                      Посмотреть все пробы <ArrowUpRight className="ml-1 h-3 w-3" />
                     </Button>
                   </Link>
                 </div>
@@ -124,8 +124,8 @@ export default function StudentDashboard() {
               <CardContent className="p-6">
                 <div className="flex justify-between items-start">
                   <div>
-                    <p className="text-sm text-gray-500">Medical Group</p>
-                    <p className="text-2xl font-semibold capitalize">{profile?.medicalGroup || "Not Set"}</p>
+                    <p className="text-sm text-gray-500">Мед. группа</p>
+                    <p className="text-2xl font-semibold capitalize">{profile?.medicalGroup || "Не установлено"}</p>
                   </div>
                   <div className="p-2 bg-amber-100 rounded-md">
                     <Users className="h-5 w-5 text-amber-600" />
@@ -133,9 +133,9 @@ export default function StudentDashboard() {
                 </div>
                 <div className="mt-4 text-xs text-gray-500">
                   {profile?.diagnosis ? (
-                    <span>Diagnosis: {profile.diagnosis}</span>
+                    <span>Диагноз: {profile.diagnosis}</span>
                   ) : (
-                    <span>No special medical requirements</span>
+                    <span>Нет специальных медицинских требований</span>
                   )}
                 </div>
               </CardContent>
@@ -145,15 +145,15 @@ export default function StudentDashboard() {
               <CardContent className="p-6">
                 <div className="flex justify-between items-start">
                   <div>
-                    <p className="text-sm text-gray-500">Next Scheduled Test</p>
-                    <p className="text-xl font-semibold">None</p>
+                    <p className="text-sm text-gray-500">Следующий запланированный тест</p>
+                    <p className="text-xl font-semibold">Нет</p>
                   </div>
                   <div className="p-2 bg-purple-100 rounded-md">
                     <Calendar className="h-5 w-5 text-purple-600" />
                   </div>
                 </div>
                 <div className="mt-4 text-xs text-gray-500">
-                  No upcoming tests scheduled
+                  Нет запланированных тестов
                 </div>
               </CardContent>
             </Card>
@@ -163,30 +163,30 @@ export default function StudentDashboard() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-lg">Quick Actions</CardTitle>
+                <CardTitle className="text-lg">Быстрые действия</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 gap-3">
                   <Link href="/tests/new">
                     <Button className="w-full">
                       <Activity className="mr-2 h-4 w-4" />
-                      Record Test
+                      Записать тест
                     </Button>
                   </Link>
                   <Link href="/samples/new">
                     <Button variant="outline" className="w-full">
                       <Heart className="mr-2 h-4 w-4" />
-                      Record Sample
+                      Записать пробу
                     </Button>
                   </Link>
                   <Link href="/profile/edit">
                     <Button variant="outline" className="w-full">
-                      Update Profile
+                      Обновить профиль
                     </Button>
                   </Link>
                   <Link href="/settings">
                     <Button variant="outline" className="w-full">
-                      Settings
+                      Настройки
                     </Button>
                   </Link>
                 </div>
@@ -195,34 +195,34 @@ export default function StudentDashboard() {
             
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-lg">Profile Completion</CardTitle>
+                <CardTitle className="text-lg">Завершение заполнения профиля</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   <div>
                     <div className="flex justify-between mb-1">
-                      <span className="text-sm font-medium">Personal Info</span>
+                      <span className="text-sm font-medium">Личная информация</span>
                       <span className="text-sm text-gray-500">75%</span>
                     </div>
                     <Progress value={75} className="h-2" />
                   </div>
                   <div>
                     <div className="flex justify-between mb-1">
-                      <span className="text-sm font-medium">Medical Info</span>
+                      <span className="text-sm font-medium">Медицинская информация</span>
                       <span className="text-sm text-gray-500">60%</span>
                     </div>
                     <Progress value={60} className="h-2" />
                   </div>
                   <div>
                     <div className="flex justify-between mb-1">
-                      <span className="text-sm font-medium">Academic Info</span>
+                      <span className="text-sm font-medium">Академическая информация</span>
                       <span className="text-sm text-gray-500">80%</span>
                     </div>
                     <Progress value={80} className="h-2" />
                   </div>
                   <div>
                     <div className="flex justify-between mb-1">
-                      <span className="text-sm font-medium">Overall</span>
+                      <span className="text-sm font-medium">Общая информация</span>
                       <span className="text-sm text-gray-500">72%</span>
                     </div>
                     <Progress value={72} className="h-2" />
@@ -235,13 +235,13 @@ export default function StudentDashboard() {
           {/* Recent Tests */}
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-lg">Recent Tests & Samples</CardTitle>
+              <CardTitle className="text-lg">Последние тесты и пробы</CardTitle>
             </CardHeader>
             <CardContent>
               <Tabs defaultValue="tests">
                 <TabsList className="mb-4">
-                  <TabsTrigger value="tests">Tests</TabsTrigger>
-                  <TabsTrigger value="samples">Samples</TabsTrigger>
+                  <TabsTrigger value="tests">Тесты</TabsTrigger>
+                  <TabsTrigger value="samples">Пробы</TabsTrigger>
                 </TabsList>
                 
                 <TabsContent value="tests">
@@ -249,10 +249,10 @@ export default function StudentDashboard() {
                     <table className="w-full">
                       <thead>
                         <tr className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          <th className="px-4 py-2">Test Type</th>
-                          <th className="px-4 py-2">Result</th>
-                          <th className="px-4 py-2">Date</th>
-                          <th className="px-4 py-2">Grade</th>
+                          <th className="px-4 py-2">Тип теста</th>
+                          <th className="px-4 py-2">Результат</th>
+                          <th className="px-4 py-2">Дата</th>
+                          <th className="px-4 py-2">Оценка</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-200">
@@ -274,7 +274,7 @@ export default function StudentDashboard() {
                                 </span>
                               ) : (
                                 <span className="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-800">
-                                  Pending
+                                  Ожидается
                                 </span>
                               )}
                             </td>
@@ -283,7 +283,7 @@ export default function StudentDashboard() {
                         {(!tests || tests.length === 0) && (
                           <tr>
                             <td colSpan={4} className="px-4 py-4 text-center text-sm text-gray-500">
-                              No tests recorded yet
+                              Нет записанных тестов
                             </td>
                           </tr>
                         )}
@@ -297,10 +297,10 @@ export default function StudentDashboard() {
                     <table className="w-full">
                       <thead>
                         <tr className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          <th className="px-4 py-2">Sample Type</th>
-                          <th className="px-4 py-2">Value</th>
-                          <th className="px-4 py-2">Date</th>
-                          <th className="px-4 py-2">Notes</th>
+                          <th className="px-4 py-2">Тип пробы</th>
+                          <th className="px-4 py-2">Значение</th>
+                          <th className="px-4 py-2">Дата</th>
+                          <th className="px-4 py-2">Примечания</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-200">
@@ -323,7 +323,7 @@ export default function StudentDashboard() {
                         {(!samples || samples.length === 0) && (
                           <tr>
                             <td colSpan={4} className="px-4 py-4 text-center text-sm text-gray-500">
-                              No samples recorded yet
+                              Нет записанных проб
                             </td>
                           </tr>
                         )}
@@ -336,18 +336,18 @@ export default function StudentDashboard() {
               <div className="mt-4 flex justify-center space-x-4">
                 <Link href="/tests">
                   <Button variant="outline" size="sm">
-                    All Tests
+                    Все тесты
                   </Button>
                 </Link>
                 <Link href="/samples">
                   <Button variant="outline" size="sm">
-                    All Samples
+                    Все пробы
                   </Button>
                 </Link>
                 <Link href="/tests/new">
                   <Button size="sm">
                     <Plus className="mr-1 h-3 w-3" />
-                    Add New
+                    Добавить новую запись
                   </Button>
                 </Link>
               </div>

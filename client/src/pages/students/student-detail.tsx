@@ -65,16 +65,16 @@ export default function StudentDetail() {
 
   // Helper function to get faculty name
   const getFacultyName = (facultyId?: number) => {
-    if (!facultyId || !faculties) return "Not Assigned";
+    if (!facultyId || !faculties) return "Не назначен";
     const faculty = faculties?.find(f => f.facultyId === facultyId);
-    return faculty ? faculty.name : "Not Found";
+    return faculty ? faculty.name : "Не найден";
   };
 
   // Helper function to get group name
   const getGroupName = (groupId?: number) => {
-    if (!groupId || !groups) return "Not Assigned";
+    if (!groupId || !groups) return "Не назначен";
     const group = groups.find(g => g.groupId === groupId);
-    return group ? group.name : "Not Found";
+    return group ? group.name : "Не найден";
   };
 
   // Helper function to get medical group badge
@@ -83,11 +83,11 @@ export default function StudentDetail() {
     
     switch (medicalGroup) {
       case "basic":
-        return <Badge className="bg-green-100 text-green-800">Basic</Badge>;
+        return <Badge className="bg-green-100 text-green-800">Основная</Badge>;
       case "preparatory":
-        return <Badge className="bg-amber-100 text-amber-800">Preparatory</Badge>;
+        return <Badge className="bg-amber-100 text-amber-800">Подготовительная</Badge>;
       case "special":
-        return <Badge className="bg-red-100 text-red-800">Special</Badge>;
+        return <Badge className="bg-red-100 text-red-800">Специальная</Badge>;
       default:
         return <Badge className="bg-gray-100 text-gray-800">{medicalGroup}</Badge>;
     }
@@ -108,11 +108,11 @@ export default function StudentDetail() {
       <MainLayout>
         <div className="container mx-auto px-4 py-6">
           <div className="text-center py-12">
-            <h2 className="text-2xl font-semibold mb-4">Student Not Found</h2>
-            <p className="text-gray-500 mb-6">The student you're looking for doesn't exist or you don't have permission to view their profile.</p>
+            <h2 className="text-2xl font-semibold mb-4">Студент не найден</h2>
+            <p className="text-gray-500 mb-6">Студент, которого вы ищете, не существует или у вас нет разрешения просматривать его профиль.</p>
             <Button onClick={() => navigate('/students')}>
               <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Students
+              Назад к студентам
             </Button>
           </div>
         </div>
@@ -126,10 +126,10 @@ export default function StudentDetail() {
         <div className="flex items-center mb-6">
           <Button variant="ghost" onClick={() => navigate('/students')} className="mr-2">
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back
+            Назад
           </Button>
           <div>
-            <h2 className="text-2xl font-semibold">Student Profile</h2>
+            <h2 className="text-2xl font-semibold">Профиль студента</h2>
             <p className="text-gray-500">{student.fullName || student.username}</p>
           </div>
         </div>
@@ -156,7 +156,7 @@ export default function StudentDetail() {
                 <div className="flex items-center">
                   <GraduationCap className="h-5 w-5 text-gray-500 mr-3" />
                   <div>
-                    <p className="text-sm text-gray-500">Faculty</p>
+                    <p className="text-sm text-gray-500">Факультет</p>
                     <p className="font-medium">{getFacultyName(student.facultyId)}</p>
                   </div>
                 </div>
@@ -164,7 +164,7 @@ export default function StudentDetail() {
                 <div className="flex items-center">
                   <Briefcase className="h-5 w-5 text-gray-500 mr-3" />
                   <div>
-                    <p className="text-sm text-gray-500">Group</p>
+                    <p className="text-sm text-gray-500">Группа</p>
                     <p className="font-medium">{getGroupName(student.groupId)}</p>
                   </div>
                 </div>
@@ -173,8 +173,8 @@ export default function StudentDetail() {
                   <div className="flex items-center">
                     <Calendar className="h-5 w-5 text-gray-500 mr-3" />
                     <div>
-                      <p className="text-sm text-gray-500">Date of Birth</p>
-                      <p className="font-medium">{format(new Date(student.dateOfBirth), 'MMMM d, yyyy')}</p>
+                      <p className="text-sm text-gray-500">Дата рождения</p>
+                      <p className="font-medium">{format(new Date(student.dateOfBirth), 'dd.MM.yyyy')}</p>
                     </div>
                   </div>
                 )}
@@ -184,11 +184,11 @@ export default function StudentDetail() {
                 <div className="grid grid-cols-2 gap-4 pt-2">
                   <div className="bg-gray-50 p-3 rounded-lg text-center">
                     <p className="text-2xl font-bold text-primary">{tests?.length || 0}</p>
-                    <p className="text-xs text-gray-500">Tests</p>
+                    <p className="text-xs text-gray-500">Тесты</p>
                   </div>
                   <div className="bg-gray-50 p-3 rounded-lg text-center">
                     <p className="text-2xl font-bold text-primary">{samples?.length || 0}</p>
-                    <p className="text-xs text-gray-500">Samples</p>
+                    <p className="text-xs text-gray-500">Пробы</p>
                   </div>
                 </div>
                 
@@ -196,13 +196,13 @@ export default function StudentDetail() {
                   <Link href={`/tests/${student.studentId}`}>
                     <Button variant="outline" className="w-full">
                       <Activity className="mr-2 h-4 w-4" />
-                      View Tests
+                      Просмотр тестов
                     </Button>
                   </Link>
                   <Link href={`/reports?userId=${student.studentId}`}>
                     <Button variant="outline" className="w-full">
                       <FileText className="mr-2 h-4 w-4" />
-                      Generate Report
+                      Генерация отчета
                     </Button>
                   </Link>
                 </div>
@@ -213,36 +213,36 @@ export default function StudentDetail() {
           {/* Student Details Card */}
           <Card className="lg:col-span-2">
             <CardHeader>
-              <CardTitle>Student Details</CardTitle>
+              <CardTitle>Детали студента</CardTitle>
             </CardHeader>
             <CardContent>
               <Tabs defaultValue="personal">
                 <TabsList className="mb-4">
-                  <TabsTrigger value="personal">Personal</TabsTrigger>
-                  <TabsTrigger value="education">Education</TabsTrigger>
-                  <TabsTrigger value="medical">Medical</TabsTrigger>
-                  <TabsTrigger value="sports">Sports</TabsTrigger>
+                  <TabsTrigger value="personal">Личные данные</TabsTrigger>
+                  <TabsTrigger value="education">Образование</TabsTrigger>
+                  <TabsTrigger value="medical">Медицинская группа</TabsTrigger>
+                  <TabsTrigger value="sports">Спорт</TabsTrigger>
                 </TabsList>
                 
                 <TabsContent value="personal">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <h3 className="text-sm font-medium text-gray-500 mb-4">Basic Information</h3>
+                      <h3 className="text-sm font-medium text-gray-500 mb-4">Основная информация</h3>
                       <div className="space-y-4">
                         <div className="flex items-start">
                           <UserCheck className="h-5 w-5 text-gray-400 mr-3 mt-0.5" />
                           <div>
-                            <p className="text-sm text-gray-500">Full Name</p>
-                            <p className="font-medium">{student.fullName || "Not specified"}</p>
+                            <p className="text-sm text-gray-500">ФИО</p>
+                            <p className="font-medium">{student.fullName || "Не указано"}</p>
                           </div>
                         </div>
                         
                         <div className="flex items-start">
                           <Calendar className="h-5 w-5 text-gray-400 mr-3 mt-0.5" />
                           <div>
-                            <p className="text-sm text-gray-500">Date of Birth</p>
+                            <p className="text-sm text-gray-500">Дата рождения</p>
                             <p className="font-medium">
-                              {student.dateOfBirth ? format(new Date(student.dateOfBirth), 'MMMM d, yyyy') : "Not specified"}
+                              {student.dateOfBirth ? format(new Date(student.dateOfBirth), 'dd.MM.yyyy') : "Не указано"}
                             </p>
                           </div>
                         </div>
@@ -250,37 +250,37 @@ export default function StudentDetail() {
                         <div className="flex items-start">
                           <Flag className="h-5 w-5 text-gray-400 mr-3 mt-0.5" />
                           <div>
-                            <p className="text-sm text-gray-500">Gender</p>
-                            <p className="font-medium">{student.gender || "Not specified"}</p>
+                            <p className="text-sm text-gray-500">Пол</p>
+                            <p className="font-medium">{student.gender || "Не указано"}</p>
                           </div>
                         </div>
                       </div>
                     </div>
                     
                     <div>
-                      <h3 className="text-sm font-medium text-gray-500 mb-4">Location Information</h3>
+                      <h3 className="text-sm font-medium text-gray-500 mb-4">Место рождения</h3>
                       <div className="space-y-4">
                         <div className="flex items-start">
                           <MapPin className="h-5 w-5 text-gray-400 mr-3 mt-0.5" />
                           <div>
-                            <p className="text-sm text-gray-500">Place of Birth</p>
-                            <p className="font-medium">{student.placeOfBirth || "Not specified"}</p>
+                            <p className="text-sm text-gray-500">Место рождения</p>
+                            <p className="font-medium">{student.placeOfBirth || "Не указано"}</p>
                           </div>
                         </div>
                         
                         <div className="flex items-start">
                           <Home className="h-5 w-5 text-gray-400 mr-3 mt-0.5" />
                           <div>
-                            <p className="text-sm text-gray-500">Address</p>
-                            <p className="font-medium">{student.address || "Not specified"}</p>
+                            <p className="text-sm text-gray-500">Адрес</p>
+                            <p className="font-medium">{student.address || "Не указано"}</p>
                           </div>
                         </div>
                         
                         <div className="flex items-start">
                           <Flag className="h-5 w-5 text-gray-400 mr-3 mt-0.5" />
                           <div>
-                            <p className="text-sm text-gray-500">Nationality</p>
-                            <p className="font-medium">{student.nationality || "Not specified"}</p>
+                            <p className="text-sm text-gray-500">Национальность</p>
+                            <p className="font-medium">{student.nationality || "Не указано"}</p>
                           </div>
                         </div>
                       </div>
@@ -293,15 +293,15 @@ export default function StudentDetail() {
                     <div className="flex items-start">
                       <GraduationCap className="h-5 w-5 text-gray-400 mr-3 mt-0.5" />
                       <div>
-                        <p className="text-sm text-gray-500">Previous School</p>
-                        <p className="font-medium">{student.schoolGraduated || "Not specified"}</p>
+                        <p className="text-sm text-gray-500">Школа</p>
+                        <p className="font-medium">{student.schoolGraduated || "Не указано"}</p>
                       </div>
                     </div>
                     
                     <div className="flex items-start">
                       <BookOpen className="h-5 w-5 text-gray-400 mr-3 mt-0.5" />
                       <div>
-                        <p className="text-sm text-gray-500">Faculty</p>
+                        <p className="text-sm text-gray-500">Факультет</p>
                         <p className="font-medium">{getFacultyName(student.facultyId)}</p>
                       </div>
                     </div>
@@ -309,7 +309,7 @@ export default function StudentDetail() {
                     <div className="flex items-start">
                       <Users className="h-5 w-5 text-gray-400 mr-3 mt-0.5" />
                       <div>
-                        <p className="text-sm text-gray-500">Group</p>
+                        <p className="text-sm text-gray-500">Группа</p>
                         <p className="font-medium">{getGroupName(student.groupId)}</p>
                       </div>
                     </div>
@@ -317,8 +317,8 @@ export default function StudentDetail() {
                     <div className="flex items-start">
                       <BookOpen className="h-5 w-5 text-gray-400 mr-3 mt-0.5" />
                       <div>
-                        <p className="text-sm text-gray-500">Educational Department</p>
-                        <p className="font-medium">{student.educationalDepartment || "Not specified"}</p>
+                        <p className="text-sm text-gray-500">Учебный отдел</p>
+                        <p className="font-medium">{student.educationalDepartment || "Не указано"}</p>
                       </div>
                     </div>
                   </div>
@@ -329,7 +329,7 @@ export default function StudentDetail() {
                     <div className="flex items-start">
                       <Heart className="h-5 w-5 text-gray-400 mr-3 mt-0.5" />
                       <div>
-                        <p className="text-sm text-gray-500">Medical Group</p>
+                        <p className="text-sm text-gray-500">Медицинская группа</p>
                         <div className="flex items-center mt-1">
                           {getMedicalGroupBadge(student.medicalGroup)}
                         </div>
@@ -340,8 +340,8 @@ export default function StudentDetail() {
                       <div className="flex items-start">
                         <Heart className="h-5 w-5 text-gray-400 mr-3 mt-0.5" />
                         <div>
-                          <p className="text-sm text-gray-500">Diagnosis</p>
-                          <p className="font-medium">{student.medicalDiagnosis || "Not specified"}</p>
+                          <p className="text-sm text-gray-500">Диагноз</p>
+                          <p className="font-medium">{student.medicalDiagnosis || "Не указано"}</p>
                         </div>
                       </div>
                     )}
@@ -349,8 +349,8 @@ export default function StudentDetail() {
                     <div className="flex items-start">
                       <Heart className="h-5 w-5 text-gray-400 mr-3 mt-0.5" />
                       <div>
-                        <p className="text-sm text-gray-500">Previous Illnesses</p>
-                        <p className="font-medium">{student.previousIllnesses || "None reported"}</p>
+                        <p className="text-sm text-gray-500">Предыдущие болезни</p>
+                        <p className="font-medium">{student.previousIllnesses || "Не указано"}</p>
                       </div>
                     </div>
                   </div>
@@ -361,24 +361,24 @@ export default function StudentDetail() {
                     <div className="flex items-start">
                       <Activity className="h-5 w-5 text-gray-400 mr-3 mt-0.5" />
                       <div>
-                        <p className="text-sm text-gray-500">Currently Engaged In</p>
-                        <p className="font-medium">{student.activeSports || "Not specified"}</p>
+                        <p className="text-sm text-gray-500">Текущая деятельность</p>
+                        <p className="font-medium">{student.activeSports || "Не указано"}</p>
                       </div>
                     </div>
                     
                     <div className="flex items-start">
                       <Activity className="h-5 w-5 text-gray-400 mr-3 mt-0.5" />
                       <div>
-                        <p className="text-sm text-gray-500">Previously Engaged In</p>
-                        <p className="font-medium">{student.previousSports || "Not specified"}</p>
+                        <p className="text-sm text-gray-500">Предыдущая деятельность</p>
+                        <p className="font-medium">{student.previousSports || "Не указано"}</p>
                       </div>
                     </div>
                     
                     <div className="flex items-start">
                       <Activity className="h-5 w-5 text-gray-400 mr-3 mt-0.5" />
                       <div>
-                        <p className="text-sm text-gray-500">Additional Information</p>
-                        <p className="font-medium">{student.additionalInfo || "None provided"}</p>
+                        <p className="text-sm text-gray-500">Дополнительная информация</p>
+                        <p className="font-medium">{student.additionalInfo || "Не указано"}</p>
                       </div>
                     </div>
                   </div>

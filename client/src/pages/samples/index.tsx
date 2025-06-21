@@ -92,14 +92,14 @@ const transformedSamples: PhysicalState[] = rawSamples?.flatMap((sample) => {
       <div className="container mx-auto px-4 py-6">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
           <div>
-            <h2 className="text-2xl font-semibold">Health Samples</h2>
-            <p className="text-gray-500">View and manage physical measurement records</p>
+            <h2 className="text-2xl font-semibold">Физические пробы</h2>
+            <p className="text-gray-500">Просмотр и управление записями физических проб</p>
           </div>
           <div className="mt-4 md:mt-0 flex flex-col sm:flex-row gap-3">
             <div className="relative">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
               <Input
-                placeholder="Search samples..."
+                placeholder="Поиск проб..."
                 className="pl-9 w-full sm:w-64"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -108,7 +108,7 @@ const transformedSamples: PhysicalState[] = rawSamples?.flatMap((sample) => {
             <Link href="/samples/new">
               <Button>
                 <Plus className="mr-2 h-4 w-4" />
-                Record Sample
+                Записать пробу
               </Button>
             </Link>
           </div>
@@ -117,17 +117,17 @@ const transformedSamples: PhysicalState[] = rawSamples?.flatMap((sample) => {
         <Card>
           <CardHeader className="pb-3">
             <div className="flex justify-between items-center">
-              <CardTitle className="text-lg">Sample Records</CardTitle>
+              <CardTitle className="text-lg">Записи проб</CardTitle>
               <div className="flex gap-2">
                 <Select
                   value={sampleTypeFilter}
                   onValueChange={setSampleTypeFilter}
                 >
                   <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="All sample types" />
+                    <SelectValue placeholder="Все типы проб" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All sample types</SelectItem>
+                    <SelectItem value="all">Все типы проб</SelectItem>
                     {SAMPLE_TYPES.map(type => (
                       <SelectItem key={type} value={type}>
                         {formatSampleType(type)}
@@ -138,7 +138,7 @@ const transformedSamples: PhysicalState[] = rawSamples?.flatMap((sample) => {
               </div>
             </div>
             <CardDescription>
-              Physical measurements and health indicators
+              Физические измерения и показатели здоровья
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -150,11 +150,11 @@ const transformedSamples: PhysicalState[] = rawSamples?.flatMap((sample) => {
               <>
                 {(!filteredSamples || filteredSamples.length === 0) ? (
                   <div className="text-center py-12">
-                    <p className="text-gray-500 mb-4">No sample records found.</p>
+                    <p className="text-gray-500 mb-4">Записи проб не найдены.</p>
                     <Link href="/samples/new">
                       <Button>
                         <Plus className="mr-2 h-4 w-4" />
-                        Record New Sample
+                        Записать новую пробу
                       </Button>
                     </Link>
                   </div>
@@ -165,15 +165,15 @@ const transformedSamples: PhysicalState[] = rawSamples?.flatMap((sample) => {
                         <tr className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           <th className="px-4 py-3">
                             <div className="flex items-center">
-                              Sample Type
+                              Тип пробы
                               <ArrowUpDown className="ml-2 h-3 w-3" />
                             </div>
                           </th>
-                          <th className="px-4 py-3">Value</th>
-                          <th className="px-4 py-3">Date</th>
-                          <th className="px-4 py-3">Recorded By</th>
-                          <th className="px-4 py-3">Notes</th>
-                          <th className="px-4 py-3 text-right">Actions</th>
+                          <th className="px-4 py-3">Значение</th>
+                          <th className="px-4 py-3">Дата</th>
+                          <th className="px-4 py-3">Кем записано</th>
+                          <th className="px-4 py-3">Примечания</th>
+                          <th className="px-4 py-3 text-right">Действия</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-200">
@@ -189,7 +189,7 @@ const transformedSamples: PhysicalState[] = rawSamples?.flatMap((sample) => {
                               {sample.date ? format(new Date(sample.date), 'MMM d, yyyy') : '-'}
                             </td>
                             <td className="px-4 py-4 whitespace-nowrap text-sm">
-                              {sample.recordedBy ? `ID: ${sample.recordedBy}` : 'Self-reported'}
+                              {sample.recordedBy ? `ID: ${sample.recordedBy}` : 'Самостоятельно'}
                             </td>
                             <td className="px-4 py-4">
                               <div className="max-w-xs truncate">
@@ -204,12 +204,12 @@ const transformedSamples: PhysicalState[] = rawSamples?.flatMap((sample) => {
                                   </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
-                                  <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                  <DropdownMenuLabel>Действия</DropdownMenuLabel>
                                   <DropdownMenuItem asChild>
                                     <Link href={`/samples/edit/${sample.id}`}>
                                       <div className="w-full flex items-center">
                                         <Pencil className="mr-2 h-4 w-4" />
-                                        Edit
+                                        Редактировать
                                       </div>
                                     </Link>
                                   </DropdownMenuItem>

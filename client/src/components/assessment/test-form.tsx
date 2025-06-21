@@ -114,7 +114,7 @@ export function TestForm({ test, studentId, assessmentMode = true }: TestFormPro
         
         <div className="mb-4">
           <Label className="block text-sm font-medium text-gray-700 mb-1">
-            Result ({test.unit})
+            Результат ({test.unit})
           </Label>
           <div className="flex">
             <Input
@@ -138,7 +138,7 @@ export function TestForm({ test, studentId, assessmentMode = true }: TestFormPro
           <>
             <div className="mb-4">
               <Label className="block text-sm font-medium text-gray-700 mb-1">
-                Assessment
+                Оценка
               </Label>
               <Select
                 value={assessment}
@@ -148,17 +148,17 @@ export function TestForm({ test, studentId, assessmentMode = true }: TestFormPro
                   <SelectValue placeholder="Select assessment" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="excellent">Excellent</SelectItem>
-                  <SelectItem value="good">Good</SelectItem>
-                  <SelectItem value="satisfactory">Satisfactory</SelectItem>
-                  <SelectItem value="poor">Poor</SelectItem>
+                  <SelectItem value="excellent">Замечательно</SelectItem>
+                  <SelectItem value="good">Хорошо</SelectItem>
+                  <SelectItem value="satisfactory">Удовлетворительно</SelectItem>
+                  <SelectItem value="poor">Плохо</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             
             <div className="mb-4">
               <Label className="block text-sm font-medium text-gray-700 mb-1">
-                Comments
+                Комментарии
               </Label>
               <Textarea
                 value={comments}
@@ -173,12 +173,12 @@ export function TestForm({ test, studentId, assessmentMode = true }: TestFormPro
         {latestPreviousResult && (
           <div className="mt-4 text-gray-500 text-sm">
             <p>
-              <span className="font-medium">Previous:</span>{" "}
+              <span className="font-medium">Предыдущее значение:</span>{" "}
               {latestPreviousResult.value} {test.unit}{" "}
               ({new Date(latestPreviousResult.assessedAt).toLocaleDateString()})
             </p>
             <p>
-              <span className="font-medium">Historical average:</span>{" "}
+              <span className="font-medium">Среднее значение:</span>{" "}
               {historicalAverage} {test.unit}
             </p>
           </div>
@@ -189,7 +189,7 @@ export function TestForm({ test, studentId, assessmentMode = true }: TestFormPro
             onClick={handleSubmit}
             disabled={saveResultMutation.isPending}
           >
-            {saveResultMutation.isPending ? "Saving..." : "Save Result"}
+            {saveResultMutation.isPending ? "Сохранение..." : "Сохранить результат"}
           </Button>
         </div>
       </CardContent>

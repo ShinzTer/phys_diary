@@ -263,14 +263,14 @@ export default function UserManagement() {
       <div className="container mx-auto px-4 py-6">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
           <div>
-            <h2 className="text-2xl font-semibold">User Management</h2>
-            <p className="text-gray-500">Create, view, edit, and manage system users</p>
+            <h2 className="text-2xl font-semibold">Управление пользователями</h2>
+            <p className="text-gray-500">Создание, просмотр, редактирование и управление пользователями в системе</p>
           </div>
           <div className="mt-4 md:mt-0 flex flex-col sm:flex-row gap-3">
             <div className="relative">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
               <Input
-                placeholder="Search users..."
+                placeholder="Поиск пользователей..."
                 className="pl-9 w-full sm:w-64"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -278,7 +278,7 @@ export default function UserManagement() {
             </div>
             <Button onClick={() => setIsCreateDialogOpen(true)}>
               <UserPlus className="mr-2 h-4 w-4" />
-              Add User
+              Добавить пользователя
             </Button>
           </div>
         </div>
@@ -286,24 +286,24 @@ export default function UserManagement() {
         <Card>
           <CardHeader className="pb-3">
             <div className="flex justify-between items-center">
-              <CardTitle className="text-lg">System Users</CardTitle>
+              <CardTitle className="text-lg">Пользователи системы</CardTitle>
               <Select
                 value={roleFilter || "all"}
                 onValueChange={(value) => setRoleFilter(value === "all" ? "" : value)}
               >
                 <SelectTrigger className="w-[150px]">
-                  <SelectValue placeholder="All roles" />
+                  <SelectValue placeholder="Все роли" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All roles</SelectItem>
-                  <SelectItem value="admin">Administrators</SelectItem>
-                  <SelectItem value="teacher">Teachers</SelectItem>
-                  <SelectItem value="student">Students</SelectItem>
+                  <SelectItem value="all">Все роли</SelectItem>
+                  <SelectItem value="admin">Администраторы</SelectItem>
+                  <SelectItem value="teacher">Преподаватели</SelectItem>
+                  <SelectItem value="student">Студенты</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <CardDescription>
-              Manage user accounts and their roles
+              Управление учетными записями и их ролями
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -315,10 +315,10 @@ export default function UserManagement() {
               <>
                 {(!filteredUsers || filteredUsers.length === 0) ? (
                   <div className="text-center py-12">
-                    <p className="text-gray-500 mb-4">No users found matching your search criteria.</p>
+                    <p className="text-gray-500 mb-4">Пользователи не найдены.</p>
                     <Button onClick={() => setIsCreateDialogOpen(true)}>
                       <UserPlus className="mr-2 h-4 w-4" />
-                      Create New User
+                      Добавить нового пользователя
                     </Button>
                   </div>
                 ) : (
@@ -326,11 +326,11 @@ export default function UserManagement() {
                     <table className="w-full">
                       <thead>
                         <tr className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          <th className="px-4 py-3">User</th>
-                          <th className="px-4 py-3">Username</th>
-                          <th className="px-4 py-3">Role</th>
-                          <th className="px-4 py-3">Faculty/Group</th>
-                          <th className="px-4 py-3 text-right">Actions</th>
+                          <th className="px-4 py-3">Пользователь</th>
+                          <th className="px-4 py-3">Имя пользователя</th>
+                          <th className="px-4 py-3">Роль</th>
+                          <th className="px-4 py-3">Факультет/Группа</th>
+                          <th className="px-4 py-3 text-right">Действия</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-200">
@@ -344,7 +344,7 @@ export default function UserManagement() {
                                   </AvatarFallback>
                                 </Avatar>
                                 <div>
-                                  <div className="font-medium">{"Not Set"}</div>
+                                  <div className="font-medium">{"Не установлено"}</div>
                                 </div>
                               </div>
                             </td>
@@ -359,8 +359,8 @@ export default function UserManagement() {
                             </td>
                             <td className="px-4 py-4 whitespace-nowrap">
                               <div className="text-sm">
-                                {u.facultyId ? `Faculty ID: ${u.facultyId}` : "No Faculty"}
-                                {u.groupId && ` / Group ID: ${u.groupId}`}
+                                {u.facultyId ? `ID факультета: ${u.facultyId}` : "Не установлено"}
+                                {u.groupId && ` / ID группы: ${u.groupId}`}
                               </div>
                             </td>
                             <td className="px-4 py-4 whitespace-nowrap text-right">
@@ -371,14 +371,14 @@ export default function UserManagement() {
                                   </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
-                                  <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                  <DropdownMenuLabel>Действия</DropdownMenuLabel>
                                   {u.id !== user?.id && (
                                     <>
                                       <DropdownMenuItem asChild>
                                         <Link href={`/students/${u.id}`}>
                                           <div className="w-full flex items-center">
                                             <User className="mr-2 h-4 w-4" />
-                                            View Profile
+                                            Просмотр профиля
                                           </div>
                                         </Link>
                                       </DropdownMenuItem>
@@ -391,7 +391,7 @@ export default function UserManagement() {
                                         className="text-red-600"
                                       >
                                         <Trash2 className="mr-2 h-4 w-4" />
-                                        Delete User
+                                        Удалить пользователя
                                       </DropdownMenuItem>
                                     </>
                                   )}
@@ -399,7 +399,7 @@ export default function UserManagement() {
                                     <DropdownMenuItem asChild disabled>
                                       <span className="text-gray-500 w-full flex items-center">
                                         <User className="mr-2 h-4 w-4" />
-                                        Current User
+                                        Текущий пользователь
                                       </span>
                                     </DropdownMenuItem>
                                   )}
@@ -421,9 +421,9 @@ export default function UserManagement() {
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle>Create New User</DialogTitle>
+              <DialogTitle>Добавить нового пользователя</DialogTitle>
               <DialogDescription>
-                Add a new user to the system
+                Добавьте нового пользователя в систему
               </DialogDescription>
             </DialogHeader>
             <Form {...form}>
@@ -433,7 +433,7 @@ export default function UserManagement() {
                   name="role"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Role</FormLabel>
+                      <FormLabel>Роль</FormLabel>
                       <Select 
                         onValueChange={(value: "admin" | "teacher" | "student") => {
                           field.onChange(value);
@@ -443,13 +443,13 @@ export default function UserManagement() {
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select a role" />
+                            <SelectValue placeholder="Выберите роль" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="student">Student</SelectItem>
-                          <SelectItem value="teacher">Teacher</SelectItem>
-                          <SelectItem value="admin">Administrator</SelectItem>
+                          <SelectItem value="student">Студент</SelectItem>
+                          <SelectItem value="teacher">Преподаватель</SelectItem>
+                          <SelectItem value="admin">Администратор</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -462,9 +462,9 @@ export default function UserManagement() {
                   name="username"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Username</FormLabel>
+                      <FormLabel>Имя пользователя</FormLabel>
                       <FormControl>
-                        <Input placeholder="Choose a username" {...field} />
+                        <Input placeholder="Выберите имя пользователя" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -476,9 +476,9 @@ export default function UserManagement() {
                   name="password"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Password</FormLabel>
+                      <FormLabel>Пароль</FormLabel>
                       <FormControl>
-                        <Input type="password" placeholder="Set a password" {...field} />
+                        <Input type="password" placeholder="Выберите пароль" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -494,9 +494,9 @@ export default function UserManagement() {
                       name="fullName"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Full Name</FormLabel>
+                          <FormLabel>Полное имя</FormLabel>
                           <FormControl>
-                            <Input placeholder="Enter full name" {...field} />
+                            <Input placeholder="Введите полное имя" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -507,17 +507,17 @@ export default function UserManagement() {
                       name="gender"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Gender</FormLabel>
+                          <FormLabel>Пол</FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue placeholder="Select gender" />
+                                <SelectValue placeholder="Выберите пол" />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="male">Male</SelectItem>
-                              <SelectItem value="female">Female</SelectItem>
-                              <SelectItem value="other">Other</SelectItem>
+                              <SelectItem value="male">Мужской</SelectItem>
+                              <SelectItem value="female">Женский</SelectItem>
+                              <SelectItem value="other">Другой</SelectItem>
                             </SelectContent>
                           </Select>
                           <FormMessage />
@@ -530,7 +530,7 @@ export default function UserManagement() {
                       name="dateOfBirth"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Date of Birth</FormLabel>
+                          <FormLabel>Дата рождения</FormLabel>
                           <FormControl>
                             <Input type="date" {...field} />
                           </FormControl>
@@ -544,7 +544,7 @@ export default function UserManagement() {
                       name="phone"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Phone Number</FormLabel>
+                          <FormLabel>Номер телефона</FormLabel>
                           <FormControl>
                             <Input 
                               placeholder="+375291234567" 
@@ -559,7 +559,7 @@ export default function UserManagement() {
                               }}
                             />
                           </FormControl>
-                          <FormDescription>Format: +375*********</FormDescription>
+                          <FormDescription>Формат: +375*********</FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -570,17 +570,17 @@ export default function UserManagement() {
                       name="medicalGroup"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Medical Group</FormLabel>
+                          <FormLabel>Медицинская группа</FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue placeholder="Select medical group" />
+                                <SelectValue placeholder="Выберите медицинскую группу" />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="basic">Basic</SelectItem>
-                              <SelectItem value="preparatory">Preparatory</SelectItem>
-                              <SelectItem value="special">Special</SelectItem>
+                              <SelectItem value="basic">Основная</SelectItem>
+                              <SelectItem value="preparatory">Подготовительная</SelectItem>
+                              <SelectItem value="special">Специальная</SelectItem>
                             </SelectContent>
                           </Select>
                           <FormMessage />
@@ -593,14 +593,14 @@ export default function UserManagement() {
                       name="groupId"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Group</FormLabel>
+                          <FormLabel>Группа</FormLabel>
                           <Select 
                             onValueChange={(value) => field.onChange(parseInt(value))} 
                             defaultValue={field.value?.toString()}
                           >
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue placeholder="Select group" />
+                                <SelectValue placeholder="Выберите группу" />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
@@ -625,9 +625,9 @@ export default function UserManagement() {
                       name="fullName"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Full Name</FormLabel>
+                          <FormLabel>Полное имя</FormLabel>
                           <FormControl>
-                            <Input placeholder="Enter full name" {...field} />
+                            <Input placeholder="Введите полное имя" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -638,9 +638,9 @@ export default function UserManagement() {
                       name="position"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Position</FormLabel>
+                          <FormLabel>Должность</FormLabel>
                           <FormControl>
-                            <Input placeholder="e.g., Senior Lecturer" {...field} />
+                            <Input placeholder="Введите должность" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -652,7 +652,7 @@ export default function UserManagement() {
                       name="phone"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Phone Number</FormLabel>
+                          <FormLabel>Номер телефона</FormLabel>
                           <FormControl>
                             <Input 
                               placeholder="+375291234567" 
@@ -667,7 +667,7 @@ export default function UserManagement() {
                               }}
                             />
                           </FormControl>
-                          <FormDescription>Format: +375*********</FormDescription>
+                          <FormDescription>Формат: +375*********</FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -677,16 +677,16 @@ export default function UserManagement() {
 
                 <DialogFooter>
                   <Button type="button" variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-                    Cancel
+                    Отмена
                   </Button>
                   <Button type="submit" disabled={createUserMutation.isPending}>
                     {createUserMutation.isPending ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Creating...
+                        Создание...
                       </>
                     ) : (
-                      'Create User'
+                      'Создать пользователя'
                     )}
                   </Button>
                 </DialogFooter>
@@ -699,17 +699,17 @@ export default function UserManagement() {
         <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+              <AlertDialogTitle>Вы уверены?</AlertDialogTitle>
               <AlertDialogDescription>
-                This will permanently delete the user account for{' '}
+                Это действие не может быть отменено и может повлиять на пользователя и его данные.
                 <span className="font-semibold">
                   {userToDelete?.fullName || userToDelete?.username}
                 </span>. 
-                This action cannot be undone.
+                Это действие не может быть отменено.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogCancel>Отмена</AlertDialogCancel>
               <AlertDialogAction
                 onClick={() => handleDeleteUser(userToDelete?.id)}
                 className="bg-red-600 hover:bg-red-700"
@@ -717,10 +717,10 @@ export default function UserManagement() {
                 {deleteUserMutation.isPending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Deleting...
+                    Удаление...
                   </>
                 ) : (
-                  'Delete User'
+                  'Удалить пользователя'
                 )}
               </AlertDialogAction>
             </AlertDialogFooter>
