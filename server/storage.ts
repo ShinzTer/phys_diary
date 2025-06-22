@@ -362,7 +362,13 @@ export class Storage implements IStorage {
   }
 
   async getUsersByRole(role: UserRole): Promise<User[]> {
+    
     return await this.db.select().from(users).where(eq(users.role, role));
+  }
+
+    async getUsers(): Promise<User[]> {
+   
+    return await this.db.select().from(users).orderBy(desc(users.id));
   }
 
   async createUser(userData: {
@@ -394,7 +400,9 @@ export class Storage implements IStorage {
   }
 
   async deleteUser(id: number): Promise<boolean> {
+    this.deleteStudent(id)
     const result = await this.db.delete(users).where(eq(users.id, id));
+   
     return result.rowCount !== null && result.rowCount > 0;
   }
 

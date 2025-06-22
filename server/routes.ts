@@ -29,7 +29,6 @@ import { parse } from "csv-parse";
 import fileUpload from "express-fileupload";
 import { eq } from "drizzle-orm";
 
-// Remove the custom interface since we're using the built-in Express types
 export async function registerRoutes(app: Express): Promise<Server> {
   // Add file upload middleware
   app.use(fileUpload());
@@ -83,7 +82,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // User management endpoints (admin only)
   app.get("/api/users/manage", async (req, res) => {
     try {
+  
+      const users = await storage.getUsers() ;
+      // Remove password field from each user
+      const safeUsers = users.map(user => {
+        const { password, ...userWithoutPassword } = user;
+        return userWithoutPassword;
+      });
+      res.json(safeUsers);
+    } catch (error) {
+      res.status(500).json({ message: "Error fetching users" });
+    }
+  });
+
+    app.get("/api/users", async (req, res) => {
+    try {
       const role = req.query.role ? req.query.role as UserRole : undefined;
+      console.log(role)
       const users = role ? await storage.getUsersByRole(role) : [];
       // Remove password field from each user
       const safeUsers = users.map(user => {
@@ -95,6 +110,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Error fetching users" });
     }
   });
+
 
     app.get("/api/student/users", async (req, res) => {
     try {
@@ -680,6 +696,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+   app.get("/api/physical-states-by-id/:sampleId", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const sampleId = parseInt(req.params.sampleId);
+      
+      const states = await storage.getPhysicalState(sampleId);
+      res.json(states);
+    } catch (error) {
+      res.status(500).json({ message: "Error fetching physical states" });
+    }
+  });
+
   app.get("/api/samples/all", async (req, res) => {
     try {
       if (!req.isAuthenticated()) {
@@ -708,6 +739,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       const teacherId = parseInt(req.params.teacherId);
       const states = req.user?.role !== "teacher" ? await storage.getPhysicalTests() : await storage.getPhysicalTestsByTeacher(teacherId) ;
+  
+      res.json(states);
+    } catch (error) {
+      res.status(500).json({ message: "Error fetching physical tests" });
+    }
+  });
+
+
+      app.get("/api/tests/all", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      if (req.user?.role !== "admin" && req.user?.role !== "teacher" ) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      const states = await storage.getPhysicalTests();
   
       res.json(states);
     } catch (error) {
@@ -1398,6 +1446,79 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(204).send();
     } catch (error) {
       res.status(500).json({ message: "Error deleting student" });
+    }
+  });
+
+
+    app.delete("/api/physical-states/:id", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      // Check if user is admin
+      if (req.user?.role !== "admin") {
+        return res.status(403).json({ message: "Access denied. Admin role required." });
+      }
+      
+      const id = parseInt(req.params.id);
+      const success = await storage.deletePhysicalState(id);
+      
+      if (!success) {
+        return res.status(404).json({ message: "Physical state not found" });
+      }
+      
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ message: "Error deleting student" });
+    }
+  });
+
+   app.delete("/api/physical-tests/:id", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      // Check if user is admin
+      if (req.user?.role !== "admin") {
+        return res.status(403).json({ message: "Access denied. Admin role required." });
+      }
+      
+      const id = parseInt(req.params.id);
+      const success = await storage.deletePhysicalTest(id);
+      
+      if (!success) {
+        return res.status(404).json({ message: "Physical state not found" });
+      }
+      
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ message: "Error deleting student" });
+    }
+  });
+
+  app.delete("/api/sport-results/:id", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      // Check if user is admin
+      if (req.user?.role !== "admin") {
+        return res.status(403).json({ message: "Access denied. Admin role required." });
+      }
+      
+      const id = parseInt(req.params.id);
+      const success = await storage.deleteSportResult(id);
+      
+      if (!success) {
+        return res.status(404).json({ message: "Sport result not found" });
+      }
+      
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ message: "Error deleting sport result" });
     }
   });
 

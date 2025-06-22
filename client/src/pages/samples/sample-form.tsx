@@ -5,7 +5,13 @@ import { queryClient } from "@/lib/queryClient";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { SAMPLE_TYPES } from "@shared/schema";
+import {
+  Period,
+  period,
+  PhysicalState,
+  SAMPLE_TYPES,
+  SAMPLE_TYPES_CAMEL,
+} from "@shared/schema";
 import MainLayout from "@/components/layout/main-layout";
 import { useLocation, useParams } from "wouter";
 import {
@@ -38,6 +44,7 @@ import {
 import { Loader2, Save, ArrowLeft } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { or } from "drizzle-orm";
 
 interface Student {
   id: number;
@@ -45,19 +52,26 @@ interface Student {
   fullName?: string;
 }
 
-interface SampleData {
-  studentId: number;
-  date: string;
-  notes: string | null;
-  [key: string]: any; // For dynamic sample type fields
-}
-
 // Form schema for sample creation/editing
 const sampleFormSchema = z.object({
-  userId: z.number(),
-  sampleType: z.string().min(1, "Sample type is required"),
-  value: z.string().min(1, "Value is required"),
-  notes: z.string().optional(),
+  studentId: z.number(),
+  date: z.string(),
+  height: z.number().optional(),
+  weight: z.number().optional(),
+  ketleIndex: z.string().optional(),
+  chestCircumference: z.string().optional(),
+  waistCircumference: z.string().optional(),
+  posture: z.string().optional(),
+  vitalCapacity: z.number().optional(),
+  handStrength: z.number().optional(),
+  orthostaticTest: z.string().optional(),
+  shtangeTest: z.number().optional(),
+  genchiTest: z.number().optional(),
+  martineTest: z.number().optional(),
+  heartRate: z.number().optional(),
+  bloodPressure: z.number().optional(),
+  pulsePressure: z.number().optional(),
+  periodId: z.number().optional(),
 });
 
 type SampleFormValues = z.infer<typeof sampleFormSchema>;
@@ -70,6 +84,18 @@ export default function SampleForm() {
   const isEdit = !!params.id;
   const sampleId = isEdit && params.id ? parseInt(params.id) : undefined;
 
+  // First get the user record to get the studentId
+  const { data: userRecord } = useQuery<any>({
+    queryKey: [`/api/users/${user?.id}/record`],
+    enabled: user?.role === "student" && !!user?.id,
+  });
+
+  // Then fetch student profile using the studentId
+  const { data: studentProfile } = useQuery<any>({
+    queryKey: [`/api/profile/student/${userRecord?.studentId}`],
+    enabled: !!userRecord?.studentId,
+  });
+
   // Fetch students for teacher/admin to select a student
   const { data: students = [], isLoading: isLoadingStudents } = useQuery<
     Student[]
@@ -78,42 +104,79 @@ export default function SampleForm() {
     enabled: user?.role !== "student",
   });
 
+  const { data: periods = [], isLoading: isLoadingPeriods } = useQuery<
+    Period[]
+  >({
+    queryKey: ["/api/periods"],
+    enabled: user?.role !== "student",
+  });
+
   // Fetch specific sample data when editing
-  const { data: sampleData, isLoading: isLoadingSample } = useQuery<SampleData>(
-    {
-      queryKey: [`/api/physical-states/${sampleId}`],
+  const { data: sampleData, isLoading: isLoadingSample } =
+    useQuery<PhysicalState>({
+      queryKey: [`/api/physical-states-by-id/${sampleId}`],
       enabled: !!isEdit && !!sampleId,
-    }
-  );
+    });
 
   // Setup form with default values
   const form = useForm<SampleFormValues>({
     resolver: zodResolver(sampleFormSchema),
     defaultValues: {
-      userId: user?.role === "student" ? user.id || 0 : 0,
-      sampleType: "",
-      value: "",
-      notes: "",
+      studentId: user?.role === "student" ? user.id || 0 : 0,
+      date: sampleData?.date || new Date().toISOString().split("T")[0],
+      height: sampleData?.height || 0,
+      weight: sampleData?.weight || 0,
+      ketleIndex: sampleData?.ketleIndex || "0",
+      chestCircumference: sampleData?.chestCircumference || "0",
+      waistCircumference: sampleData?.waistCircumference || "0",
+      posture: sampleData?.posture || "",
+      vitalCapacity: sampleData?.vitalCapacity || 0,
+      handStrength: sampleData?.handStrength || 0,
+      orthostaticTest: sampleData?.orthostaticTest || "0",
+      shtangeTest: sampleData?.shtangeTest || 0,
+      genchiTest: sampleData?.genchiTest || 0,
+      martineTest: sampleData?.martineTest || 0,
+      heartRate: sampleData?.heartRate || 0,
+      bloodPressure: sampleData?.bloodPressure || 0,
+      pulsePressure: sampleData?.pulsePressure || 0,
+      periodId: sampleData?.periodId || 0,
     },
   });
 
-  // Update form when edit data is loaded
+  // Update form when student profile or edit data is loaded
   useEffect(() => {
+    if (user?.role === "student" && sampleData) {
+      form.setValue("studentId", sampleData?.studentId);
+    }
+
     if (isEdit && sampleData) {
-      const sampleType = Object.keys(sampleData).find((key) =>
-        SAMPLE_TYPES.includes(key as any)
+      const testType = Object.keys(sampleData).find((key) =>
+        [...SAMPLE_TYPES_CAMEL].includes(key as any)
       );
 
-      if (sampleType) {
+      if (testType) {
         form.reset({
-          userId: sampleData.studentId,
-          sampleType: sampleType,
-          value: sampleData[sampleType]?.toString() || "",
-          notes: sampleData.notes || "",
+          studentId: user?.role === "student" ? user.id : sampleData.studentId,
+          date: sampleData?.date || new Date().toISOString().split("T")[0],
+          height: sampleData?.height || 0,
+          weight: sampleData?.weight || 0,
+          ketleIndex: sampleData?.ketleIndex || "0",
+          chestCircumference: sampleData?.chestCircumference || "0",
+          waistCircumference: sampleData?.waistCircumference || "0",
+          posture: sampleData?.posture || "",
+          vitalCapacity: sampleData?.vitalCapacity || 0,
+          handStrength: sampleData?.handStrength || 0,
+          orthostaticTest: sampleData?.orthostaticTest || "0",
+          shtangeTest: sampleData?.shtangeTest || 0,
+          genchiTest: sampleData?.genchiTest || 0,
+          martineTest: sampleData?.martineTest || 0,
+          heartRate: sampleData?.heartRate || 0,
+          bloodPressure: sampleData?.bloodPressure || 0,
+          pulsePressure: sampleData?.pulsePressure || 0,
         });
       }
     }
-  }, [isEdit, sampleData, form]);
+  }, [isEdit, sampleData, form, user?.role, studentProfile]);
 
   // Get formatted sample type display name
   const formatSampleType = (type: string) => {
@@ -127,15 +190,26 @@ export default function SampleForm() {
   const createSampleMutation = useMutation({
     mutationFn: async (data: SampleFormValues) => {
       // Create an empty state data object
-      const stateData: SampleData = {
-        studentId: user?.role === "student" ? user.id || 0 : data.userId,
-        date: new Date().toISOString().split("T")[0],
-        notes: data.notes || null,
+      const stateData: Omit<PhysicalState, "stateId"> = {
+        studentId: user?.role === "student" ? user.id || 0 : data.studentId,
+        date: data?.date || new Date().toISOString().split("T")[0],
+        height: data?.height || 0,
+        weight: data?.weight || 0,
+        ketleIndex: data?.ketleIndex || "0",
+        chestCircumference: data?.chestCircumference || "0",
+        waistCircumference: data?.waistCircumference || "0",
+        posture: data?.posture || "",
+        vitalCapacity: data?.vitalCapacity || 0,
+        handStrength: data?.handStrength || 0,
+        orthostaticTest: data?.orthostaticTest || "0",
+        shtangeTest: data?.shtangeTest || 0,
+        genchiTest: data?.genchiTest || 0,
+        martineTest: data?.martineTest || 0,
+        heartRate: data?.heartRate || 0,
+        bloodPressure: data?.bloodPressure || 0,
+        pulsePressure: data?.pulsePressure || 0,
+        periodId: data?.periodId || 0,
       };
-
-      // Add the specific sample type value
-      stateData[data.sampleType] = parseFloat(data.value) || data.value;
-
       await apiRequest("POST", "/api/physical-states", stateData);
     },
     onSuccess: () => {
@@ -145,8 +219,7 @@ export default function SampleForm() {
       queryClient.invalidateQueries({ queryKey: ["/api/physical-states"] });
       toast({
         title: "Проба записана",
-        description:
-          "Ваше физическое измерение успешно записано.",
+        description: "Ваше физическое измерение успешно записано.",
       });
       navigate("/samples");
     },
@@ -162,13 +235,26 @@ export default function SampleForm() {
   // Update sample mutation
   const updateSampleMutation = useMutation({
     mutationFn: async (data: SampleFormValues) => {
-      const stateData: SampleData = {
-        studentId: user?.role === "student" ? user.id || 0 : data.userId,
-        date: new Date().toISOString().split("T")[0],
-        notes: data.notes || null,
+      const stateData: Omit<PhysicalState, "stateId"> = {
+        studentId: user?.role === "student" ? user.id || 0 : data.studentId,
+        date: data?.date || new Date().toISOString().split("T")[0],
+        height: data?.height || 0,
+        weight: data?.weight || 0,
+        ketleIndex: data?.ketleIndex || "0",
+        chestCircumference: data?.chestCircumference || "0",
+        waistCircumference: data?.waistCircumference || "0",
+        posture: data?.posture || "",
+        vitalCapacity: data?.vitalCapacity || 0,
+        handStrength: data?.handStrength || 0,
+        orthostaticTest: data?.orthostaticTest || "0",
+        shtangeTest: data?.shtangeTest || 0,
+        genchiTest: data?.genchiTest || 0,
+        martineTest: data?.martineTest || 0,
+        heartRate: data?.heartRate || 0,
+        bloodPressure: data?.bloodPressure || 0,
+        pulsePressure: data?.pulsePressure || 0,
+        periodId: data?.periodId || 0,
       };
-
-      stateData[data.sampleType] = parseFloat(data.value) || data.value;
 
       await apiRequest("PUT", `/api/physical-states/${sampleId}`, stateData);
     },
@@ -253,7 +339,7 @@ export default function SampleForm() {
                 {user?.role !== "student" && (
                   <FormField
                     control={form.control}
-                    name="userId"
+                    name="studentId"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Студент</FormLabel>
@@ -281,7 +367,8 @@ export default function SampleForm() {
                           </SelectContent>
                         </Select>
                         <FormDescription>
-                          Выберите студента, для которого записывается это измерение
+                          Выберите студента, для которого записывается это
+                          измерение
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -289,66 +376,131 @@ export default function SampleForm() {
                   />
                 )}
 
-              
- <CardContent className="space-y-4 py-2">
-                {/* Табличный ввод */}
-                <div className="overflow-x-auto">
-                  <table className="w-full table-auto border border-gray-200 text-sm">
-                    <thead className="bg-muted">
-                      <tr>
-                        <th className="p-2 text-left">Название теста</th>
-                        <th className="p-2 text-left">Результат</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {[
-                        { name: "Рост", key: "height" },
-                        { name: "Вес", key: "weight" },
-                        { name: "Весоростовой индекс Кетле", key: "ketleIndex" },
-                          { name: "Окружность грудной клетки", key: "chestCircumference" },  
-                        { name: "Окружность талии", key: "waistCircumference" },
-                        { name: "Осанка", key: "posture" },
-                        { name: "Жизненная емкость легких", key: "vitalCapacity" },
-                        { name: "Сила кисти", key: "handStrength" },
-                        { name: "Ортостатическая проба", key: "orthostaticTest" },
-                        { name: "Проба Штанге", key: "shtangeTest" },
-                          { name: "Проба Генчи", key: "genchiTest" },
-                            { name: "Проба Мартине-Кушелевского", key: "martineTest" },
-                          { name: "Частота сердечных сокращений", key: "heartRate" },
-                          { name: "Артериальное давление", key: "bloodPressure" },
-                            { name: "Пульсовое давление", key: "pulsePressure" },
-                      ].map((test) => (
-                        <tr key={test.key} className="border-t border-gray-100">
-                          <td className="p-2 font-medium">{test.name}</td>
-                          <td className="p-2">
-                            <FormField
-                              control={form.control}
-                              name={test.key as keyof SampleFormValues}
-                              render={({ field }) => (
-                                <Input
-                                  type="number"
-                                  step={test.key === "longJump" ? "0.01" : "1"}
-                                  value={field.value ?? ""}
-                                  onChange={(e) => {
-                                    const inputValue = e.target.value;
-                                    field.onChange(
-                                      inputValue === ""
-                                        ? undefined
-                                        : Number(inputValue)
-                                    );
-                                  }}
-                                />
-                              )}
-                            />
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </CardContent>
-                
+                <FormField
+                  control={form.control}
+                  name="periodId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Период обучения</FormLabel>
+                      <Select
+                        onValueChange={(value) =>
+                          field.onChange(parseInt(value))
+                        }
+                        defaultValue={field.value.toString()}
+                        disabled={isEdit}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Выберите студента" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {periods?.map((period) => (
+                            <SelectItem
+                              key={period.periodId}
+                              value={period.periodId.toString()}
+                            >
+                              {period.periodOfStudy}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormDescription className="py-2">
+                        Выберите студента для записи результатов теста
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
+                <CardContent className="space-y-4 py-2">
+                  {/* Табличный ввод */}
+                  <div className="overflow-x-auto">
+                    <table className="w-full table-auto border border-gray-200 text-sm">
+                      <thead className="bg-muted">
+                        <tr>
+                          <th className="p-2 text-left">Название теста</th>
+                          <th className="p-2 text-left">Результат</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {[
+                          { name: "Рост", key: "height" },
+                          { name: "Вес", key: "weight" },
+                          {
+                            name: "Весоростовой индекс Кетле",
+                            key: "ketleIndex",
+                          },
+                          {
+                            name: "Окружность грудной клетки",
+                            key: "chestCircumference",
+                          },
+                          {
+                            name: "Окружность талии",
+                            key: "waistCircumference",
+                          },
+                          { name: "Осанка", key: "posture" },
+                          {
+                            name: "Жизненная емкость легких",
+                            key: "vitalCapacity",
+                          },
+                          { name: "Сила кисти", key: "handStrength" },
+                          {
+                            name: "Ортостатическая проба",
+                            key: "orthostaticTest",
+                          },
+                          { name: "Проба Штанге", key: "shtangeTest" },
+                          { name: "Проба Генчи", key: "genchiTest" },
+                          {
+                            name: "Проба Мартине-Кушелевского",
+                            key: "martineTest",
+                          },
+                          {
+                            name: "Частота сердечных сокращений",
+                            key: "heartRate",
+                          },
+                          {
+                            name: "Артериальное давление",
+                            key: "bloodPressure",
+                          },
+                          { name: "Пульсовое давление", key: "pulsePressure" },
+                        ].map((test) => (
+                          <tr
+                            key={test.key}
+                            className="border-t border-gray-100"
+                          >
+                            <td className="p-2 font-medium">{test.name}</td>
+                            <td className="p-2">
+                              <FormField
+                                control={form.control}
+                                name={test.key as keyof SampleFormValues}
+                                render={({ field }) => (
+                                  <Input
+                                    type={
+                                      test.key === "posture" ? "number" : "text"
+                                    }
+                                    step={
+                                      test.key === "longJump" ? "0.01" : "1"
+                                    }
+                                    value={field.value ?? ""}
+                                    onChange={(e) => {
+                                      const inputValue = e.target.value;
+                                      field.onChange(
+                                        inputValue === ""
+                                          ? undefined
+                                          : Number(inputValue)
+                                      );
+                                    }}
+                                  />
+                                )}
+                              />
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </CardContent>
               </CardContent>
               <CardFooter className="flex justify-between">
                 <Button

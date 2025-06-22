@@ -128,11 +128,9 @@ export default function UserManagement() {
   const [selectedRole, setSelectedRole] = useState<"admin" | "teacher" | "student">("student");
   
   // Fetch all users
-  const { data: usersResponse, isLoading } = useQuery<QueryResponse<User>>({
-    queryKey: ["/api/users"],
+  const { data: users, isLoading } = useQuery<User[]>({
+    queryKey: ["/api/users/manage"],
   });
-
-  const users = usersResponse?.data || [];
 
   // Fetch all groups for student creation
   const { data: groupsResponse } = useQuery<QueryResponse<Group>>({
@@ -168,10 +166,10 @@ export default function UserManagement() {
   // Delete user mutation
   const deleteUserMutation = useMutation({
     mutationFn: async (userId: number) => {
-      await apiRequest("DELETE", `/api/users/${userId}`);
+      await apiRequest("DELETE", `/api/users/manage/${userId}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/users/manage"] });
       toast({
         title: "User deleted",
         description: "The user has been successfully deleted."
@@ -223,7 +221,7 @@ export default function UserManagement() {
   }
 
   // Filter users based on search term and role filter
-  const filteredUsers = users.filter((u: User) => {
+  const filteredUsers = users?.filter((u: User) => {
     // const matchesSearch = 
     //   u.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
     //   (u.fullName && u.fullName.toLowerCase().includes(searchTerm.toLowerCase()));

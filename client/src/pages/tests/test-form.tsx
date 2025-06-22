@@ -152,7 +152,8 @@ console.log(testData)
       longJump: testData?.longJump ?? 0,
     },
   });
-console.log(studentProfile)
+
+  
   // Update form when student profile or edit data is loaded
   useEffect(() => {
     if (user?.role === "student" && testData  ) {

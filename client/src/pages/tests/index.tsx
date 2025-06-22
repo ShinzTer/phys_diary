@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import MainLayout from "@/components/layout/main-layout";
 import { Link, useLocation } from "wouter";
@@ -38,6 +38,7 @@ import {
   MoreHorizontal,
   ArrowUpDown,
   Star,
+  Trash,
 } from "lucide-react";
 import {
   TEST_TYPES,
@@ -51,6 +52,8 @@ import {
   Teacher,
 } from "@shared/schema";
 import { format } from "date-fns";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { toast } from "@/hooks/use-toast";
 
 export default function Tests() {
   const { user } = useAuth();
@@ -156,6 +159,63 @@ export default function Tests() {
         return <Badge>{grade}</Badge>;
     }
   };
+
+
+  const deleteTestMutation = useMutation({
+        mutationFn: async (id: number) => {
+    
+          await apiRequest("DELETE", `/api/physical-tests/${id}`);
+        },
+        onSuccess: () => {
+          queryClient.invalidateQueries({
+            queryKey: [user?.role === "student"
+          ? `/api/physical-tests/${user.id}`
+          : "/api/tests/all",],
+          });
+          toast({
+            title: "Физический тест удален",
+            description: "Физическое тест успешно удален.",
+          });
+       
+        },
+        onError: (error) => {
+          toast({
+            title: "Ошибка",
+            description: error.message || "Не удалось удалить физический тест",
+            variant: "destructive",
+          });
+        },
+      });
+    
+        const deleteSportResultMutation = useMutation({
+        mutationFn: async (id: number) => {
+    
+          await apiRequest("DELETE", `/api/sport-results/${id}`);
+        },
+        onSuccess: () => {
+          queryClient.invalidateQueries({
+            queryKey: [user?.role === "student"
+        ? `/api/sport-results/${user.id}`
+        : user?.role === "teacher"
+        ? `/api/sport-results-teacher/${teacherProfile?.teacher_id}/period/${periodFilter}`
+        : `/api/sport-results-period/${periodFilter}`,],
+          });
+          toast({
+            title: "Контрольное упражнение удалено",
+            description: "Колнтрольное упражнение успешно удалено.",
+          });
+       
+        },
+        onError: (error) => {
+          toast({
+            title: "Ошибка",
+            description: error.message || "Не удалось удалить контрольное упражнение",
+            variant: "destructive",
+          });
+        },
+      });
+
+      // Handle form submission
 
   return (
     <MainLayout>
@@ -377,6 +437,14 @@ export default function Tests() {
                                             <Pencil className="mr-2 h-4 w-4" />
                                             Редактировать
                                           </DropdownMenuItem>
+                                           <DropdownMenuItem
+                                            onClick={() =>
+                                              deleteTestMutation.mutate(test.testId)
+                                            }
+                                          >
+                                            <Trash className="mr-2 h-4 w-4" />
+                                            Удалить
+                                          </DropdownMenuItem>
                                           {user?.role === "teacher" && (
                                             <DropdownMenuItem
                                               onClick={() =>
@@ -513,6 +581,14 @@ export default function Tests() {
                                     <Pencil className="mr-2 h-4 w-4" />
                                     Edit
                                   </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                            onClick={() =>
+                                              deleteSportResultMutation.mutate(test.sportResultId)
+                                            }
+                                          >
+                                            <Trash className="mr-2 h-4 w-4" />
+                                            Удалить
+                                          </DropdownMenuItem>
                                   {user?.role === "teacher"  && (
                                     <DropdownMenuItem onClick={() => navigate(`/sport_resutls/edit/${test.sportResultId}?grade=true`)}>
                                       <Star className="mr-2 h-4 w-4" />
