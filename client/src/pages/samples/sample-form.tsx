@@ -46,10 +46,41 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { or } from "drizzle-orm";
 
+interface UserRecord {
+  studentId?: number;
+  teacherId?: number;
+}
+
+interface StudentProfile {
+  studentId: number;
+  fullName: string;
+}
+
 interface Student {
   id: number;
   username: string;
   fullName?: string;
+}
+
+interface SampleData {
+  studentId: number;
+  date: string;
+  height: number;
+  weight: number;
+  ketleIndex: number;
+  chestCircumference: string;
+  waistCircumference: number;
+  posture: string;
+  vitalCapacity: number;
+  handStrength: string;
+  orthostaticTest: number;
+  shtangeTest: number;
+  genchiTest: number;
+  martineTest: string;
+  heartRate: number;
+  bloodPressure: number;
+  pulsePressure: string;
+  periodId: number;
 }
 
 // Form schema for sample creation/editing
@@ -58,20 +89,20 @@ const sampleFormSchema = z.object({
   date: z.string(),
   height: z.number().optional(),
   weight: z.number().optional(),
-  ketleIndex: z.string().optional(),
+  ketleIndex: z.number().optional(),
   chestCircumference: z.string().optional(),
-  waistCircumference: z.string().optional(),
+  waistCircumference: z.number().optional(),
   posture: z.string().optional(),
   vitalCapacity: z.number().optional(),
-  handStrength: z.number().optional(),
-  orthostaticTest: z.string().optional(),
+  handStrength: z.string().optional(),
+  orthostaticTest: z.number().optional(),
   shtangeTest: z.number().optional(),
   genchiTest: z.number().optional(),
-  martineTest: z.number().optional(),
+  martineTest: z.string().optional(),
   heartRate: z.number().optional(),
   bloodPressure: z.number().optional(),
-  pulsePressure: z.number().optional(),
-  periodId: z.number().optional(),
+  pulsePressure: z.string().optional(),
+  periodId: z.number(),
 });
 
 type SampleFormValues = z.infer<typeof sampleFormSchema>;
@@ -91,9 +122,16 @@ export default function SampleForm() {
   });
 
   // Then fetch student profile using the studentId
-  const { data: studentProfile } = useQuery<any>({
+  const { data: studentProfile } = useQuery<StudentProfile>({
     queryKey: [`/api/profile/student/${userRecord?.studentId}`],
     enabled: !!userRecord?.studentId,
+  });
+
+  const { data: periods = [], isLoading: isLoadingPeriods } = useQuery<
+    Period[]
+  >({
+    queryKey: ["/api/periods"],
+    enabled: user?.role !== "student",
   });
 
   // Fetch students for teacher/admin to select a student
@@ -104,16 +142,8 @@ export default function SampleForm() {
     enabled: user?.role !== "student",
   });
 
-  const { data: periods = [], isLoading: isLoadingPeriods } = useQuery<
-    Period[]
-  >({
-    queryKey: ["/api/periods"],
-    enabled: user?.role !== "student",
-  });
-
   // Fetch specific sample data when editing
-  const { data: sampleData, isLoading: isLoadingSample } =
-    useQuery<PhysicalState>({
+  const { data: sampleData, isLoading: isLoadingSample } = useQuery<SampleData>({
       queryKey: [`/api/physical-states-by-id/${sampleId}`],
       enabled: !!isEdit && !!sampleId,
     });
@@ -123,23 +153,23 @@ export default function SampleForm() {
     resolver: zodResolver(sampleFormSchema),
     defaultValues: {
       studentId: user?.role === "student" ? user.id || 0 : 0,
-      date: sampleData?.date || new Date().toISOString().split("T")[0],
-      height: sampleData?.height || 0,
-      weight: sampleData?.weight || 0,
-      ketleIndex: sampleData?.ketleIndex || "0",
-      chestCircumference: sampleData?.chestCircumference || "0",
-      waistCircumference: sampleData?.waistCircumference || "0",
-      posture: sampleData?.posture || "",
-      vitalCapacity: sampleData?.vitalCapacity || 0,
-      handStrength: sampleData?.handStrength || 0,
-      orthostaticTest: sampleData?.orthostaticTest || "0",
-      shtangeTest: sampleData?.shtangeTest || 0,
-      genchiTest: sampleData?.genchiTest || 0,
-      martineTest: sampleData?.martineTest || 0,
-      heartRate: sampleData?.heartRate || 0,
-      bloodPressure: sampleData?.bloodPressure || 0,
-      pulsePressure: sampleData?.pulsePressure || 0,
-      periodId: sampleData?.periodId || 0,
+      date: new Date().toISOString().split("T")[0],
+      height: sampleData?.height ?? 0,
+      weight: sampleData?.weight ?? 0,
+      ketleIndex: sampleData?.ketleIndex ?? 0,
+      chestCircumference: sampleData?.chestCircumference ?? "0",
+      waistCircumference: sampleData?.waistCircumference ?? 0,
+      posture: sampleData?.posture ?? "",
+      vitalCapacity: sampleData?.vitalCapacity ?? 0,
+      handStrength: sampleData?.handStrength ?? "0",
+      orthostaticTest: sampleData?.orthostaticTest ?? 0,
+      shtangeTest: sampleData?.shtangeTest ?? 0,
+      genchiTest: sampleData?.genchiTest ?? 0,
+      martineTest: sampleData?.martineTest ?? "0",
+      heartRate: sampleData?.heartRate ?? 0,
+      bloodPressure: sampleData?.bloodPressure ?? 0,
+      pulsePressure: sampleData?.pulsePressure ?? "0",
+      periodId: sampleData?.periodId ?? 0,
     },
   });
 
@@ -156,23 +186,23 @@ export default function SampleForm() {
 
       if (testType) {
         form.reset({
-          studentId: user?.role === "student" ? user.id : sampleData.studentId,
-          date: sampleData?.date || new Date().toISOString().split("T")[0],
-          height: sampleData?.height || 0,
-          weight: sampleData?.weight || 0,
-          ketleIndex: sampleData?.ketleIndex || "0",
-          chestCircumference: sampleData?.chestCircumference || "0",
-          waistCircumference: sampleData?.waistCircumference || "0",
-          posture: sampleData?.posture || "",
-          vitalCapacity: sampleData?.vitalCapacity || 0,
-          handStrength: sampleData?.handStrength || 0,
-          orthostaticTest: sampleData?.orthostaticTest || "0",
-          shtangeTest: sampleData?.shtangeTest || 0,
-          genchiTest: sampleData?.genchiTest || 0,
-          martineTest: sampleData?.martineTest || 0,
-          heartRate: sampleData?.heartRate || 0,
-          bloodPressure: sampleData?.bloodPressure || 0,
-          pulsePressure: sampleData?.pulsePressure || 0,
+          studentId: user?.role === "student" ? user.id : (sampleData.studentId),
+          date: new Date().toISOString().split("T")[0],
+          height: sampleData.height ?? 0,
+          weight: sampleData.weight ?? 0,
+          ketleIndex: sampleData.ketleIndex ?? 0,
+          chestCircumference: sampleData.chestCircumference ?? "0",
+          waistCircumference: sampleData.waistCircumference ?? 0,
+          posture: sampleData.posture ?? "",
+          vitalCapacity: sampleData.vitalCapacity ?? 0,
+          handStrength: sampleData.handStrength ?? "0",
+          orthostaticTest: sampleData.orthostaticTest ?? 0,
+          shtangeTest: sampleData.shtangeTest ?? 0,
+          genchiTest: sampleData.genchiTest ?? 0,
+          martineTest: sampleData.martineTest ?? "0",
+          heartRate: sampleData.heartRate ?? 0,
+          bloodPressure: sampleData.bloodPressure ?? 0,
+          pulsePressure: sampleData.pulsePressure ?? "0",
         });
       }
     }
@@ -189,28 +219,45 @@ export default function SampleForm() {
   // Create sample mutation
   const createSampleMutation = useMutation({
     mutationFn: async (data: SampleFormValues) => {
-      // Create an empty state data object
-      const stateData: Omit<PhysicalState, "stateId"> = {
+      let studentId: number;
+      console.log(data)
+      if (user?.role === "student") {
+        if (!studentProfile?.studentId) {
+          throw new Error(
+            "Профиль студента не найден. Обратитесь к администратору."
+          );
+        }
+        studentId = studentProfile.studentId;
+      } else {
+        studentId = data.studentId;
+      }
+
+      if (!studentId) {
+        throw new Error("Требуется ID студента");
+      }
+
+      // Create sample data object
+      const sampleData: SampleData = {
         studentId: user?.role === "student" ? user.id || 0 : data.studentId,
-        date: data?.date || new Date().toISOString().split("T")[0],
-        height: data?.height || 0,
-        weight: data?.weight || 0,
-        ketleIndex: data?.ketleIndex || "0",
-        chestCircumference: data?.chestCircumference || "0",
-        waistCircumference: data?.waistCircumference || "0",
-        posture: data?.posture || "",
-        vitalCapacity: data?.vitalCapacity || 0,
-        handStrength: data?.handStrength || 0,
-        orthostaticTest: data?.orthostaticTest || "0",
-        shtangeTest: data?.shtangeTest || 0,
-        genchiTest: data?.genchiTest || 0,
-        martineTest: data?.martineTest || 0,
-        heartRate: data?.heartRate || 0,
-        bloodPressure: data?.bloodPressure || 0,
-        pulsePressure: data?.pulsePressure || 0,
-        periodId: data?.periodId || 0,
+        date: new Date().toISOString().split("T")[0],
+        height: data.height ?? 0,
+        weight: data.weight ?? 0,
+        ketleIndex: data.ketleIndex ?? 0,
+        chestCircumference: data.chestCircumference ?? "0",
+        waistCircumference: data.waistCircumference ?? 0,
+        posture: data.posture ?? "",
+        vitalCapacity: data.vitalCapacity ?? 0,
+        handStrength: data.handStrength ?? "0",
+        orthostaticTest: data.orthostaticTest ?? 0,
+        shtangeTest: data.shtangeTest ?? 0,
+        genchiTest: data.genchiTest ?? 0,
+        martineTest: data.martineTest ?? "0",
+        heartRate: data.heartRate ?? 0,
+        bloodPressure: data.bloodPressure ?? 0,
+        pulsePressure: data.pulsePressure ?? "0",
+        periodId: data.periodId,
       };
-      await apiRequest("POST", "/api/physical-states", stateData);
+      await apiRequest("POST", "/api/physical-states", sampleData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -235,28 +282,43 @@ export default function SampleForm() {
   // Update sample mutation
   const updateSampleMutation = useMutation({
     mutationFn: async (data: SampleFormValues) => {
-      const stateData: Omit<PhysicalState, "stateId"> = {
+      let studentId: number;
+   console.log(studentProfile)
+      if (user?.role === "student") {
+        if (!studentProfile?.studentId) {
+          throw new Error("Профиль студента не найден");
+        }
+        studentId = studentProfile.studentId;
+      } else {
+        studentId = data.studentId;
+      }
+
+      if (!studentId) {
+        throw new Error("Требуется ID студента");
+      }
+
+      const sampleData: SampleData = {
         studentId: user?.role === "student" ? user.id || 0 : data.studentId,
-        date: data?.date || new Date().toISOString().split("T")[0],
-        height: data?.height || 0,
-        weight: data?.weight || 0,
-        ketleIndex: data?.ketleIndex || "0",
-        chestCircumference: data?.chestCircumference || "0",
-        waistCircumference: data?.waistCircumference || "0",
-        posture: data?.posture || "",
-        vitalCapacity: data?.vitalCapacity || 0,
-        handStrength: data?.handStrength || 0,
-        orthostaticTest: data?.orthostaticTest || "0",
-        shtangeTest: data?.shtangeTest || 0,
-        genchiTest: data?.genchiTest || 0,
-        martineTest: data?.martineTest || 0,
-        heartRate: data?.heartRate || 0,
-        bloodPressure: data?.bloodPressure || 0,
-        pulsePressure: data?.pulsePressure || 0,
-        periodId: data?.periodId || 0,
+        date: new Date().toISOString().split("T")[0],
+        height: data.height ?? 0,
+        weight: data.weight ?? 0,
+        ketleIndex: data.ketleIndex ?? 0,
+        chestCircumference: data.chestCircumference ?? "0",
+        waistCircumference: data.waistCircumference ?? 0,
+        posture: data.posture ?? "",
+        vitalCapacity: data.vitalCapacity ?? 0,
+        handStrength: data.handStrength ?? "0",
+        orthostaticTest: data.orthostaticTest ?? 0,
+        shtangeTest: data.shtangeTest ?? 0,
+        genchiTest: data.genchiTest ?? 0,
+        martineTest: data.martineTest ?? "0",
+        heartRate: data.heartRate ?? 0,
+        bloodPressure: data.bloodPressure ?? 0,
+        pulsePressure: data.pulsePressure ?? "0",
+        periodId: data.periodId,
       };
 
-      await apiRequest("PUT", `/api/physical-states/${sampleId}`, stateData);
+      await apiRequest("PUT", `/api/physical-states/${sampleId}`, sampleData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -465,13 +527,12 @@ export default function SampleForm() {
                               render={({ field }) => (
                                 <Input
                                   type="number"
-                                  step={test.key === "longJump" ? "0.01" : "1"}
                                   value={field.value ?? ""}
                                   onChange={(e) => {
                                     const inputValue = e.target.value;
                                     field.onChange(
                                       inputValue === ""
-                                        ? undefined
+                                        ? String(inputValue)
                                         : Number(inputValue)
                                     );
                                   }}

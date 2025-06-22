@@ -35,7 +35,7 @@ import {
   ArrowUpDown,
   Trash
 } from "lucide-react";
-import { Period, PhysicalState, SAMPLE_TYPES, Student } from "@shared/schema";
+import { Period, PhysicalState, SAMPLE_TYPES, Student, Teacher } from "@shared/schema";
 import { format } from "date-fns";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { toast } from "@/hooks/use-toast";
@@ -43,13 +43,19 @@ import { toast } from "@/hooks/use-toast";
 export default function Samples() {
   const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
-  const [sampleTypeFilter, setSampleTypeFilter] = useState<string>("all");
   const [periodFilter, setPeriodFilter] = useState<string>("all");
+  const { data: teacherProfile, isLoading: isLoadingTeacherProfile } =
+    useQuery<Teacher>({
+      queryKey: [`/api/profile/teacher/${user?.id}`],
+      enabled: user?.role === "teacher",
+    });
   const { data: samples, isLoading } = useQuery<PhysicalState[]>({
     queryKey: [
       user?.role === "student"
         ? `/api/physical-states/${user.id}`
-        : "/api/samples/all",
+        : user?.role === "teacher"
+        ? `/api/samples/all/${teacherProfile?.teacherId}`
+        : "api/samples/all",
     ],
   });
 

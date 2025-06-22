@@ -197,12 +197,12 @@ export default function Tests() {
             queryKey: [user?.role === "student"
         ? `/api/sport-results/${user.id}`
         : user?.role === "teacher"
-        ? `/api/sport-results-teacher/${teacherProfile?.teacher_id}/period/${periodFilter}`
+        ? `/api/sport-results-teacher/${teacherProfile?.teacherId}/period/${periodFilter}`
         : `/api/sport-results-period/${periodFilter}`,],
           });
           toast({
             title: "Контрольное упражнение удалено",
-            description: "Колнтрольное упражнение успешно удалено.",
+            description: "Контрольное упражнение успешно удалено.",
           });
        
         },
