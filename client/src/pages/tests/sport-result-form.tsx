@@ -150,7 +150,7 @@ console.log(testData?.basketballFreethrow)
   const form = useForm<TestFormValues>({
     resolver: zodResolver(testFormSchema),
     defaultValues: {
-      studentId: testData?.studentId ?? 0,
+      studentId: user?.role === "student" ? user.id : (testData?.studentId ?? 0),
       periodId: testData?.periodId ?? 0,
       basketballFreethrow: testData?.basketballFreethrow ?? 0,
       basketballDribble: testData?.basketballDribble ?? 0,
@@ -180,7 +180,7 @@ console.log(testData?.basketballFreethrow)
         console.log(testData)
       if (testType) {
         form.reset({
-          studentId: testData.studentId,
+          studentId: user?.role === "student" ? user.id : (testData.studentId),
           periodId: testData.periodId,
         basketballFreethrow: testData?.basketballFreethrow ?? 0,
         basketballDribble: testData?.basketballDribble ?? 0,
@@ -268,7 +268,7 @@ console.log(testData?.basketballFreethrow)
     onSuccess: () => {
       const studentId =
         user?.role === "student"
-          ? studentProfile?.studentId
+          ? user?.id
           : form.getValues("studentId");
       queryClient.invalidateQueries({
         queryKey: [`/api/sport-results/${studentId}`],

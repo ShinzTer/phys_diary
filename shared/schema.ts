@@ -307,6 +307,22 @@ export const SAMPLE_TYPES = [
   "pulse_pressure"
 ] as const;
 
+export const SAMPLE_TYPES_CAMEL= [
+  "height",
+  "weight",
+  "ketleIndex",
+  "chestCircumference",
+  "waistCircumference",
+  "posture",
+  "vitalCapacity",
+  "handStrength",
+  "orthostaticTest",
+  "shtangeTest",
+  "martineTest",
+  "heartRate",
+  "bloodPressure",
+  "pulsePressure"
+] as const;
 // Base profile schema for common fields
 export const baseProfileSchema = z.object({
   fullName: z.string().min(1, "Full name is required"),

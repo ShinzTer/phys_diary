@@ -451,56 +451,42 @@ export default function SampleForm() {
                           },
                           { name: "Проба Штанге", key: "shtangeTest" },
                           { name: "Проба Генчи", key: "genchiTest" },
-                          {
-                            name: "Проба Мартине-Кушелевского",
-                            key: "martineTest",
-                          },
-                          {
-                            name: "Частота сердечных сокращений",
-                            key: "heartRate",
-                          },
-                          {
-                            name: "Артериальное давление",
-                            key: "bloodPressure",
-                          },
-                          { name: "Пульсовое давление", key: "pulsePressure" },
-                        ].map((test) => (
-                          <tr
-                            key={test.key}
-                            className="border-t border-gray-100"
-                          >
-                            <td className="p-2 font-medium">{test.name}</td>
-                            <td className="p-2">
-                              <FormField
-                                control={form.control}
-                                name={test.key as keyof SampleFormValues}
-                                render={({ field }) => (
-                                  <Input
-                                    type={
-                                      test.key === "posture" ? "number" : "text"
-                                    }
-                                    step={
-                                      test.key === "longJump" ? "0.01" : "1"
-                                    }
-                                    value={field.value ?? ""}
-                                    onChange={(e) => {
-                                      const inputValue = e.target.value;
-                                      field.onChange(
-                                        inputValue === ""
-                                          ? undefined
-                                          : Number(inputValue)
-                                      );
-                                    }}
-                                  />
-                                )}
-                              />
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </CardContent>
+                            { name: "Проба Мартине-Кушелевского", key: "martineTest" },
+                          { name: "Частота сердечных сокращений", key: "heartRate" },
+                          { name: "Артериальное давление", key: "bloodPressure" },
+                            { name: "Пульсовое давление", key: "pulsePressure" },
+                      ].map((test) => (
+                        <tr key={test.key} className="border-t border-gray-100">
+                          <td className="p-2 font-medium">{test.name}</td>
+                          <td className="p-2">
+                            <FormField
+                              control={form.control}
+                              name={test.key as keyof SampleFormValues}
+                              render={({ field }) => (
+                                <Input
+                                  type="number"
+                                  step={test.key === "longJump" ? "0.01" : "1"}
+                                  value={field.value ?? ""}
+                                  onChange={(e) => {
+                                    const inputValue = e.target.value;
+                                    field.onChange(
+                                      inputValue === ""
+                                        ? undefined
+                                        : Number(inputValue)
+                                    );
+                                  }}
+                                />
+                              )}
+                            />
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+                
+
               </CardContent>
               <CardFooter className="flex justify-between">
                 <Button
