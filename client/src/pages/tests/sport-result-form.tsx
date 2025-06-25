@@ -98,6 +98,7 @@ const testFormSchema = z.object({
   // grade: z.string().optional(),
   // notes: z.string().optional(),
 });
+console.log(testFormSchema)
 
 type TestFormValues = z.infer<typeof testFormSchema>;
 
@@ -173,11 +174,11 @@ console.log(testData?.basketballFreethrow)
       volleyballUpperPass: testData?.volleyballUpperPass ?? 0,
       volleyballLowerPass: testData?.volleyballLowerPass ?? 0,
       volleyballServe: testData?.volleyballServe ?? 0,
-      swimming25m: Number(testData?.swimming25m ?? 0),
-      swimming50m: Number(testData?.swimming50m ?? 0),
-      swimming100m: Number(testData?.swimming100m ?? 0),
-      running100m: Number(testData?.running100m ?? 0),
-      running500m1000m: Number(testData?.running500m1000m ?? 0),
+      swimming25m: testData?.swimming25m ?? 0,
+      swimming50m: testData?.swimming50m ?? 0,
+      swimming100m: testData?.swimming100m ?? 0,
+      running100m: testData?.running100m ?? 0,
+      running500m1000m: testData?.running500m1000m ?? 0,
     },
   });
 
@@ -203,11 +204,11 @@ console.log(testData?.basketballFreethrow)
         volleyballUpperPass: testData?.volleyballUpperPass ?? 0,
         volleyballLowerPass: testData?.volleyballLowerPass ?? 0,
         volleyballServe: testData?.volleyballServe ?? 0,
-        swimming25m: Number(testData?.swimming25m ?? 0),
-        swimming50m: Number(testData?.swimming50m ?? 0),
-        swimming100m: Number(testData?.swimming100m ?? 0),
-        running100m: Number(testData?.running100m ?? 0),
-        running500m1000m: Number(testData?.running500m1000m ?? 0),
+        swimming25m: testData?.swimming25m ?? 0,
+        swimming50m: testData?.swimming50m ?? 0,
+        swimming100m: testData?.swimming100m ?? 0,
+        running100m: testData?.running100m ?? 0,
+        running500m1000m: testData?.running500m1000m ?? 0,
         });
       }
     }
@@ -270,11 +271,11 @@ console.log(testData?.basketballFreethrow)
       volleyballUpperPass: data?.volleyballUpperPass ?? 0,
       volleyballLowerPass: data?.volleyballLowerPass ?? 0,
       volleyballServe: data?.volleyballServe ?? 0,
-      swimming25m: Number(data?.swimming25m ?? 0),
-      swimming50m: Number(data?.swimming50m ?? 0),
-      swimming100m: Number(data?.swimming100m ?? 0),
-      running100m: Number(data?.running100m ?? 0),
-      running500m1000m: Number(data?.running500m1000m ?? 0),
+      swimming25m: data?.swimming25m ?? 0,
+      swimming50m: data?.swimming50m ?? 0,
+      swimming100m: data?.swimming100m ?? 0,
+      running100m: data?.running100m ?? 0,
+      running500m1000m: data?.running500m1000m ?? 0,
       };
 
       await apiRequest("POST", "/api/sport-results", resultData);
@@ -331,11 +332,11 @@ console.log(testData?.basketballFreethrow)
         volleyballUpperPass: data?.volleyballUpperPass ?? 0,
         volleyballLowerPass: data?.volleyballLowerPass ?? 0,
         volleyballServe: data?.volleyballServe ?? 0,
-        swimming25m: Number(data?.swimming25m ?? 0),
-        swimming50m: Number(data?.swimming50m ?? 0),
-        swimming100m: Number(data?.swimming100m ?? 0),
-        running100m: Number(data?.running100m ?? 0),
-        running500m1000m: Number(data?.running500m1000m ?? 0),
+        swimming25m: data?.swimming25m ?? 0,
+        swimming50m: data?.swimming50m ?? 0,
+        swimming100m: data?.swimming100m ?? 0,
+        running100m: data?.running100m ?? 0,
+        running500m1000m: data?.running500m1000m ?? 0,
       };
 
       await apiRequest("PUT", `/api/sport-results/${testId}`, resultData);
@@ -370,15 +371,6 @@ console.log(testData?.basketballFreethrow)
   function onSubmit(data: TestFormValues) {
     // Клонируем данные, чтобы не мутировать оригинал
     const newData = { ...data };
-    if (typeof newData.swimming50m === "string") {
-      newData.swimming50m = parseTimeToMs(newData.swimming50m);
-    }
-    if (typeof newData.swimming100m === "string") {
-      newData.swimming100m = parseTimeToMs(newData.swimming100m);
-    }
-    if (typeof newData.running500m1000m === "string") {
-      newData.running500m1000m = parseTimeToMs(newData.running500m1000m);
-    }
     if (isEdit) {
       updateTestMutation.mutate(newData);
     } else {
@@ -535,18 +527,18 @@ console.log(testData?.basketballFreethrow)
                       <tbody>
                         {/* Каждое поле с нужным форматом и названием */}
                         {[ 
-                          { name: "Штрафные броски", key: "basketballFreethrow", inputProps: { type: "number", min: 1, max: 5, step: 1 } },
+                          { name: "Штрафные броски (кол-во попаданий из 5 попыток)", key: "basketballFreethrow", inputProps: { type: "number", min: 1, max: 5, step: 1 } },
                           { name: "Двухшажная техника (кол-во попаданий из 5 попыток)", key: "basketballDribble", inputProps: { type: "number", min: 1, max: 5, step: 1 } },
-                          { name: "Техника быстрого ведения мяча, с", key: "basketballLeading", inputProps: { type: "number", step: 0.01, min: 0 } },
+                          { name: "Техника быстрого ведения мяча, с", key: "basketballLeading", inputProps: { type: "number", step: 0.1, min: 0 } },
                           { name: "Передача мяча двумя руками над собой (кол-во раз)", key: "volleyballSoloPass", inputProps: { type: "number", step: 1, min: 1 } },
                           { name: "Верхняя передача мяча в парах (кол-во передач)", key: "volleyballUpperPass", inputProps: { type: "number", step: 1, min: 1 } },
                           { name: "Нижняя передача мяча в парах (кол-во передач)", key: "volleyballLowerPass", inputProps: { type: "number", step: 1, min: 1 } },
                           { name: "Верхняя подача мяча через сетку (юноши), Верхняя, нижняя, боковая подача мяча через сетку (девушки) (кол-во подач через сетку)", key: "volleyballServe", inputProps: { type: "number", min: 1, max: 5, step: 1 } },
                           { name: "Плавание 25 м, с", key: "swimming25m", inputProps: { type: "number", step: 0.1, min: 0 } },
-                          { name: "Плавание 50 м, с", key: "swimming50m", inputProps: { type: "text", placeholder: "мм.сс", pattern: "^[0-9]{1}\.[0-9]{2},[0-9]{1}$" } },
-                          { name: "Плавание 100 м", key: "swimming100m", inputProps: { type: "text", placeholder: "мм.сс", pattern: "^[0-9]{1}\.[0-9]{2},[0-9]{1}$" } },
+                          { name: "Плавание 50 м, с", key: "swimming50m", inputProps: { type: "number", step: 0.1, min: 0 } },
+                          { name: "Плавание 100 м", key: "swimming100m", inputProps: { type: "number", step: 0.1, min: 0 } },
                           { name: "Бег 100 м, с", key: "running100m", inputProps: { type: "number", step: 0.1, min: 0 } },
-                          { name: "Бег 500 (девушки)/1000 м (юноши)", key: "running500m1000m", inputProps: { type: "text", placeholder: "мм.сс", pattern: "^[0-9]{1}\.[0-9]{2},[0-9]{1}$" } },
+                          { name: "Бег 500 (девушки)/1000 м (юноши)", key: "running500m1000m", inputProps: { type: "number", step: 0.1, min: 0 } },
                         ].map((test) => (
                           <tr key={test.key} className="border-t border-gray-100">
                             <td className="p-2 font-medium">{test.name}</td>
@@ -562,10 +554,8 @@ console.log(testData?.basketballFreethrow)
                                       const inputValue = e.target.value;
                                       field.onChange(
                                         inputValue === ""
-                                          ? undefined
-                                          : test.inputProps.type === "number"
-                                            ? Number(inputValue)
-                                            : inputValue
+                                        ? String(inputValue)
+                                        : Number(inputValue)
                                       );
                                     }}
                                   />
