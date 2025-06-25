@@ -71,7 +71,7 @@ export default function Tests() {
       user?.role === "student"
         ? `/api/physical-tests/${user.id}`
         : user?.role === "teacher"
-        ? `/api/tests/all/${teacherProfile?.teacher_id}`
+        ? `/api/tests/all/${teacherProfile?.teacherId}`
         : "api/tests/all",
     ],
   });
@@ -85,7 +85,7 @@ export default function Tests() {
       user?.role === "student"
         ? `/api/sport-results/${user.id}`
         : user?.role === "teacher"
-        ? `/api/sport-results-teacher/${teacherProfile?.teacher_id}/period/${periodFilter}`
+        ? `/api/sport-results-teacher/${teacherProfile?.teacherId}/period/${periodFilter}`
         : `/api/sport-results-period/${periodFilter}`,
     ],
     enabled: periodFilter !== "all",
@@ -286,331 +286,343 @@ export default function Tests() {
               </div>
             </div>
           </CardHeader>
-          {periodFilter === "all" ? (
-            <div className="text-center py-12">
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
-                Выберите период
-              </h3>
-              <p className="text-gray-500 max-w-md mx-auto">
-                Пожалуйста, выберите период из фильтров для просмотра записей.
-              </p>
-            </div>
-          ) : (
-            <Tabs
-              defaultValue="tests"
-              value={activeTab}
-              onValueChange={setActiveTab}
-            >
-              <TabsList>
-                <TabsTrigger value="tests">Физические тесты</TabsTrigger>
-                <TabsTrigger value="exercises">
-                  Контрольные упражнения
-                </TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="tests" className="m-0">
-                <div className="text-center py-16">
-                  <CardContent>
-                    {isLoading ? (
-                      <div className="flex justify-center items-center h-64">
-                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                      </div>
-                    ) : (
-                      <>
-                        {!filteredTests || filteredTests.length === 0 ? (
-                          <div className="text-center py-12">
-                            <p className="text-gray-500 mb-4">
-                              Не найдено записей тестов.
-                            </p>
-                            <Link href="/tests/new">
-                              <Button>
-                                <Plus className="mr-2 h-4 w-4" />
-                                Записать новый тест
-                              </Button>
-                            </Link>
-                          </div>
-                        ) : (
-                          <div className="overflow-x-auto">
-                            <table className="w-full">
-                              <thead>
-                                <tr className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                  <th className="px-4 py-3">Студент</th>
-                                  <th className="px-4 py-3">Дата</th>
-                                  <th className="px-4 py-3">Период</th>
-                                  <th className="px-4 py-3">Отжимания</th>
-                                  <th className="px-4 py-3">Подтягивания</th>
-                                  <th className="px-4 py-3">
-                                    Удержание ног над полом
-                                  </th>
-                                  <th className="px-4 py-3">Теппинг–тест</th>
-                                  <th className="px-4 py-3">Бег на месте</th>
-                                  <th className="px-4 py-3">Планка</th>
-                                  <th className="px-4 py-3">
-                                    Наклон вперед из положения сидя
-                                  </th>
-                                  <th className="px-4 py-3">Прыжок в длину</th>
-
-                                  {/* <th className="px-4 py-3">
-                            <div className="flex items-center">
-                              Grade
-                              <ArrowUpDown className="ml-2 h-3 w-3" />
+          <Tabs
+            defaultValue="tests"
+            value={activeTab}
+            onValueChange={setActiveTab}
+          >
+            <TabsList>
+              <TabsTrigger value="tests">Физические тесты</TabsTrigger>
+              <TabsTrigger value="exercises">Контрольные упражнения</TabsTrigger>
+            </TabsList>
+            <TabsContent value="tests" className="m-0">
+              {periodFilter === "all" ? (
+                <div className="text-center py-12">
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                    Выберите период
+                  </h3>
+                  <p className="text-gray-500 max-w-md mx-auto">
+                    Пожалуйста, выберите период из фильтров для просмотра записей.
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <div className="text-center py-16">
+                    <CardContent>
+                      {isLoading ? (
+                        <div className="flex justify-center items-center h-64">
+                          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                        </div>
+                      ) : (
+                        <>
+                          {!filteredTests || filteredTests.length === 0 ? (
+                            <div className="text-center py-12">
+                              <p className="text-gray-500 mb-4">
+                                Не найдено записей тестов.
+                              </p>
+                              <Link href="/tests/new">
+                                <Button>
+                                  <Plus className="mr-2 h-4 w-4" />
+                                  Записать новый тест
+                                </Button>
+                              </Link>
                             </div>
-                          </th>
-                          <th className="px-4 py-3">Notes</th> */}
-                                  <th className="px-4 py-3 text-right">
-                                    Действия
-                                  </th>
-                                </tr>
-                              </thead>
-                              <tbody className="divide-y divide-gray-200">
-                                {filteredTests?.map((test) => (
-                                  <tr key={test.testId}>
-                                    <td className="px-4 py-4 whitespace-nowrap font-medium">
-                                      {user?.role === "student"
-                                        ? user?.username
-                                        : students.find(
-                                            (student) =>
-                                              student.userId === test.studentId
-                                          )?.fullName || "Unknown"}
-                                    </td>
-                                    <td className="px-4 py-4 whitespace-nowrap">
-                                      {test.date
-                                        ? format(
-                                            new Date(test.date),
-                                            "dd.MM.yyyy"
-                                          )
-                                        : "-"}
-                                    </td>
-                                    <td className="px-4 py-4 whitespace-nowrap text-sm">
-                                      {periods.find(
-                                        (period) =>
-                                          period.periodId === test.periodId
-                                      )?.periodOfStudy || "-"}
-                                    </td>
-                                    <td className="px-4 py-4 whitespace-nowrap">
-                                      {test.pushUps || "-"}
-                                    </td>
-                                    <td className="px-4 py-4 whitespace-nowrap">
-                                      {test.pullUps || "-"}
-                                    </td>
-                                    <td className="px-4 py-4 whitespace-nowrap">
-                                      {test.legHold || "-"}
-                                    </td>
-                                    <td className="px-4 py-4 whitespace-nowrap">
-                                      {test.tappingTest || "-"}
-                                    </td>
-                                    <td className="px-4 py-4 whitespace-nowrap">
-                                      {test.runningInPlace || "-"}
-                                    </td>
-                                    <td className="px-4 py-4 whitespace-nowrap">
-                                      {test.forwardBend || "-"}
-                                    </td>
-                                    <td className="px-4 py-4 whitespace-nowrap">
-                                      {test.plank || "-"}
-                                    </td>
-                                    <td className="px-4 py-4 whitespace-nowrap">
-                                      {test.longJump || "-"}
-                                    </td>
+                          ) : (
+                            <div className="overflow-x-auto">
+                              <table className="w-full">
+                                <thead>
+                                  <tr className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <th className="px-4 py-3">Студент</th>
+                                    <th className="px-4 py-3">Дата</th>
+                                    <th className="px-4 py-3">Период</th>
+                                    <th className="px-4 py-3">Отжимания</th>
+                                    <th className="px-4 py-3">Подтягивания</th>
+                                    <th className="px-4 py-3">
+                                      Удержание ног над полом
+                                    </th>
+                                    <th className="px-4 py-3">Теппинг–тест</th>
+                                    <th className="px-4 py-3">Бег на месте</th>
+                                    <th className="px-4 py-3">Планка</th>
+                                    <th className="px-4 py-3">
+                                      Наклон вперед из положения сидя
+                                    </th>
+                                    <th className="px-4 py-3">Прыжок в длину</th>
 
-                                    <td className="px-4 py-4 whitespace-nowrap text-right">
-                                      <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                          <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            className="h-8 w-8 p-0"
-                                          >
-                                            <MoreHorizontal className="h-4 w-4" />
-                                          </Button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent align="end">
-                                          <DropdownMenuLabel>
-                                            Действия
-                                          </DropdownMenuLabel>
-                                          <DropdownMenuItem
-                                            onClick={() =>
-                                              navigate(
-                                                `/tests/edit/${test.testId}`
-                                              )
-                                            }
-                                          >
-                                            <Pencil className="mr-2 h-4 w-4" />
-                                            Редактировать
-                                          </DropdownMenuItem>
-                                           <DropdownMenuItem
-                                            onClick={() =>
-                                              deleteTestMutation.mutate(test.testId)
-                                            }
-                                          >
-                                            <Trash className="mr-2 h-4 w-4" />
-                                            Удалить
-                                          </DropdownMenuItem>
-                                          {user?.role === "teacher" && (
+                                    {/* <th className="px-4 py-3">
+                              <div className="flex items-center">
+                                Grade
+                                <ArrowUpDown className="ml-2 h-3 w-3" />
+                              </div>
+                            </th>
+                            <th className="px-4 py-3">Notes</th> */}
+                                    <th className="px-4 py-3 text-right">
+                                      Действия
+                                    </th>
+                                  </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-200">
+                                  {filteredTests?.map((test) => (
+                                    <tr key={test.testId}>
+                                      <td className="px-4 py-4 whitespace-nowrap font-medium">
+                                        {user?.role === "student"
+                                          ? user?.username
+                                          : students.find(
+                                              (student) =>
+                                                student.userId === test.studentId
+                                            )?.fullName || "Unknown"}
+                                      </td>
+                                      <td className="px-4 py-4 whitespace-nowrap">
+                                        {test.date
+                                          ? format(
+                                              new Date(test.date),
+                                              "dd.MM.yyyy"
+                                            )
+                                          : "-"}
+                                      </td>
+                                      <td className="px-4 py-4 whitespace-nowrap text-sm">
+                                        {periods.find(
+                                          (period) =>
+                                            period.periodId === test.periodId
+                                        )?.periodOfStudy || "-"}
+                                      </td>
+                                      <td className="px-4 py-4 whitespace-nowrap">
+                                        {test.pushUps || "-"}
+                                      </td>
+                                      <td className="px-4 py-4 whitespace-nowrap">
+                                        {test.pullUps || "-"}
+                                      </td>
+                                      <td className="px-4 py-4 whitespace-nowrap">
+                                        {test.legHold || "-"}
+                                      </td>
+                                      <td className="px-4 py-4 whitespace-nowrap">
+                                        {test.tappingTest || "-"}
+                                      </td>
+                                      <td className="px-4 py-4 whitespace-nowrap">
+                                        {test.runningInPlace || "-"}
+                                      </td>
+                                      <td className="px-4 py-4 whitespace-nowrap">
+                                        {test.forwardBend || "-"}
+                                      </td>
+                                      <td className="px-4 py-4 whitespace-nowrap">
+                                        {test.plank || "-"}
+                                      </td>
+                                      <td className="px-4 py-4 whitespace-nowrap">
+                                        {test.longJump || "-"}
+                                      </td>
+
+                                      <td className="px-4 py-4 whitespace-nowrap text-right">
+                                        <DropdownMenu>
+                                          <DropdownMenuTrigger asChild>
+                                            <Button
+                                              variant="ghost"
+                                              size="sm"
+                                              className="h-8 w-8 p-0"
+                                            >
+                                              <MoreHorizontal className="h-4 w-4" />
+                                            </Button>
+                                          </DropdownMenuTrigger>
+                                          <DropdownMenuContent align="end">
+                                            <DropdownMenuLabel>
+                                              Действия
+                                            </DropdownMenuLabel>
                                             <DropdownMenuItem
                                               onClick={() =>
                                                 navigate(
-                                                  `/tests/edit/${test.testId}?grade=true`
+                                                  `/tests/edit/${test.testId}`
                                                 )
                                               }
                                             >
-                                              <Star className="mr-2 h-4 w-4" />
-                                              Выставить оценку
+                                              <Pencil className="mr-2 h-4 w-4" />
+                                              Редактировать
                                             </DropdownMenuItem>
-                                          )}
-                                        </DropdownMenuContent>
-                                      </DropdownMenu>
-                                    </td>
-                                  </tr>
-                                ))}
-                              </tbody>
-                            </table>
-                          </div>
-                        )}
-                      </>
-                    )}
-                  </CardContent>
-                </div>
-              </TabsContent>
-              <TabsContent value="exercises" className="m-0">
-              <div className="text-center py-16">
-               <CardContent>
-            {isLoading ? (
-              <div className="flex justify-center items-center h-64">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              </div>
-            ) : (
-              <>
-                {(!filteredSportResults || filteredSportResults.length === 0) ? (
-                  <div className="text-center py-12">
-                    <p className="text-gray-500 mb-4">Не найдено записей тестов.</p>
-                    <Link href="/sport_results/new">
-                      <Button>
-                        <Plus className="mr-2 h-4 w-4" />
-                        Записать новое контрольное упражнение 
-                      </Button>
-                    </Link>
-                  </div>
-                ) : (
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead>
-                        <tr className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        
-                          <th className="px-4 py-3">Студент</th>
-                          <th className="px-4 py-3">Период</th>
-                          <th className="px-4 py-3">Штрафные броски</th>
-                          <th className="px-4 py-3">Двухшажная техника</th>
-                          <th className="px-4 py-3">Техника быстрого ведения мяча</th>
-                          <th className="px-4 py-3">Передача мяча двумя руками над собой</th>
-                          <th className="px-4 py-3">Верхняя передача мяча в парах</th>
-                          <th className="px-4 py-3">Нижняя передача мяча в парах</th>
-                          <th className="px-4 py-3">Верхняя подача мяча через сетку (юноши).
-                                                    Верхняя, нижняя, боковая подача мяча через сетку (девушки)</th>
-                          <th className="px-4 py-3">Плавание 25 м</th>
-                          <th className="px-4 py-3">Плавание 50 м</th>
-                          <th className="px-4 py-3">Плавание 100 м</th>
-                          <th className="px-4 py-3">Бег 100 м</th>
-                          <th className="px-4 py-3">Бег 500/1000 м</th>
-
-                                  {/* <th className="px-4 py-3">
-                            <div className="flex items-center">
-                              Grade
-                              <ArrowUpDown className="ml-2 h-3 w-3" />
+                                            <DropdownMenuItem
+                                              onClick={() =>
+                                                deleteTestMutation.mutate(test.testId)
+                                              }
+                                            >
+                                              <Trash className="mr-2 h-4 w-4" />
+                                              Удалить
+                                            </DropdownMenuItem>
+                                            {user?.role === "teacher" && (
+                                              <DropdownMenuItem
+                                                onClick={() =>
+                                                  navigate(
+                                                    `/tests/edit/${test.testId}?grade=true`
+                                                  )
+                                                }
+                                              >
+                                                <Star className="mr-2 h-4 w-4" />
+                                                Выставить оценку
+                                              </DropdownMenuItem>
+                                            )}
+                                          </DropdownMenuContent>
+                                        </DropdownMenu>
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
                             </div>
-                          </th>
-                          <th className="px-4 py-3">Notes</th> */}
-                          <th className="px-4 py-3 text-right">Действия</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-200">
-                        {filteredSportResults?.map((test) => (
-                          <tr key={test.sportResultId}>
-                            <td className="px-4 py-4 whitespace-nowrap font-medium">
-                              {students.find((student) => student.userId === test.studentId)?.fullName || 'Unknown'}
-                            </td>
-                           
-                            <td className="px-4 py-4 whitespace-nowrap text-sm">
-                              {periods.find((period) => period.periodId === test.periodId)?.periodOfStudy || '-'}
-                            </td>
-                            <td className="px-4 py-4 whitespace-nowrap">
-                              {test.basketballFreethrow || '-'}
-                            </td>
-                              <td className="px-4 py-4 whitespace-nowrap">
-                              {test.basketballDribble || '-'}
-                            </td>
-                              <td className="px-4 py-4 whitespace-nowrap">
-                              {test.basketballLeading || '-'}
-                            </td>
-                              <td className="px-4 py-4 whitespace-nowrap">
-                              {test.volleyballSoloPass || '-'}
-                            </td>
-                              <td className="px-4 py-4 whitespace-nowrap">
-                              {test.volleyballUpperPass || '-'}
-                            </td>
-                              <td className="px-4 py-4 whitespace-nowrap">
-                              {test.volleyballLowerPass || '-'}
-                            </td>
-                              <td className="px-4 py-4 whitespace-nowrap">
-                              {test.volleyballServe || '-'}
-                            </td>
-                              <td className="px-4 py-4 whitespace-nowrap">
-                              {test.swimming25m || '-'}
-                            </td>
-                             <td className="px-4 py-4 whitespace-nowrap">
-                              {test.swimming50m || '-'}
-                            </td>
-                             <td className="px-4 py-4 whitespace-nowrap">
-                              {test.swimming100m || '-'}
-                            </td>
-                             <td className="px-4 py-4 whitespace-nowrap">
-                              {test.running100m || '-'}
-                            </td>
-                            <td className="px-4 py-4 whitespace-nowrap">
-                              {test.running500m1000m || '-'}
-                            </td>
-                            <td className="px-4 py-4 whitespace-nowrap text-right">
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                                    <MoreHorizontal className="h-4 w-4" />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                  <DropdownMenuLabel>Действия</DropdownMenuLabel>
-                                  <DropdownMenuItem onClick={() => navigate(`/sport_results/edit/${test.sportResultId}`)}>
-                                    <Pencil className="mr-2 h-4 w-4" />
-                                    Edit
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem
-                                            onClick={() =>
-                                              deleteSportResultMutation.mutate(test.sportResultId)
-                                            }
-                                          >
-                                            <Trash className="mr-2 h-4 w-4" />
-                                            Удалить
-                                          </DropdownMenuItem>
-                                  {user?.role === "teacher"  && (
-                                    <DropdownMenuItem onClick={() => navigate(`/sport_resutls/edit/${test.sportResultId}?grade=true`)}>
-                                      <Star className="mr-2 h-4 w-4" />
-                                      Выставить оценку
-                                    </DropdownMenuItem>
-                                  )}
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                          )}
+                        </>
+                      )}
+                    </CardContent>
                   </div>
-                )}
-              </>
-            )}
-          </CardContent>
-              </div>
+                </>
+              )}
             </TabsContent>
-           </Tabs> 
-           )}
+            <TabsContent value="exercises" className="m-0">
+              {periodFilter === "all" ? (
+                <div className="text-center py-12">
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                    Выберите период
+                  </h3>
+                  <p className="text-gray-500 max-w-md mx-auto">
+                    Пожалуйста, выберите период из фильтров для просмотра записей.
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <div className="text-center py-16">
+                    <CardContent>
+                      {isLoading ? (
+                        <div className="flex justify-center items-center h-64">
+                          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                        </div>
+                      ) : (
+                        <>
+                          {(!filteredSportResults || filteredSportResults.length === 0) ? (
+                            <div className="text-center py-12">
+                              <p className="text-gray-500 mb-4">Не найдено записей тестов.</p>
+                              <Link href="/sport_results/new">
+                                <Button>
+                                  <Plus className="mr-2 h-4 w-4" />
+                                  Записать новое контрольное упражнение 
+                                </Button>
+                              </Link>
+                            </div>
+                          ) : (
+                            <div className="overflow-x-auto">
+                              <table className="w-full">
+                                <thead>
+                                  <tr className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                  
+                                    <th className="px-4 py-3">Студент</th>
+                                    <th className="px-4 py-3">Период</th>
+                                    <th className="px-4 py-3">Штрафные броски</th>
+                                    <th className="px-4 py-3">Двухшажная техника</th>
+                                    <th className="px-4 py-3">Техника быстрого ведения мяча</th>
+                                    <th className="px-4 py-3">Передача мяча двумя руками над собой</th>
+                                    <th className="px-4 py-3">Верхняя передача мяча в парах</th>
+                                    <th className="px-4 py-3">Нижняя передача мяча в парах</th>
+                                    <th className="px-4 py-3">Верхняя подача мяча через сетку (юноши).
+                                                                  Верхняя, нижняя, боковая подача мяча через сетку (девушки)</th>
+                                    <th className="px-4 py-3">Плавание 25 м</th>
+                                    <th className="px-4 py-3">Плавание 50 м</th>
+                                    <th className="px-4 py-3">Плавание 100 м</th>
+                                    <th className="px-4 py-3">Бег 100 м</th>
+                                    <th className="px-4 py-3">Бег 500/1000 м</th>
+
+                                    {/* <th className="px-4 py-3">
+                              <div className="flex items-center">
+                                Grade
+                                <ArrowUpDown className="ml-2 h-3 w-3" />
+                              </div>
+                            </th>
+                            <th className="px-4 py-3">Notes</th> */}
+                                    <th className="px-4 py-3 text-right">Действия</th>
+                                  </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-200">
+                                  {filteredSportResults?.map((test) => (
+                                    <tr key={test.sportResultId}>
+                                      <td className="px-4 py-4 whitespace-nowrap font-medium">
+                                        {students.find((student) => student.userId === test.studentId)?.fullName || 'Unknown'}
+                                      </td>
+                                    
+                                      <td className="px-4 py-4 whitespace-nowrap text-sm">
+                                        {periods.find((period) => period.periodId === test.periodId)?.periodOfStudy || '-'}
+                                      </td>
+                                      <td className="px-4 py-4 whitespace-nowrap">
+                                        {test.basketballFreethrow || '-'}
+                                      </td>
+                                        <td className="px-4 py-4 whitespace-nowrap">
+                                        {test.basketballDribble || '-'}
+                                      </td>
+                                        <td className="px-4 py-4 whitespace-nowrap">
+                                        {test.basketballLeading || '-'}
+                                      </td>
+                                        <td className="px-4 py-4 whitespace-nowrap">
+                                        {test.volleyballSoloPass || '-'}
+                                      </td>
+                                        <td className="px-4 py-4 whitespace-nowrap">
+                                        {test.volleyballUpperPass || '-'}
+                                      </td>
+                                        <td className="px-4 py-4 whitespace-nowrap">
+                                        {test.volleyballLowerPass || '-'}
+                                      </td>
+                                        <td className="px-4 py-4 whitespace-nowrap">
+                                        {test.volleyballServe || '-'}
+                                      </td>
+                                        <td className="px-4 py-4 whitespace-nowrap">
+                                        {test.swimming25m || '-'}
+                                      </td>
+                                        <td className="px-4 py-4 whitespace-nowrap">
+                                          {test.swimming50m || '-'}
+                                        </td>
+                                        <td className="px-4 py-4 whitespace-nowrap">
+                                          {test.swimming100m || '-'}
+                                        </td>
+                                        <td className="px-4 py-4 whitespace-nowrap">
+                                          {test.running100m || '-'}
+                                        </td>
+                                      <td className="px-4 py-4 whitespace-nowrap">
+                                        {test.running500m1000m || '-'}
+                                      </td>
+                                      <td className="px-4 py-4 whitespace-nowrap text-right">
+                                        <DropdownMenu>
+                                          <DropdownMenuTrigger asChild>
+                                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                              <MoreHorizontal className="h-4 w-4" />
+                                            </Button>
+                                          </DropdownMenuTrigger>
+                                          <DropdownMenuContent align="end">
+                                            <DropdownMenuLabel>Действия</DropdownMenuLabel>
+                                            <DropdownMenuItem onClick={() => navigate(`/sport_results/edit/${test.sportResultId}`)}>
+                                              <Pencil className="mr-2 h-4 w-4" />
+                                              Edit
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem
+                                              onClick={() =>
+                                                deleteSportResultMutation.mutate(test.sportResultId)
+                                              }
+                                            >
+                                              <Trash className="mr-2 h-4 w-4" />
+                                              Удалить
+                                            </DropdownMenuItem>
+                                            {user?.role === "teacher"  && (
+                                              <DropdownMenuItem onClick={() => navigate(`/sport_resutls/edit/${test.sportResultId}?grade=true`)}>
+                                                <Star className="mr-2 h-4 w-4" />
+                                                Выставить оценку
+                                              </DropdownMenuItem>
+                                            )}
+                                          </DropdownMenuContent>
+                                        </DropdownMenu>
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </CardContent>
+                  </div>
+                </>
+              )}
+            </TabsContent>
+          </Tabs>
         </Card>
       </div>
     </MainLayout>

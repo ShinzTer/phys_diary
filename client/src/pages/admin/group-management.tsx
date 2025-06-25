@@ -65,9 +65,9 @@ import React from "react";
 
 // Group form schema
 const groupFormSchema = z.object({
-  name: z.string().min(1, "Group name is required"),
-  facultyId: z.string().min(1, "Faculty is required"),
-  teacherId: z.string().min(1, "Teacher is required"),
+  name: z.string().min(1, "Название группы является обязательным"),
+  facultyId: z.string().min(1, "Факультет является обязательным"),
+  teacherId: z.string().min(1, "Преподаватель является обязательным"),
 });
 
 type GroupFormValues = z.infer<typeof groupFormSchema>;
@@ -148,16 +148,16 @@ export default function GroupManagement() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/groups"] });
       toast({
-        title: "Group created",
-        description: "The group has been successfully created."
+        title: "Группа создана",
+        description: "Группа успешно создана."
       });
       setIsCreateDialogOpen(false);
       createForm.reset();
     },
     onError: (error) => {
       toast({
-        title: "Error",
-        description: error.message || "Failed to create group",
+        title: "Ошибка",
+        description: error.message || "Не удалось создать группу",
         variant: "destructive"
       });
     }
@@ -175,15 +175,15 @@ export default function GroupManagement() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/groups"] });
       toast({
-        title: "Group updated",
-        description: "The group has been successfully updated."
+        title: "Группа обновлена",
+        description: "Группа успешно обновлена."
       });
       setIsEditDialogOpen(false);
     },
     onError: (error) => {
       toast({
-        title: "Error",
-        description: error.message || "Failed to update group",
+        title: "Ошибка",
+        description: error.message || "Не удалось обновить группу",
         variant: "destructive"
       });
     }
@@ -197,15 +197,15 @@ export default function GroupManagement() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/groups"] });
       toast({
-        title: "Group deleted",
-        description: "The group has been successfully deleted."
+        title: "Группа удалена",
+        description: "Группа успешно удалена."
       });
       setIsDeleteDialogOpen(false);
     },
     onError: (error) => {
       toast({
-        title: "Error",
-        description: error.message || "Failed to delete group",
+        title: "Ошибка",
+        description: error.message || "Не удалось удалить группу",
         variant: "destructive"
       });
     }

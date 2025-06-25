@@ -227,6 +227,23 @@ export class Storage implements IStorage {
       )
     `);
 
+    await this.db.execute(`
+      INSERT INTO period (period_of_study) 
+      VALUES 
+        ('Начало первого курса'),
+        ('1 семестр'),
+        ('2 семестр'),
+        ('Начало второго курса'),
+        ('3 семестр'),
+        ('4 семестр'),
+        ('Начало третьего курса'),
+        ('5 семестр'),
+        ('6 семестр'),
+        ('Начало четвёртого курса'),
+        ('7 семестр'),
+        ('8 семестр')
+    `);
+
     // Check if we have any users, if not, create default users
     const existingUsers = await this.db.select().from(users);
 

@@ -87,32 +87,32 @@ interface QueryResponse<T> {
 
 // User creation form schema
 const baseUserSchema = z.object({
-  username: z.string().min(3, "Username must be at least 3 characters"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
+  username: z.string().min(3, "Логин должен быть не менее 3 символов"),
+  password: z.string().min(6, "Пароль должен быть не менее 6 символов"),
   role: z.enum(["admin", "teacher", "student"]),
 });
 
 const studentUserSchema = baseUserSchema.extend({
-  fullName: z.string().min(1, "Full name is required"),
+  fullName: z.string().min(1, "ФИО является обязательным"),
   gender: z.enum(["male", "female", "other"], {
-    required_error: "Gender is required",
+    required_error: "Пол является обязательным",
   }),
-  dateOfBirth: z.string().min(1, "Date of birth is required"),
+  dateOfBirth: z.string().min(1, "Дата рождения является обязательной"),
   phone: z.string()
-    .regex(/^\+375\d{9}$/, "Phone number must be in format: +375*********"),
+    .regex(/^\+375\d{9}$/, "Номер телефона должен быть в формате: +375*********"),
   medicalGroup: z.enum(["basic", "preparatory", "special"], {
-    required_error: "Medical group is required",
+    required_error: "Медицинская группа является обязательной",
   }),
   groupId: z.number({
-    required_error: "Group is required",
+    required_error: "Группа является обязательной",
   }),
 });
 
 const teacherUserSchema = baseUserSchema.extend({
-  fullName: z.string().min(1, "Full name is required"),
-  position: z.string().min(1, "Position is required"),
+  fullName: z.string().min(1, "ФИО является обязательным"),
+  position: z.string().min(1, "Должность является обязательной"),
   phone: z.string()
-    .regex(/^\+375\d{9}$/, "Phone number must be in format: +375*********"),
+    .regex(/^\+375\d{9}$/, "Номер телефона должен быть в формате: +375*********"),
 });
 
 type UserFormValues = z.infer<typeof studentUserSchema> | z.infer<typeof teacherUserSchema> | z.infer<typeof baseUserSchema>;
@@ -137,8 +137,8 @@ export default function UserManagement() {
     queryKey: ["/api/groups", { forRegistration: true }],
     enabled: selectedRole === "student",
   });
-
-  const groups = groupsResponse?.data || [];
+console.log(groupsResponse)
+  const groups = groupsResponse || [];
 
   // Create user mutation
   const createUserMutation = useMutation({
@@ -148,16 +148,16 @@ export default function UserManagement() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
       toast({
-        title: "User created",
-        description: "The user has been successfully created."
+        title: "Пользователь создан",
+        description: "Пользователь успешно создан."
       });
       setIsCreateDialogOpen(false);
       form.reset();
     },
     onError: (error) => {
       toast({
-        title: "Error",
-        description: error.message || "Failed to create user",
+        title: "Ошибка",
+        description: error.message || "Не удалось создать пользователя",
         variant: "destructive"
       });
     }
@@ -171,15 +171,15 @@ export default function UserManagement() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/users/manage"] });
       toast({
-        title: "User deleted",
-        description: "The user has been successfully deleted."
+        title: "Пользователь удален",
+        description: "Пользователь успешно удален."
       });
       setIsDeleteDialogOpen(false);
     },
     onError: (error) => {
       toast({
-        title: "Error",
-        description: error.message || "Failed to delete user",
+        title: "Ошибка",
+        description: error.message || "Не удалось удалить пользователя",
         variant: "destructive"
       });
     }

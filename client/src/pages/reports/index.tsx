@@ -39,6 +39,7 @@ import {
   PhysicalTest,
   TEST_TYPES_CAMEL,
   Period,
+  CONTROL_EXERCISE_TYPES_CAMEL,
 } from "@shared/schema";
 import { format, subDays } from "date-fns";
 
@@ -87,6 +88,22 @@ interface UserData {
   username: string;
   fullName?: string;
 }
+
+// Массив соответствия ключей и русских названий контрольных упражнений
+const CONTROL_EXERCISE_LABELS = [
+  { name: "Штрафные броски", key: "basketballFreethrow" },
+  { name: "Двухшажная техника", key: "basketballDribble" },
+  { name: "Техника быстрого ведения мяча", key: "basketballLeading" },
+  { name: "Передача мяча двумя руками над собой", key: "volleyballSoloPass" },
+  { name: "Верхняя передача мяча в парах", key: "volleyballUpperPass" },
+  { name: "Нижняя передача мяча в парах", key: "volleyballLowerPass" },
+  { name: "Верхняя подача мяча через сетку (юноши).\nВерхняя, нижняя, боковая подача мяча через сетку (девушки)", key: "volleyballServe" },
+  { name: "Плавание 25 м", key: "swimming25m" },
+  { name: "Плавание 50 м", key: "swimming50m" },
+  { name: "Плавание 100 м", key: "swimming100m" },
+  { name: "Бег 100 м", key: "running100m" },
+  { name: "Бег 500 (девушки)\n1000 м (юноши)", key: "running500m1000m" },
+];
 
 export default function Reports() {
   const { user } = useAuth();
@@ -179,9 +196,23 @@ const filteredTests = tests?.filter(test => test.periodId === Number(selectedDat
     enabled: selectedUser !== "" && selectedUser !== "all",
   });
 
+  // Добавляю запрос sport results для выбранного студента
+  const { data: sportResults, isLoading: isLoadingSportResults } = useQuery<any[]>({
+    queryKey: ["/api/sport-results", selectedUser],
+    enabled: selectedUser !== "" && selectedUser !== "all",
+    queryFn: async () => {
+      const res = await fetch(`/api/sport-results/${selectedUser}`, {
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Не удалось получить контрольные упражнения");
+      return res.json();
+    },
+  });
+
   const isLoading =
     isLoadingTests ||
     isLoadingSamples ||
+    isLoadingSportResults ||
     (selectedUser !== "" && selectedUser !== "all" && !userData);
 
   // Format test type display name
@@ -202,21 +233,43 @@ const filteredTests = tests?.filter(test => test.periodId === Number(selectedDat
   }).join('');
 };
 
-  // Helper function to get random performance data (for demonstration)
-  const getPerformanceData = () => {
-    // We'll create fake data based on the test types
-    return TEST_TYPES_CAMEL.map((testType) => {
-      if (filteredTests) {
-      // Generate random value between 60 and 100
-      const value = filteredTests[0]?.[testType] ? filteredTests[0]?.[testType] : 0;
-     
-      return {
-        name: formatTestType(testType),
-        value,
-      };
+  // Временная функция преобразования результата в оценку (1-10)
+  function getScoreForExercise(key: string, value: any): number {
+    if (value == null || value === "") return 0;
+    // ВРЕМЕННО: чем меньше значение, тем выше оценка (для времени)
+    // Для бросков/очков — наоборот
+    // TODO: заменить на реальные таблицы
+    const num = parseFloat(value);
+    if (isNaN(num)) return 0;
+    // Пример: для беговых/плавательных — меньше = лучше
+    if (["swimming25m", "swimming50m", "swimming100m", "running100m", "running500m1000m"].includes(key)) {
+      if (num <= 10) return 10;
+      if (num <= 12) return 9;
+      if (num <= 14) return 8;
+      if (num <= 16) return 7;
+      if (num <= 18) return 6;
+      if (num <= 20) return 5;
+      if (num <= 22) return 4;
+      if (num <= 24) return 3;
+      if (num <= 26) return 2;
+      return 1;
     }
+    // Для бросков и техники — больше = лучше
+    return Math.max(1, Math.min(10, Math.round(num / 2)));
+  }
+
+  // Новый getPerformanceData для sport results
+  const getPerformanceData = () => {
+    if (!sportResults || sportResults.length === 0) return CONTROL_EXERCISE_LABELS.map(({ name }) => ({ name, value: 0 }));
+    // Берём последний результат (или можно средний)
+    const lastResult = sportResults[sportResults.length - 1];
+    return CONTROL_EXERCISE_LABELS.map(({ name, key }) => {
+      const value = lastResult?.[key] ?? null;
+      return {
+        name,
+        value: getScoreForExercise(key, value),
+      };
     });
-  
   };
 
   // Generate medical group distribution data
@@ -240,9 +293,9 @@ const filteredTests = tests?.filter(test => test.periodId === Number(selectedDat
     });
 
     return [
-      { name: "Basic", value: counts.basic },
-      { name: "Preparatory", value: counts.preparatory },
-      { name: "Special", value: counts.special },
+      { name: "Основная", value: counts.basic },
+      { name: "Подготовительная", value: counts.preparatory },
+      { name: "Специальная", value: counts.special },
     ];
   };
 
@@ -498,12 +551,7 @@ const filteredTests = tests?.filter(test => test.periodId === Number(selectedDat
                       Анализ производительности
                     </SelectItem>
                     <SelectItem value="progress">Прогресс по времени</SelectItem>
-                    <SelectItem value="medical">
-                      Распределение по медицинским группам
-                    </SelectItem>
-                    <SelectItem value="samples">
-                      Физические измерения
-                    </SelectItem>
+                    <SelectItem value="samples">Физические измерения</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -542,8 +590,6 @@ const filteredTests = tests?.filter(test => test.periodId === Number(selectedDat
                   "Test performance analysis across different exercises"}
                 {selectedReportType === "progress" &&
                   "Student progress over time"}
-                {selectedReportType === "medical" &&
-                  "Distribution of students by medical group"}
                 {selectedReportType === "samples" &&
                   "Physical measurement trends"}
               </CardDescription>
@@ -571,7 +617,7 @@ const filteredTests = tests?.filter(test => test.periodId === Number(selectedDat
                       {selectedReportType === "performance" && (
                         <div>
                           <h3 className="text-lg font-medium mb-4">
-                            Производительность по типу теста
+                            Производительность по контрольным упражнениям
                           </h3>
                           <div className="h-80">
                             <ResponsiveContainer width="100%" height="100%">
@@ -586,12 +632,12 @@ const filteredTests = tests?.filter(test => test.periodId === Number(selectedDat
                               >
                                 <CartesianGrid strokeDasharray="3 3" />
                                 <XAxis dataKey="name" />
-                                <YAxis domain={[0, 100]} />
+                                <YAxis domain={[0, 10]} />
                                 <Tooltip />
                                 <Legend />
                                 <Bar
                                   dataKey="value"
-                                  name="Оценка производительности"
+                                  name="Оценка (1-10)"
                                   fill="#1565C0"
                                 />
                               </ReBarChart>
@@ -600,10 +646,7 @@ const filteredTests = tests?.filter(test => test.periodId === Number(selectedDat
                           <div className="mt-6">
                             <h4 className="font-medium mb-2">Сводка</h4>
                             <p className="text-gray-600">
-                              Этот график показывает производительность студента
-                              по разным физическим тестам. Более высокие оценки
-                              указывают на лучшую производительность по сравнению
-                              со стандартами для возраста и пола студента.
+                              Этот график показывает оценки студента по контрольным упражнениям (1 — худший, 10 — лучший результат). Таблицы соответствия будут настроены позже.
                             </p>
                           </div>
                         </div>
@@ -669,52 +712,6 @@ const filteredTests = tests?.filter(test => test.periodId === Number(selectedDat
                               по разным физическим тестам. Более высокие оценки
                               указывают на лучшую производительность по сравнению
                               со стандартами для возраста и пола студента.
-                            </p>
-                          </div>
-                        </div>
-                      )}
-
-                      {selectedReportType === "medical" && (
-                        <div>
-                          <h3 className="text-lg font-medium mb-4">
-                            Распределение по медицинским группам
-                          </h3>
-                          <div className="h-80">
-                            <ResponsiveContainer width="100%" height="100%">
-                              <RePieChart>
-                                <Pie
-                                  data={getMedicalGroupData()}
-                                  cx="50%"
-                                  cy="50%"
-                                  labelLine={true}
-                                  outerRadius={80}
-                                  fill="#8884d8"
-                                  dataKey="value"
-                                  label={({ name, percent }) =>
-                                    `${name}: ${(percent * 100).toFixed(0)}%`
-                                  }
-                                >
-                                  {getMedicalGroupData().map((entry, index) => (
-                                    <Cell
-                                      key={`cell-${index}`}
-                                      fill={COLORS[index % COLORS.length]}
-                                    />
-                                  ))}
-                                </Pie>
-                                <Tooltip />
-                                <Legend />
-                              </RePieChart>
-                            </ResponsiveContainer>
-                          </div>
-                          <div className="mt-6">
-                            <h4 className="font-medium mb-2">
-                              Анализ по медицинским группам
-                            </h4>
-                            <p className="text-gray-600">
-                              Этот график показывает распределение студентов
-                              по разным медицинским группам. Понимание
-                              этого распределения помогает в планировании
-                              подходящих физических упражнений.
                             </p>
                           </div>
                         </div>

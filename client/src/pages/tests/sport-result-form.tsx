@@ -71,11 +71,11 @@ interface ResultData {
   volleyballUpperPass?: number;
   volleyballLowerPass?: number;
   volleyballServe?: number;
-  swimming25m?: string;
-  swimming50m?: string;
-  swimming100m?: string;
-  running100m?: string;
-  running500m1000m?: string;
+  swimming25m?: number;
+  swimming50m?: number;
+  swimming100m?: number;
+  running100m?: number;
+  running500m1000m?: number;
   periodId: number;
 }
 
@@ -100,6 +100,20 @@ const testFormSchema = z.object({
 });
 
 type TestFormValues = z.infer<typeof testFormSchema>;
+
+// Функция преобразования времени в миллисекунды
+function parseTimeToMs(value: string): number | undefined {
+  if (!value) return undefined;
+  // Ожидается формат мм.сс,ддд или мм.сс
+  const [minPart, secPartRaw] = value.split(".");
+  if (!minPart || !secPartRaw) return undefined;
+  // Секунды могут быть с запятой (дробные)
+  const secPart = secPartRaw.replace(",", ".");
+  const minutes = parseInt(minPart, 10);
+  const seconds = parseFloat(secPart);
+  if (isNaN(minutes) || isNaN(seconds)) return undefined;
+  return Math.round((minutes * 60 + seconds) * 1000);
+}
 
 export default function SportResultForm() {
   const { user } = useAuth();
@@ -256,11 +270,11 @@ console.log(testData?.basketballFreethrow)
       volleyballUpperPass: data?.volleyballUpperPass ?? 0,
       volleyballLowerPass: data?.volleyballLowerPass ?? 0,
       volleyballServe: data?.volleyballServe ?? 0,
-      swimming25m: String(data?.swimming25m ?? 0),
-      swimming50m: String(data?.swimming50m ?? 0),
-      swimming100m: String(data?.swimming100m ?? 0),
-      running100m: String(data?.running100m ?? 0),
-      running500m1000m: String(data?.running500m1000m ?? 0),
+      swimming25m: Number(data?.swimming25m ?? 0),
+      swimming50m: Number(data?.swimming50m ?? 0),
+      swimming100m: Number(data?.swimming100m ?? 0),
+      running100m: Number(data?.running100m ?? 0),
+      running500m1000m: Number(data?.running500m1000m ?? 0),
       };
 
       await apiRequest("POST", "/api/sport-results", resultData);
@@ -317,11 +331,11 @@ console.log(testData?.basketballFreethrow)
         volleyballUpperPass: data?.volleyballUpperPass ?? 0,
         volleyballLowerPass: data?.volleyballLowerPass ?? 0,
         volleyballServe: data?.volleyballServe ?? 0,
-        swimming25m: String(data?.swimming25m ?? 0),
-        swimming50m: String(data?.swimming50m ?? 0),
-        swimming100m: String(data?.swimming100m ?? 0),
-        running100m: String(data?.running100m ?? 0),
-        running500m1000m: String(data?.running500m1000m ?? 0),
+        swimming25m: Number(data?.swimming25m ?? 0),
+        swimming50m: Number(data?.swimming50m ?? 0),
+        swimming100m: Number(data?.swimming100m ?? 0),
+        running100m: Number(data?.running100m ?? 0),
+        running500m1000m: Number(data?.running500m1000m ?? 0),
       };
 
       await apiRequest("PUT", `/api/sport-results/${testId}`, resultData);
@@ -354,12 +368,26 @@ console.log(testData?.basketballFreethrow)
 
   // Handle form submission
   function onSubmit(data: TestFormValues) {
+    // Клонируем данные, чтобы не мутировать оригинал
+    const newData = { ...data };
+    if (typeof newData.swimming50m === "string") {
+      newData.swimming50m = parseTimeToMs(newData.swimming50m);
+    }
+    if (typeof newData.swimming100m === "string") {
+      newData.swimming100m = parseTimeToMs(newData.swimming100m);
+    }
+    if (typeof newData.running500m1000m === "string") {
+      newData.running500m1000m = parseTimeToMs(newData.running500m1000m);
+    }
     if (isEdit) {
-      updateTestMutation.mutate(data);
+      updateTestMutation.mutate(newData);
     } else {
-      createTestMutation.mutate(data);
+      createTestMutation.mutate(newData);
     }
   }
+
+  // Новый стейт для выбора категории
+  const [category, setCategory] = useState<'physical' | 'sport'>('sport');
 
   if (isEdit && isLoadingTest && isLoadingStudents) {
     return (
@@ -457,6 +485,7 @@ console.log(testData?.basketballFreethrow)
                 />
               )}
 
+              {/* Период теперь после выбора категории */}
               <FormField 
                 control={form.control}
                 name="periodId"
@@ -492,60 +521,65 @@ console.log(testData?.basketballFreethrow)
                 )}
               />
 
-              <CardContent className="space-y-4 py-2">
-                {/* Табличный ввод */}
-                <div className="overflow-x-auto">
-                  <table className="w-full table-auto border border-gray-200 text-sm">
-                    <thead className="bg-muted">
-                      <tr>
-                        <th className="p-2 text-left">Название теста</th>
-                        <th className="p-2 text-left">Результат</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {[
-                        { name: "Штрафные броски", key: "basketballFreethrow" },
-                        { name: "Двухшажная техника", key: "basketballDribble" },
-                        { name: "Техника быстрого ведения мяча", key: "basketballLeading" },
-                        { name: "Передача мяча двумя руками над собой", key: "volleyballSoloPass" },
-                        { name: "Верхняя передача мяча в парах", key: "volleyballUpperPass" },
-                        { name: "Нижняя передача мяча в парах", key: "volleyballLowerPass" },
-                        { name: "Верхняя подача мяча через сетку (юноши).\nВерхняя, нижняя, боковая подача мяча через сетку (девушки)", key: "volleyballServe" },
-                        { name: "Плавание 25 м", key: "swimming25m" },
-                        { name: "Плавание 50 м", key: "swimming50m" },
-                        { name: "Плавание 100 м", key: "swimming100m" },
-                        { name: "Бег 100 м", key: "running100m" },
-                        { name: "Бег 500 (девушки)\n1000 м (юноши)", key: "running500m1000m" },
-                      ].map((test) => (
-                        <tr key={test.key} className="border-t border-gray-100">
-                          <td className="p-2 font-medium">{test.name}</td>
-                          <td className="p-2">
-                            <FormField
-                              control={form.control}
-                              name={test.key as keyof TestFormValues}
-                              render={({ field }) => (
-                                <Input
-                                  type={/\d/.test(test.key) ? "text" : "number"}
-                                  step={/\d/.test(test.key) ? "0.01" : "1"}
-                                  value={field.value ?? ""}
-                                  onChange={(e) => {
-                                    const inputValue = e.target.value;
-                                    field.onChange(
-                                      inputValue === ""
-                                        ? undefined
-                                        : Number(inputValue)
-                                    );
-                                  }}
-                                />
-                              )}
-                            />
-                          </td>
+              {/* Табличный ввод для контрольных упражнений */}
+              {category === 'sport' && (
+                <CardContent className="space-y-4 py-2">
+                  <div className="overflow-x-auto">
+                    <table className="w-full table-auto border border-gray-200 text-sm">
+                      <thead className="bg-muted">
+                        <tr>
+                          <th className="p-2 text-left">Название теста</th>
+                          <th className="p-2 text-left">Результат</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </CardContent>
+                      </thead>
+                      <tbody>
+                        {/* Каждое поле с нужным форматом и названием */}
+                        {[ 
+                          { name: "Штрафные броски", key: "basketballFreethrow", inputProps: { type: "number", min: 1, max: 5, step: 1 } },
+                          { name: "Двухшажная техника (кол-во попаданий из 5 попыток)", key: "basketballDribble", inputProps: { type: "number", min: 1, max: 5, step: 1 } },
+                          { name: "Техника быстрого ведения мяча, с", key: "basketballLeading", inputProps: { type: "number", step: 0.01, min: 0 } },
+                          { name: "Передача мяча двумя руками над собой (кол-во раз)", key: "volleyballSoloPass", inputProps: { type: "number", step: 1, min: 1 } },
+                          { name: "Верхняя передача мяча в парах (кол-во передач)", key: "volleyballUpperPass", inputProps: { type: "number", step: 1, min: 1 } },
+                          { name: "Нижняя передача мяча в парах (кол-во передач)", key: "volleyballLowerPass", inputProps: { type: "number", step: 1, min: 1 } },
+                          { name: "Верхняя подача мяча через сетку (юноши), Верхняя, нижняя, боковая подача мяча через сетку (девушки) (кол-во подач через сетку)", key: "volleyballServe", inputProps: { type: "number", min: 1, max: 5, step: 1 } },
+                          { name: "Плавание 25 м, с", key: "swimming25m", inputProps: { type: "number", step: 0.1, min: 0 } },
+                          { name: "Плавание 50 м, с", key: "swimming50m", inputProps: { type: "text", placeholder: "мм.сс", pattern: "^[0-9]{1}\.[0-9]{2},[0-9]{1}$" } },
+                          { name: "Плавание 100 м", key: "swimming100m", inputProps: { type: "text", placeholder: "мм.сс", pattern: "^[0-9]{1}\.[0-9]{2},[0-9]{1}$" } },
+                          { name: "Бег 100 м, с", key: "running100m", inputProps: { type: "number", step: 0.1, min: 0 } },
+                          { name: "Бег 500 (девушки)/1000 м (юноши)", key: "running500m1000m", inputProps: { type: "text", placeholder: "мм.сс", pattern: "^[0-9]{1}\.[0-9]{2},[0-9]{1}$" } },
+                        ].map((test) => (
+                          <tr key={test.key} className="border-t border-gray-100">
+                            <td className="p-2 font-medium">{test.name}</td>
+                            <td className="p-2">
+                              <FormField
+                                control={form.control}
+                                name={test.key as keyof TestFormValues}
+                                render={({ field }) => (
+                                  <Input
+                                    {...test.inputProps}
+                                    value={field.value ?? ""}
+                                    onChange={(e) => {
+                                      const inputValue = e.target.value;
+                                      field.onChange(
+                                        inputValue === ""
+                                          ? undefined
+                                          : test.inputProps.type === "number"
+                                            ? Number(inputValue)
+                                            : inputValue
+                                      );
+                                    }}
+                                  />
+                                )}
+                              />
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </CardContent>
+              )}
+              {/* Здесь можно добавить аналогичный блок для физ. тестов, если потребуется */}
 
               <CardFooter className="flex justify-between">
                 <Button

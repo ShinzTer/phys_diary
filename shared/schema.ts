@@ -65,11 +65,7 @@ export const student = pgTable("student", {
 // Period table
 export const period = pgTable("period", {
   periodId: serial("period_id").primaryKey(),
-  periodOfStudy: text("period_of_study", { enum: ["first_course_beginning",  
-    "semester_1",  "semester_2",  "second_course_beginning",  
-    "semester_3",  "semester_4",  "third_course_beginning",  
-    "semester_5",  "semester_6",  "fourth_course_beginning",  
-    "semester_7",  "semester_8"] }).notNull(),
+  periodOfStudy: text("period_of_study").notNull(),
 });
 
 // Physical state table
@@ -123,11 +119,11 @@ export const sport_results = pgTable("sport_results", {
   volleyballUpperPass: integer("volleyball_upper_pass"),
   volleyballLowerPass: integer("volleyball_lower_pass"),
   volleyballServe: integer("volleyball_serve"),
-  swimming25m: numeric("swimming_25m", { precision: 10, scale: 2 }),
-  swimming50m: numeric("swimming_50m", { precision: 10, scale: 2 }),
-  swimming100m: numeric("swimming_100m", { precision: 10, scale: 2 }),
-  running100m: numeric("running_100m", { precision: 10, scale: 2 }),
-  running500m1000m: numeric("running_500m_1000m", { precision: 10, scale: 2 }),
+  swimming25m: integer("swimming_25m"),
+  swimming50m: integer("swimming_50m"),
+  swimming100m: integer("swimming_100m"),
+  running100m: integer("running_100m"),
+  running500m1000m: integer("running_500m_1000m"),
   periodId: integer("period_id").notNull().references(() => period.periodId),
 });
 
@@ -268,7 +264,10 @@ export const TEST_TYPES_CAMEL = [
 export const CONTROL_EXERCISE_TYPES = [
   "basketball_freethrow",
   "basketball_dribble",
-  "volleyball_pass",
+  "basketball_leading",
+  "volleyball_solo_pass",
+  "volleyball_upper_pass",
+  "volleyball_lower_pass",
   "volleyball_serve",
   "swimming_25m",
   "swimming_50m",
@@ -280,7 +279,10 @@ export const CONTROL_EXERCISE_TYPES = [
 export const CONTROL_EXERCISE_TYPES_CAMEL = [
   "basketballFreethrow",
   "basketballDribble",
-  "volleyballPass",
+  "basketballLeading",
+  "volleyballSoloPass",
+  "volleyballUpperPass",
+  "volleyballLowerPass",
   "volleyballServe",
   "swimming25m",
   "swimming50m",
