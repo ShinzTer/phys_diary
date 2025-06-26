@@ -251,10 +251,29 @@ console.log(testData)
         user?.role === "student"
           ? user?.id
           : form.getValues("studentId");
+      
+      // Invalidate all possible query keys for physical tests
       queryClient.invalidateQueries({
         queryKey: [`/api/physical-tests/${studentId}`],
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/physical-tests"] });
+      queryClient.invalidateQueries({ 
+        queryKey: ["/api/physical-tests"] 
+      });
+      
+      // Invalidate teacher-specific queries if user is teacher
+      if (user?.role === "teacher") {
+        queryClient.invalidateQueries({
+          queryKey: [`/api/tests/all/${user.id}`],
+        });
+      }
+      
+      // Invalidate admin queries
+      if (user?.role === "admin") {
+        queryClient.invalidateQueries({
+          queryKey: ["api/tests/all"],
+        });
+      }
+      
       toast({
         title: "Тест записан",
         description: "Результат теста успешно записан.",
@@ -310,10 +329,29 @@ console.log(testData)
         user?.role === "student"
           ? studentProfile?.studentId
           : form.getValues("studentId");
+      
+      // Invalidate all possible query keys for physical tests
       queryClient.invalidateQueries({
         queryKey: [`/api/physical-tests/${studentId}`],
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/physical-tests"] });
+      queryClient.invalidateQueries({ 
+        queryKey: ["/api/physical-tests"] 
+      });
+      
+      // Invalidate teacher-specific queries if user is teacher
+      if (user?.role === "teacher") {
+        queryClient.invalidateQueries({
+          queryKey: [`/api/tests/all/${user.id}`],
+        });
+      }
+      
+      // Invalidate admin queries
+      if (user?.role === "admin") {
+        queryClient.invalidateQueries({
+          queryKey: ["api/tests/all"],
+        });
+      }
+      
       toast({
         title: isGrading ? "Тест оценен" : "Тест обновлён",
         description: isGrading

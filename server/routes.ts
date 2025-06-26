@@ -406,16 +406,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/profile/studen/:userId", async (req, res) => {
+  app.get("/api/profile/student/:userId", async (req, res) => {
     try {
       if (!req.isAuthenticated()) {
         return res.status(401).json({ message: "Not authenticated" });
       }
 
-      const studentId = parseInt(req.params.userId);
+      const userId = parseInt(req.params.userId);
       
       // Get the student record to check permissions
-      const student = await storage.getStudentByUserId(studentId);
+      const student = await storage.getStudentByUserId(userId);
       if (!student) {
         return res.status(404).json({ message: "Student not found" });
       }
@@ -425,7 +425,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Access denied" });
       }
 
-      const profileData = await storage.getStudentProfile(studentId);
+      const profileData = await storage.getStudentProfile(student.studentId);
       const user = await storage.getUser(student.userId!);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
@@ -435,7 +435,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { password, ...userWithoutPassword } = user;
       res.json({
         ...userWithoutPassword,
-        profile: profileData
+        profile: profileData,
+        studentId: student.studentId
       });
     } catch (error) {
       console.error("Error fetching student profile by userID:", error);
@@ -472,7 +473,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { password, ...userWithoutPassword } = user;
       res.json({
         ...userWithoutPassword,
-        profile: profileData
+        profile: profileData,
+        teacherId: teacher.teacherId
       });
     } catch (error) {
       console.error("Error fetching teacher profile:", error);
@@ -598,6 +600,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       console.log(req.user);
       const studentId = parseInt(req.params.studentId);
+      
+      // If not an admin or teacher, only allow access to own physical tests
+      if (req.user?.role !== "admin" && req.user?.role !== "teacher" && req.user?.id !== studentId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
       
       const tests = await storage.getPhysicalTestsByStudent(studentId);
       
@@ -772,7 +779,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const stateData = insertPhysicalStateSchema.parse(req.body);
       
       // If student, can only create physical states for themselves
-      if (req.user?.role === "student" && stateData.studentId !== req.user.studentId) {
+      if (req.user?.role === "student" && stateData.studentId !== req.user.id) {
         return res.status(403).json({ message: "Access denied" });
       }
       
@@ -822,7 +829,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const studentId = parseInt(req.params.studentId);
       
       // If not an admin or teacher, only allow access to own sport results
-      if (req.user?.role !== "admin" && req.user?.role !== "teacher" && req.user?.studentId !== studentId) { //тут беда
+      if (req.user?.role !== "admin" && req.user?.role !== "teacher" && req.user?.id !== studentId) {
         return res.status(403).json({ message: "Access denied" });
       }
       
@@ -898,7 +905,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const resultData = insertSportResultsSchema.parse(req.body);
       
       // If student, can only create sport results for themselves
-      if (req.user?.role === "student" && resultData.studentId !== req.user.studentId) { //тут беда
+      if (req.user?.role === "student" && resultData.studentId !== req.user.id) {
         return res.status(403).json({ message: "Access denied" });
       }
       
@@ -927,7 +934,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Students can only update their own sport results
-      if (req.user?.role === "student" && existingResult.studentId !== req.user.studentId) { //тут беда
+      if (req.user?.role === "student" && existingResult.studentId !== req.user.id) {
         return res.status(403).json({ message: "Access denied" });
       }
       
@@ -1519,6 +1526,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(204).send();
     } catch (error) {
       res.status(500).json({ message: "Error deleting sport result" });
+    }
+  });
+
+  app.get("/api/students/teacher/:teacherId", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      // Check if user is admin or teacher
+      if (req.user?.role !== "admin" && req.user?.role !== "teacher") {
+        return res.status(403).json({ message: "Access denied. Admin or teacher role required." });
+      }
+      
+      const teacherId = parseInt(req.params.teacherId);
+      const students = await storage.getStudentsByTeacher(teacherId);
+      res.json(students);
+    } catch (error) {
+      res.status(500).json({ message: "Error fetching students" });
     }
   });
 

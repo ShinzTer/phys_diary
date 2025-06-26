@@ -745,42 +745,38 @@ export class Storage implements IStorage {
   }
 
   async getPhysicalTestsByTeacher(teacherId: number): Promise<PhysicalTest[]> {
-    {
-      const results = await this.db
-        .select({
-          test: physical_tests,
-        })
-        .from(physical_tests)
-        .innerJoin(student, eq(physical_tests.studentId, student.userId))
-        .innerJoin(group, eq(student.groupId, group.groupId))
-        .where(eq(group.teacherId, teacherId));
+    const results = await this.db
+      .select({
+        test: physical_tests,
+      })
+      .from(physical_tests)
+      .innerJoin(student, eq(physical_tests.studentId, student.userId))
+      .innerJoin(group, eq(student.groupId, group.groupId))
+      .where(eq(group.teacherId, teacherId));
 
-      // возвращаем только данные тестов
-      return results.map((r) => r.test);
-    }
+    // возвращаем только данные тестов
+    return results.map((r) => r.test);
   }
   async getSportResultsByPeriodAndTeacher(
     teacherId: number,
     periodId: number
   ): Promise<SportResult[]> {
-    {
-      const results = await this.db
-        .select({
-          test: sport_results,
-        })
-        .from(sport_results)
-        .innerJoin(student, eq(sport_results.studentId, student.userId))
-        .innerJoin(group, eq(student.groupId, group.groupId))
-        .where(
-          and(
-            eq(group.teacherId, teacherId),
-            eq(sport_results.periodId, periodId)
-          )
-        );
+    const results = await this.db
+      .select({
+        test: sport_results,
+      })
+      .from(sport_results)
+      .innerJoin(student, eq(sport_results.studentId, student.userId))
+      .innerJoin(group, eq(student.groupId, group.groupId))
+      .where(
+        and(
+          eq(group.teacherId, teacherId),
+          eq(sport_results.periodId, periodId)
+        )
+      );
 
-      // возвращаем только данные тестов
-      return results.map((r) => r.test);
-    }
+    // возвращаем только данные тестов
+    return results.map((r) => r.test);
   }
 
   async getPhysicalTest(id: number): Promise<PhysicalTest | undefined> {

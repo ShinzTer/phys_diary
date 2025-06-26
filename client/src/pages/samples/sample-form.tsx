@@ -532,7 +532,7 @@ export default function SampleForm() {
                                     const inputValue = e.target.value;
                                     field.onChange(
                                       inputValue === ""
-                                        ? String(inputValue)
+                                        ? inputValue
                                         : Number(inputValue)
                                     );
                                   }}

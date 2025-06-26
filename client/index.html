@@ -8,29 +8,80 @@
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
     <script>
-  try {
-    const settings = JSON.parse(localStorage.getItem("visualSettings"));
-    if (settings) {
-      const html = document.documentElement;
+      // Apply visual settings from localStorage before React app loads
+      try {
+        const settings = JSON.parse(localStorage.getItem("visualSettings"));
+        if (settings) {
+          const html = document.documentElement;
 
-      if (settings.theme === "dark") {
-        html.classList.add("dark");
-      } else if (settings.theme === "system") {
-        const isDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-        if (isDark) html.classList.add("dark");
-      }
+          // Apply theme
+          if (settings.theme === "dark") {
+            html.classList.add("dark");
+          } else if (settings.theme === "system") {
+            const isDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (isDark) html.classList.add("dark");
+          }
 
-      if (settings.reduceMotion) {
-        html.classList.add("motion-reduce");
-      }
+          // Apply reduced motion
+          if (settings.reduceMotion) {
+            html.classList.add("motion-reduce");
+          }
 
-      if (settings.contrastMode === "high") {
-        html.classList.add("high-contrast");
+          // Apply high contrast
+          if (settings.contrastMode === "high") {
+            html.classList.add("high-contrast");
+          }
+
+          // Apply font size
+          if (settings.fontSize) {
+            const fontSizeClasses = {
+              small: 'text-sm',
+              medium: 'text-base',
+              large: 'text-lg',
+              'extra-large': 'text-xl',
+            };
+            const fontSizeClass = fontSizeClasses[settings.fontSize];
+            if (fontSizeClass) {
+              html.classList.add(fontSizeClass);
+            }
+          }
+
+          // Apply color scheme
+          if (settings.colorScheme) {
+            const colorSchemes = {
+              blue: {
+                primary: '221.2 83.2% 53.3%',
+                'primary-foreground': '210 40% 98%',
+              },
+              green: {
+                primary: '142.1 76.2% 36.3%',
+                'primary-foreground': '355.7 100% 97.3%',
+              },
+              purple: {
+                primary: '262.1 83.3% 57.8%',
+                'primary-foreground': '210 40% 98%',
+              },
+              orange: {
+                primary: '24.6 95% 53.1%',
+                'primary-foreground': '60 9.1% 97.8%',
+              },
+              red: {
+                primary: '0 84.2% 60.2%',
+                'primary-foreground': '355.7 100% 97.3%',
+              },
+            };
+
+            const selectedScheme = colorSchemes[settings.colorScheme];
+            if (selectedScheme) {
+              Object.entries(selectedScheme).forEach(([key, value]) => {
+                html.style.setProperty(`--${key}`, value);
+              });
+            }
+          }
+        }
+      } catch (e) {
+        console.warn("Failed to apply theme early:", e);
       }
-    }
-  } catch (e) {
-    console.warn("Failed to apply theme early");
-  }
-</script>
+    </script>
   </body>
 </html>

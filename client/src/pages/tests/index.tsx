@@ -62,7 +62,7 @@ export default function Tests() {
   const [periodFilter, setPeriodFilter] = useState<string>("all");
   const [activeTab, setActiveTab] = useState<string>("tests");
   const { data: teacherProfile, isLoading: isLoadingTeacherProfile } =
-    useQuery<Teacher>({
+    useQuery<{ profile: Teacher; teacherId: number }>({
       queryKey: [`/api/profile/teacher/${user?.id}`],
       enabled: user?.role === "teacher",
     });
@@ -70,10 +70,9 @@ export default function Tests() {
     queryKey: [
       user?.role === "student"
         ? `/api/physical-tests/${user.id}`
-        : user?.role === "teacher"
-        ? `/api/tests/all/${teacherProfile?.teacherId}`
         : "api/tests/all",
     ],
+    enabled: !!user,
   });
   const filteredTests = tests?.filter(
     (test) => test.periodId === Number(periodFilter) || periodFilter === "all"
@@ -84,15 +83,13 @@ export default function Tests() {
     queryKey: [
       user?.role === "student"
         ? `/api/sport-results/${user.id}`
-        : user?.role === "teacher"
-        ? `/api/sport-results-teacher/${teacherProfile?.teacherId}/period/${periodFilter}`
         : `/api/sport-results-period/${periodFilter}`,
     ],
-    enabled: periodFilter !== "all",
+    enabled: !!user && periodFilter !== "all",
   });
 
-  console.log(user?.id);
-  console.log(teacherProfile);
+  console.log("periodFilter:", periodFilter);
+  console.log("sport_results:", sport_results);
   const filteredSportResults = sport_results?.filter(
     (test) => test.periodId === Number(periodFilter)
   );
@@ -100,7 +97,7 @@ export default function Tests() {
     Student[]
   >({
     queryKey: ["/api/students"],
-    enabled: user?.role !== "student",
+    enabled: !!user && user?.role !== "student",
   });
 
   const { data: periods = [], isLoading: isLoadingPeriods } = useQuery<
@@ -170,7 +167,7 @@ export default function Tests() {
           queryClient.invalidateQueries({
             queryKey: [user?.role === "student"
           ? `/api/physical-tests/${user.id}`
-          : "/api/tests/all",],
+          : "api/tests/all",],
           });
           toast({
             title: "Физический тест удален",
@@ -196,8 +193,6 @@ export default function Tests() {
           queryClient.invalidateQueries({
             queryKey: [user?.role === "student"
         ? `/api/sport-results/${user.id}`
-        : user?.role === "teacher"
-        ? `/api/sport-results-teacher/${teacherProfile?.teacherId}/period/${periodFilter}`
         : `/api/sport-results-period/${periodFilter}`,],
           });
           toast({
@@ -443,18 +438,6 @@ export default function Tests() {
                                               <Trash className="mr-2 h-4 w-4" />
                                               Удалить
                                             </DropdownMenuItem>
-                                            {user?.role === "teacher" && (
-                                              <DropdownMenuItem
-                                                onClick={() =>
-                                                  navigate(
-                                                    `/tests/edit/${test.testId}?grade=true`
-                                                  )
-                                                }
-                                              >
-                                                <Star className="mr-2 h-4 w-4" />
-                                                Выставить оценку
-                                              </DropdownMenuItem>
-                                            )}
                                           </DropdownMenuContent>
                                         </DropdownMenu>
                                       </td>
@@ -485,7 +468,7 @@ export default function Tests() {
                 <>
                   <div className="text-center py-16">
                     <CardContent>
-                      {isLoading ? (
+                      {isLoadingResults ? (
                         <div className="flex justify-center items-center h-64">
                           <Loader2 className="h-8 w-8 animate-spin text-primary" />
                         </div>
@@ -537,7 +520,9 @@ export default function Tests() {
                                   {filteredSportResults?.map((test) => (
                                     <tr key={test.sportResultId}>
                                       <td className="px-4 py-4 whitespace-nowrap font-medium">
-                                        {students.find((student) => student.userId === test.studentId)?.fullName || 'Unknown'}
+                                        {user?.role === "student"
+                                          ? user?.username
+                                          : students.find((student) => student.userId === test.studentId)?.fullName || 'Unknown'}
                                       </td>
                                     
                                       <td className="px-4 py-4 whitespace-nowrap text-sm">
@@ -600,12 +585,6 @@ export default function Tests() {
                                               <Trash className="mr-2 h-4 w-4" />
                                               Удалить
                                             </DropdownMenuItem>
-                                            {user?.role === "teacher"  && (
-                                              <DropdownMenuItem onClick={() => navigate(`/sport_resutls/edit/${test.sportResultId}?grade=true`)}>
-                                                <Star className="mr-2 h-4 w-4" />
-                                                Выставить оценку
-                                              </DropdownMenuItem>
-                                            )}
                                           </DropdownMenuContent>
                                         </DropdownMenu>
                                       </td>
