@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import MainLayout from "@/components/layout/main-layout";
@@ -192,8 +192,15 @@ const filteredTests = tests?.filter(test => test.periodId === Number(selectedDat
 
   // Get data for selected student
   const { data: userData } = useQuery<UserData>({
-    queryKey: [`/api/profile/studen/${selectedUser}`],
+    queryKey: [`/api/sport-results/${selectedUser}`],
     enabled: selectedUser !== "" && selectedUser !== "all",
+    queryFn: async () => {
+      const res = await fetch(`/api/sport-results/${selectedUser}`, {
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Не удалось получить профиль студента");
+      return res.json();
+    },
   });
 
   // Добавляю запрос sport results для выбранного студента
@@ -260,11 +267,25 @@ const filteredTests = tests?.filter(test => test.periodId === Number(selectedDat
 
   // Новый getPerformanceData для sport results
   const getPerformanceData = () => {
-    if (!sportResults || sportResults.length === 0) return CONTROL_EXERCISE_LABELS.map(({ name }) => ({ name, value: 0 }));
-    // Берём последний результат (или можно средний)
-    const lastResult = sportResults[sportResults.length - 1];
-    return CONTROL_EXERCISE_LABELS.map(({ name, key }) => {
+    console.log("sportResults:", sportResults);
+    if (!sportResults || sportResults.length === 0)
+      return CONTROL_EXERCISE_LABELS.map(({ name, shortName }) => ({ name, shortName, value: 0 }));
+
+    // Фильтруем по выбранному периоду
+    const filteredSportResults = sportResults.filter(
+      (result) => result.periodId === Number(selectedDateRange)
+    );
+    console.log("filteredSportResults:", filteredSportResults);
+    if (!filteredSportResults.length)
+      return CONTROL_EXERCISE_LABELS.map(({ name, shortName }) => ({ name, shortName, value: 0 }));
+
+    const lastResult = filteredSportResults[filteredSportResults.length - 1];
+    console.log("lastResult:", lastResult);
+    return CONTROL_EXERCISE_LABELS.map(({ name, shortName, key }) => {
       const value = lastResult?.[key] ?? null;
+      if (!(key in lastResult)) {
+        console.warn(`Ключ '${key}' отсутствует в lastResult`, lastResult);
+      }
       return {
         name,
         value: getScoreForExercise(key, value),
@@ -402,6 +423,30 @@ const filteredTests = tests?.filter(test => test.periodId === Number(selectedDat
     }
   };
 
+  const reportRef = useRef<HTMLDivElement>(null);
+
+  const exportToPDF = async () => {
+    if (!reportRef.current) return;
+    const canvas = await html2canvas(reportRef.current, { scale: 2 });
+    const imgData = canvas.toDataURL("image/png");
+    const pdf = new jsPDF({
+      orientation: "landscape",
+      unit: "pt",
+      format: [canvas.width, canvas.height],
+    });
+    pdf.addImage(imgData, "PNG", 0, 0, canvas.width, canvas.height);
+    pdf.save("report.pdf");
+  };
+
+  // Логирование выбранного студента и периода
+  useEffect(() => {
+    console.log("Selected user:", selectedUser);
+  }, [selectedUser]);
+
+  useEffect(() => {
+    console.log("Selected period:", selectedDateRange);
+  }, [selectedDateRange]);
+
   return (
     <MainLayout>
       <div className="container mx-auto px-4 py-6">
@@ -480,7 +525,6 @@ const filteredTests = tests?.filter(test => test.periodId === Number(selectedDat
                   <SelectContent>
                     <SelectItem value="all">Все группы</SelectItem>
                     {groups?.map((group) => {
-                      //.data
                       if (!group?.groupId) return null; // Skip if no valid ID
                       return (
                         <SelectItem
@@ -529,7 +573,7 @@ const filteredTests = tests?.filter(test => test.periodId === Number(selectedDat
                   </SelectTrigger>
                   <SelectContent>
                     {periods.map((period) => (
-                      <SelectItem value={String(period.periodId)}>
+                      <SelectItem key={period.periodId} value={String(period.periodId)}>
                         {formatTestType(period.periodOfStudy)}
                       </SelectItem>
                     ))}
@@ -571,220 +615,95 @@ const filteredTests = tests?.filter(test => test.periodId === Number(selectedDat
 
           {/* Report Content */}
           <Card className="lg:col-span-3">
-            <CardHeader>
-              <CardTitle>
-                {selectedUser && userData ? (
-                  <div className="flex items-center">
-                    <Users className="h-5 w-5 mr-2 text-primary" />
-                    {userData.fullName || userData.username}
-                    <span className="ml-2 text-sm text-gray-500">
-                      (ID: {userData.id})
-                    </span>
-                  </div>
-                ) : (
-                  "Report Results"
-                )}
-              </CardTitle>
-              <CardDescription>
-                {selectedReportType === "performance" &&
-                  "Test performance analysis across different exercises"}
-                {selectedReportType === "progress" &&
-                  "Student progress over time"}
-                {selectedReportType === "samples" &&
-                  "Physical measurement trends"}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {isLoading ? (
-                <div className="flex justify-center items-center h-64">
-                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                </div>
-              ) : (
-                <>
-                  {!selectedUser || selectedUser === "all" ? (
-                    <div className="text-center py-12">
-                      <Users className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-                      <h3 className="text-lg font-medium text-gray-900 mb-2">
-                        Выберите студента
-                      </h3>
-                      <p className="text-gray-500 max-w-md mx-auto">
-                        Пожалуйста, выберите студента из 
-                        панели фильтров для генерации отчета.
-                      </p>
+            <div ref={reportRef}>
+              <CardHeader>
+                <CardTitle>
+                  {selectedUser && userData ? (
+                    <div className="flex items-center">
+                      <Users className="h-5 w-5 mr-2 text-primary" />
+                      {(userData.fullName || userData.username)}
+                      <span className="ml-2 text-sm text-gray-500">
+                        (ID: {userData.id})
+                      </span>
                     </div>
                   ) : (
-                    <>
-                      {selectedReportType === "performance" && (
-                        <div>
-                          <h3 className="text-lg font-medium mb-4">
-                            Производительность по контрольным упражнениям
-                          </h3>
-                          <div className="h-80">
-                            <ResponsiveContainer width="100%" height="100%">
-                              <ReBarChart
-                                data={getPerformanceData()}
-                                margin={{
-                                  top: 5,
-                                  right: 30,
-                                  left: 20,
-                                  bottom: 5,
-                                }}
-                              >
-                                <CartesianGrid strokeDasharray="3 3" />
-                                <XAxis dataKey="name" />
-                                <YAxis domain={[0, 10]} />
-                                <Tooltip />
-                                <Legend />
-                                <Bar
-                                  dataKey="value"
-                                  name="Оценка (1-10)"
-                                  fill="#1565C0"
-                                />
-                              </ReBarChart>
-                            </ResponsiveContainer>
-                          </div>
-                          <div className="mt-6">
-                            <h4 className="font-medium mb-2">Сводка</h4>
-                            <p className="text-gray-600">
-                              Этот график показывает оценки студента по контрольным упражнениям (1 — худший, 10 — лучший результат). Таблицы соответствия будут настроены позже.
-                            </p>
-                          </div>
-                        </div>
-                      )}
-
-                      {selectedReportType === "progress" && (
-                        <div>
-                          <h3 className="text-lg font-medium mb-4">
-                            Прогресс по времени
-                          </h3>
-                          <div className="h-80">
-                            <ResponsiveContainer width="100%" height="100%">
-                              <AreaChart
-                                data={getProgressData()}
-                                margin={{
-                                  top: 10,
-                                  right: 30,
-                                  left: 0,
-                                  bottom: 0,
-                                }}
-                              >
-                                <defs>
-                                  <linearGradient
-                                    id="colorPerformance"
-                                    x1="0"
-                                    y1="0"
-                                    x2="0"
-                                    y2="1"
-                                  >
-                                    <stop
-                                      offset="5%"
-                                      stopColor="#1565C0"
-                                      stopOpacity={0.8}
-                                    />
-                                    <stop
-                                      offset="95%"
-                                      stopColor="#1565C0"
-                                      stopOpacity={0.1}
-                                    />
-                                  </linearGradient>
-                                </defs>
-                                <XAxis dataKey="date" />
-                                <YAxis domain={[0, 100]} />
-                                <CartesianGrid strokeDasharray="3 3" />
-                                <Tooltip />
-                                <Area
-                                  type="monotone"
-                                  dataKey="performance"
-                                  stroke="#1565C0"
-                                  fillOpacity={1}
-                                  fill="url(#colorPerformance)"
-                                  name="Производительность"
-                                />
-                              </AreaChart>
-                            </ResponsiveContainer>
-                          </div>
-                          <div className="mt-6">
-                            <h4 className="font-medium mb-2">
-                              Анализ прогресса
-                            </h4>
-                            <p className="text-gray-600">
-                              Этот график отслеживает прогресс студента
-                              по разным физическим тестам. Более высокие оценки
-                              указывают на лучшую производительность по сравнению
-                              со стандартами для возраста и пола студента.
-                            </p>
-                          </div>
-                        </div>
-                      )}
-
-                      {selectedReportType === "samples" && (
-                        <div>
-                          <h3 className="text-lg font-medium mb-4">
-                            Тренды физических измерений
-                          </h3>
-                          <div className="h-80">
-                            <ResponsiveContainer width="100%" height="100%">
-                              <AreaChart
-                                data={getSampleTrendData()}
-                                margin={{
-                                  top: 10,
-                                  right: 30,
-                                  left: 0,
-                                  bottom: 0,
-                                }}
-                              >
-                                <defs>
-                                  <linearGradient
-                                    id="colorValue"
-                                    x1="0"
-                                    y1="0"
-                                    x2="0"
-                                    y2="1"
-                                  >
-                                    <stop
-                                      offset="5%"
-                                      stopColor="#4CAF50"
-                                      stopOpacity={0.8}
-                                    />
-                                    <stop
-                                      offset="95%"
-                                      stopColor="#4CAF50"
-                                      stopOpacity={0.1}
-                                    />
-                                  </linearGradient>
-                                </defs>
-                                <XAxis dataKey="date" />
-                                <YAxis />
-                                <CartesianGrid strokeDasharray="3 3" />
-                                <Tooltip />
-                                <Area
-                                  type="monotone"
-                                  dataKey="value"
-                                  stroke="#4CAF50"
-                                  fillOpacity={1}
-                                  fill="url(#colorValue)"
-                                  name="Значение измерения"
-                                />
-                              </AreaChart>
-                            </ResponsiveContainer>
-                          </div>
-                          <div className="mt-6">
-                            <h4 className="font-medium mb-2">
-                              Анализ измерений
-                            </h4>
-                            <p className="text-gray-600">
-                              Этот график показывает тренды в физических измерениях
-                              во времени, помогая отслеживать рост, уровни
-                              физической подготовки и показатели здоровья.
-                            </p>
-                          </div>
-                        </div>
-                      )}
-                    </>
+                    "Report Results"
                   )}
-                </>
-              )}
-            </CardContent>
+                </CardTitle>
+                <CardDescription>
+                  Test performance analysis across different exercises
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {isLoading ? (
+                  <div className="flex justify-center items-center h-64">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  </div>
+                ) : (
+                  <>
+                    {!selectedUser || selectedUser === "all" ? (
+                      <div className="text-center py-12">
+                        <Users className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+                        <h3 className="text-lg font-medium text-gray-900 mb-2">
+                          Выберите студента
+                        </h3>
+                        <p className="text-gray-500 max-w-md mx-auto">
+                          Пожалуйста, выберите студента из 
+                          панели фильтров для генерации отчета.
+                        </p>
+                      </div>
+                    ) : (
+                      <div>
+                        <h3 className="text-lg font-medium mb-4">
+                          Производительность по контрольным упражнениям
+                        </h3>
+                        <div className="w-full h-96">
+                          <ResponsiveContainer width="100%" height="100%" minWidth={700}>
+                            <ReBarChart
+                              data={getPerformanceData()}
+                              margin={{
+                                top: 20,
+                                right: 40,
+                                left: 20,
+                                bottom: 60,
+                              }}
+                              barCategoryGap="20%"
+                            >
+                              <CartesianGrid strokeDasharray="3 3" />
+                              <XAxis
+                                dataKey="shortName"
+                                angle={-45}
+                                textAnchor="end"
+                                interval={0}
+                                height={90}
+                                dy={20}
+                              />
+                              <YAxis domain={[0, 10]} />
+                              <Tooltip />
+                              <Legend verticalAlign="top" height={36} />
+                              <Bar
+                                dataKey="value"
+                                name="Оценка (1-10)"
+                                fill="#1565C0"
+                                maxBarSize={40}
+                              >
+                                <LabelList dataKey="value" position="top" fontSize={16} fill="#222" />
+                              </Bar>
+                            </ReBarChart>
+                          </ResponsiveContainer>
+                        </div>
+                        <div className="mt-6">
+                          <h4 className="font-medium mb-2">Сводка</h4>
+                          <p className="text-gray-600">
+                            Этот график показывает оценки студента по контрольным упражнениям (1 — худший, 10 — лучший результат). Таблицы соответствия будут настроены позже.
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
+              </CardContent>
+            </div>
           </Card>
         </div>
       </div>
