@@ -74,10 +74,7 @@ export default function Tests() {
         ? `/api/tests/all/${teacherProfile?.teacherId}`
         : "api/tests/all",
     ],
-<<<<<<< HEAD
-=======
     enabled: user?.role !== "teacher" || !!teacherProfile?.teacherId,
->>>>>>> 79903bb (chart-fix)
   });
   const filteredTests = tests?.filter(
     (test) => test.periodId === Number(periodFilter) || periodFilter === "all"
@@ -92,20 +89,13 @@ export default function Tests() {
         ? `/api/sport-results-teacher/${teacherProfile?.teacherId}/period/${periodFilter}`
         : `/api/sport-results-period/${periodFilter}`,
     ],
-<<<<<<< HEAD
-    enabled: periodFilter !== "all",
-=======
     enabled: (user?.role !== "teacher" || !!teacherProfile?.teacherId) && periodFilter !== "all",
->>>>>>> 79903bb (chart-fix)
   });
 
   console.log(user?.id);
   console.log(teacherProfile);
-<<<<<<< HEAD
-=======
   console.log("periodFilter:", periodFilter);
   console.log("sport_results:", sport_results);
->>>>>>> 79903bb (chart-fix)
   const filteredSportResults = sport_results?.filter(
     (test) => test.periodId === Number(periodFilter)
   );
