@@ -57,7 +57,10 @@ import {
   PieChart as RePieChart,
   Pie,
   Cell,
+  LabelList,
 } from "recharts";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 
 interface Faculty {
   id: number;
@@ -91,18 +94,18 @@ interface UserData {
 
 // Массив соответствия ключей и русских названий контрольных упражнений
 const CONTROL_EXERCISE_LABELS = [
-  { name: "Штрафные броски", key: "basketballFreethrow" },
-  { name: "Двухшажная техника", key: "basketballDribble" },
-  { name: "Техника быстрого ведения мяча", key: "basketballLeading" },
-  { name: "Передача мяча двумя руками над собой", key: "volleyballSoloPass" },
-  { name: "Верхняя передача мяча в парах", key: "volleyballUpperPass" },
-  { name: "Нижняя передача мяча в парах", key: "volleyballLowerPass" },
-  { name: "Верхняя подача мяча через сетку (юноши).\nВерхняя, нижняя, боковая подача мяча через сетку (девушки)", key: "volleyballServe" },
-  { name: "Плавание 25 м", key: "swimming25m" },
-  { name: "Плавание 50 м", key: "swimming50m" },
-  { name: "Плавание 100 м", key: "swimming100m" },
-  { name: "Бег 100 м", key: "running100m" },
-  { name: "Бег 500 (девушки)\n1000 м (юноши)", key: "running500m1000m" },
+  { name: "Штрафные броски", shortName: "Штр. броски", key: "basketballFreethrow" },
+  { name: "Двухшажная техника", shortName: "Двухшажная", key: "basketballDribble" },
+  { name: "Техника быстрого ведения мяча", shortName: "Быстрое ведение", key: "basketballLeading" },
+  { name: "Передача мяча двумя руками над собой", shortName: "Передача над собой", key: "volleyballSoloPass" },
+  { name: "Верхняя передача мяча в парах", shortName: "Верх. передача", key: "volleyballUpperPass" },
+  { name: "Нижняя передача мяча в парах", shortName: "Ниж. передача", key: "volleyballLowerPass" },
+  { name: "Верхняя подача мяча через сетку (юноши).\nВерхняя, нижняя, боковая подача мяча через сетку (девушки)", shortName: "Подача через сетку", key: "volleyballServe" },
+  { name: "Плавание 25 м", shortName: "Плав. 25м", key: "swimming25m" },
+  { name: "Плавание 50 м", shortName: "Плав. 50м", key: "swimming50m" },
+  { name: "Плавание 100 м", shortName: "Плав. 100м", key: "swimming100m" },
+  { name: "Бег 100 м", shortName: "Бег 100м", key: "running100m" },
+  { name: "Бег 500 (девушки)\n1000 м (юноши)", shortName: "Бег 500/1000м", key: "running500m1000m" },
 ];
 
 export default function Reports() {
@@ -125,8 +128,6 @@ export default function Reports() {
   );
   const [selectedDateRange, setSelectedDateRange] =
     useState<string>("semester");
-  const [selectedReportType, setSelectedReportType] =
-    useState<string>("performance");
 
   // Fetch faculties for dropdown
   const { data: faculties } = useQuery<Faculty[]>({
@@ -148,12 +149,21 @@ export default function Reports() {
     },
   });
   
-  // Fetch students (filtered by group if selected)
-  const { data: students = [], isLoading: isLoadingStudents } = useQuery<
-    Student[]
-  >({
-    queryKey: ["/api/students"],
+  // Fetch students (filtered by group and faculty if selected)
+  const { data: students = [], isLoading: isLoadingStudents } = useQuery<Student[]>({
+    queryKey: ["/api/students", selectedFaculty, selectedGroup],
     enabled: user?.role !== "student",
+    queryFn: async () => {
+      let url = "/api/students";
+      if (selectedGroup !== "all") {
+        url += `?groupId=${selectedGroup}`;
+      } else if (selectedFaculty !== "all") {
+        url += `?facultyId=${selectedFaculty}`;
+      }
+      const res = await fetch(url, { credentials: "include" });
+      if (!res.ok) throw new Error("Не удалось получить студентов");
+      return res.json();
+    },
   });
 
     const { data: periods = [], isLoading: isLoadingPeriods } = useQuery<
@@ -240,28 +250,108 @@ const filteredTests = tests?.filter(test => test.periodId === Number(selectedDat
   }).join('');
 };
 
-  // Временная функция преобразования результата в оценку (1-10)
+  // Функция преобразования результата в оценку (1-10) с отдельными нормами для каждого упражнения
   function getScoreForExercise(key: string, value: any): number {
     if (value == null || value === "") return 0;
-    // ВРЕМЕННО: чем меньше значение, тем выше оценка (для времени)
-    // Для бросков/очков — наоборот
-    // TODO: заменить на реальные таблицы
+    
     const num = parseFloat(value);
     if (isNaN(num)) return 0;
-    // Пример: для беговых/плавательных — меньше = лучше
-    if (["swimming25m", "swimming50m", "swimming100m", "running100m", "running500m1000m"].includes(key)) {
-      if (num <= 10) return 10;
-      if (num <= 12) return 9;
-      if (num <= 14) return 8;
-      if (num <= 16) return 7;
-      if (num <= 18) return 6;
-      if (num <= 20) return 5;
-      if (num <= 22) return 4;
-      if (num <= 24) return 3;
-      if (num <= 26) return 2;
+    
+    // Штрафные броски, двухшажная техника, подачи через сетку - 10 за значение 5; 7 за 4; 5 за 3; 3 за 2; 1 за 1
+    if (["basketballFreethrow", "basketballDribble", "volleyballServe"].includes(key)) {
+      if (num >= 5) return 10;
+      if (num >= 4) return 7;
+      if (num >= 3) return 5;
+      if (num >= 2) return 3;
       return 1;
     }
-    // Для бросков и техники — больше = лучше
+    
+    // Верхняя и нижняя передача - 10 за 26 и 1 за 6 (шаг для каждой оценки - 2)
+    if (["volleyballUpperPass", "volleyballLowerPass"].includes(key)) {
+      if (num >= 26) return 10;
+      if (num >= 24) return 9;
+      if (num >= 22) return 8;
+      if (num >= 20) return 7;
+      if (num >= 18) return 6;
+      if (num >= 16) return 5;
+      if (num >= 14) return 4;
+      if (num >= 12) return 3;
+      if (num >= 10) return 2;
+      return 1;
+    }
+    
+    // Плавание 25 м - 10 за 18, 1 за 31.5 (шаг для оценки - 1.5)
+    if (key === "swimming25m") {
+      if (num <= 18) return 10;
+      if (num <= 19.5) return 9;
+      if (num <= 21) return 8;
+      if (num <= 22.5) return 7;
+      if (num <= 24) return 6;
+      if (num <= 25.5) return 5;
+      if (num <= 27) return 4;
+      if (num <= 28.5) return 3;
+      if (num <= 30) return 2;
+      return 1;
+    }
+    
+    // Плавание 50 м - 10 за 35, 1 за 70 (с равномерным шагом оценки)
+    if (key === "swimming50m") {
+      if (num <= 35) return 10;
+      if (num <= 38.9) return 9;
+      if (num <= 42.8) return 8;
+      if (num <= 46.7) return 7;
+      if (num <= 50.6) return 6;
+      if (num <= 54.5) return 5;
+      if (num <= 58.4) return 4;
+      if (num <= 62.3) return 3;
+      if (num <= 66.2) return 2;
+      return 1;
+    }
+    
+    // Плавание 100 м - 10 за 105, 1 за 190 (с равномерным шагом оценки)
+    if (key === "swimming100m") {
+      if (num <= 105) return 10;
+      if (num <= 114.4) return 9;
+      if (num <= 123.8) return 8;
+      if (num <= 133.2) return 7;
+      if (num <= 142.6) return 6;
+      if (num <= 152) return 5;
+      if (num <= 161.4) return 4;
+      if (num <= 170.8) return 3;
+      if (num <= 180.2) return 2;
+      return 1;
+    }
+    
+    // Бег на 100 м - 10 за 13, 1 за 15 (с шагом в 0.2)
+    if (key === "running100m") {
+      if (num <= 13) return 10;
+      if (num <= 13.2) return 9;
+      if (num <= 13.4) return 8;
+      if (num <= 13.6) return 7;
+      if (num <= 13.8) return 6;
+      if (num <= 14) return 5;
+      if (num <= 14.2) return 4;
+      if (num <= 14.4) return 3;
+      if (num <= 14.6) return 2;
+      return 1;
+    }
+    
+    // Бег на 500/1000 м - 10 за 215, 1 за 345 (с равномерным шагом)
+    if (key === "running500m1000m") {
+      if (num <= 215) return 10;
+      if (num <= 229.4) return 9;
+      if (num <= 243.8) return 8;
+      if (num <= 258.2) return 7;
+      if (num <= 272.6) return 6;
+      if (num <= 287) return 5;
+      if (num <= 301.4) return 4;
+      if (num <= 315.8) return 3;
+      if (num <= 330.2) return 2;
+      return 1;
+    }
+    
+    // Для остальных упражнений (передача мяча двумя руками над собой, техника быстрого ведения мяча)
+    // используем старую логику - больше = лучше
     return Math.max(1, Math.min(10, Math.round(num / 2)));
   }
 
@@ -288,6 +378,7 @@ const filteredTests = tests?.filter(test => test.periodId === Number(selectedDat
       }
       return {
         name,
+        shortName,
         value: getScoreForExercise(key, value),
       };
     });
@@ -457,12 +548,6 @@ const filteredTests = tests?.filter(test => test.periodId === Number(selectedDat
               Генерируйте и просматривайте отчеты о прогрессе студентов
             </p>
           </div>
-          <div className="mt-4 md:mt-0">
-            <Button onClick={generateReport} disabled={!selectedUser}>
-              <FileText className="mr-2 h-4 w-4" />
-              Сгенерировать отчет
-            </Button>
-          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
@@ -580,31 +665,12 @@ const filteredTests = tests?.filter(test => test.periodId === Number(selectedDat
                   </SelectContent>
                 </Select>
               </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Тип отчета</label>
-                <Select
-                  value={selectedReportType}
-                  onValueChange={setSelectedReportType}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Выберите тип отчета" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="performance">
-                      Анализ производительности
-                    </SelectItem>
-                    <SelectItem value="progress">Прогресс по времени</SelectItem>
-                    <SelectItem value="samples">Физические измерения</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
             </CardContent>
             <CardFooter>
               <Button
                 className="w-full"
                 variant="outline"
-                onClick={generateReport}
+                onClick={exportToPDF}
                 disabled={!selectedUser}
               >
                 <Download className="mr-2 h-4 w-4" />
@@ -621,7 +687,7 @@ const filteredTests = tests?.filter(test => test.periodId === Number(selectedDat
                   {selectedUser && userData ? (
                     <div className="flex items-center">
                       <Users className="h-5 w-5 mr-2 text-primary" />
-                      {(userData.fullName || userData.username)}
+                      {(user.fullName || userData.username)}
                       <span className="ml-2 text-sm text-gray-500">
                         (ID: {userData.id})
                       </span>
