@@ -36,7 +36,6 @@ import {
   MEDICAL_GROUP_TYPES,
   PERIODS_OF_STUDY,
   Group,
-  PhysicalTest,
   TEST_TYPES_CAMEL,
   Period,
   CONTROL_EXERCISE_TYPES_CAMEL,
@@ -106,6 +105,12 @@ const CONTROL_EXERCISE_LABELS = [
   { name: "Плавание 100 м", shortName: "Плав. 100м", key: "swimming100m" },
   { name: "Бег 100 м", shortName: "Бег 100м", key: "running100m" },
   { name: "Бег 500 (девушки)\n1000 м (юноши)", shortName: "Бег 500/1000м", key: "running500m1000m" },
+  { name: "Отжимания", shortName: "Отжимания", key: "pushUps" },
+  { name: "Подтягивания", shortName: "Подтягивания", key: "pullUps" },
+  { name: "Планка", shortName: "Планка", key: "plank" },
+  { name: "Прыжок в длину", shortName: "Прыжок в длину", key: "longJump" },
+  { name: "Челночный бег 4x9 м", shortName: "Челночный бег", key: "shuttleRun49" },
+  { name: "Поднимание туловища за 1 минуту", shortName: "Поднимание туловища", key: "sitUps1min" },
 ];
 
 export default function Reports() {
@@ -192,9 +197,9 @@ export default function Reports() {
     },
   });
 
-  const isLoading =
-    isLoadingSportResults ||
-    (selectedUser !== "" && selectedUser !== "all" && !userData);
+  // const isLoading =
+  //   isLoadingSportResults ||
+  //   (selectedUser !== "" && selectedUser !== "all" && !userData);
 
   // Format test type display name
   const formatTestType = (type: string) => {
@@ -313,7 +318,78 @@ export default function Reports() {
       if (num <= 330.2) return 2;
       return 1;
     }
-    
+    if (key === "pushUps") {
+      if (num >= 42) return 10;
+      if (num >= 40) return 9;
+      if (num >= 37) return 8;
+      if (num >= 33) return 7;
+      if (num >= 30) return 6;
+      if (num >= 27) return 5;
+      if (num >= 24) return 4;
+      if (num >= 20) return 3;
+      if (num >= 15) return 2;
+      return 1;
+    }
+    if (key === "pullUps") {
+      if (num >= 17) return 10;
+      if (num >= 14) return 9;
+      if (num >= 11) return 8;
+      if (num >= 8) return 7;
+      if (num >= 7) return 6;
+      if (num >= 6) return 5;
+      if (num >= 5) return 4;
+      if (num >= 4) return 3;
+      if (num >= 3) return 2;
+      return 1;
+    }
+    if (key === "plank") {
+      if (num >= 180) return 10;
+      if (num >= 165) return 9;
+      if (num >= 150) return 8;
+      if (num >= 135) return 7;
+      if (num >= 120) return 6;
+      if (num >= 110) return 5;
+      if (num >= 80) return 4;
+      if (num >= 60) return 3;
+      if (num >= 45) return 2;
+      return 1;
+    }
+    if (key === "longJump") {
+      if (num >= 260) return 10;
+      if (num >= 250) return 9;
+      if (num >= 245) return 8;
+      if (num >= 240) return 7;
+      if (num >= 235) return 6;
+      if (num >= 230) return 5;
+      if (num >= 225) return 4;
+      if (num >= 220) return 3;
+      if (num >= 215) return 2;
+      return 1;
+    }
+    if (key === "shuttleRun49") {
+      if (num <= 8.6) return 10;
+      if (num <= 8.8) return 9;
+      if (num <= 8.9) return 8;
+      if (num <= 9.0) return 7;
+      if (num <= 9.1) return 6;
+      if (num <= 9.3) return 5;
+      if (num <= 9.5) return 4;
+      if (num <= 9.7) return 3;
+      if (num <= 9.9) return 2;
+      return 1;
+    }
+    if (key === "sitUps1min") {
+      if (num >= 57) return 10;
+      if (num >= 55) return 9;
+      if (num >= 53) return 8;
+      if (num >= 52) return 7;
+      if (num >= 50) return 6;
+      if (num >= 47) return 5;
+      if (num >= 44) return 4;
+      if (num >= 41) return 3;
+      if (num >= 38) return 2;
+      return 1;
+    }
     // Для остальных упражнений (передача мяча двумя руками над собой, техника быстрого ведения мяча)
     // используем старую логику - больше = лучше
     return Math.max(1, Math.min(10, Math.round(num / 2)));
@@ -559,11 +635,6 @@ export default function Reports() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                {isLoading ? (
-                  <div className="flex justify-center items-center h-64">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                  </div>
-                ) : (
                   <>
                     {!selectedUser || selectedUser === "all" ? (
                       <div className="text-center py-12">
@@ -625,7 +696,6 @@ export default function Reports() {
                       </div>
                     )}
                   </>
-                )}
               </CardContent>
             </div>
           </Card>

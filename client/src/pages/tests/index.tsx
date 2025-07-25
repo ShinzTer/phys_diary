@@ -45,7 +45,6 @@ import {
   CONTROL_EXERCISE_TYPES,
   TEST_TYPES_CAMEL,
   CONTROL_EXERCISE_TYPES_CAMEL,
-  PhysicalTest,
   Student,
   Period,
   SportResult,
@@ -66,17 +65,7 @@ export default function Tests() {
       queryKey: [`/api/profile/teacher/${user?.id}`],
       enabled: user?.role === "teacher",
     });
-  const { data: tests, isLoading } = useQuery<PhysicalTest[]>({
-    queryKey: [
-      user?.role === "student"
-        ? `/api/physical-tests/${user.id}`
-        : "api/tests/all",
-    ],
-    enabled: !!user,
-  });
-  const filteredTests = tests?.filter(
-    (test) => test.periodId === Number(periodFilter) || periodFilter === "all"
-  );
+  
   const { data: sport_results, isLoading: isLoadingResults } = useQuery<
     SportResult[]
   >({
@@ -127,36 +116,6 @@ export default function Tests() {
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
       .join(" ");
   };
-
-  // Get grade badge
-  const getGradeBadge = (grade?: string) => {
-    if (!grade) return <Badge variant="outline">Не назначен</Badge>;
-
-    let badgeClass = "";
-    switch (grade.toUpperCase()) {
-      case "10":
-      case "9":
-      case "EXCELENT":
-        return <Badge className="bg-green-100 text-green-800">{grade}</Badge>;
-      case "8":
-      case "7":
-      case "GOOD":
-        return <Badge className="bg-blue-100 text-blue-800">{grade}</Badge>;
-      case "6":
-      case "5":
-      case "4":
-      case "SATISFACTORY":
-        return <Badge className="bg-amber-100 text-amber-800">{grade}</Badge>;
-      case "3":
-      case "2":
-      case "1":
-      case "POOR":
-        return <Badge className="bg-red-100 text-red-800">{grade}</Badge>;
-      default:
-        return <Badge>{grade}</Badge>;
-    }
-  };
-
 
   const deleteTestMutation = useMutation({
         mutationFn: async (id: number) => {
@@ -321,6 +280,12 @@ export default function Tests() {
                                     <th className="px-4 py-3">Плавание 100 м</th>
                                     <th className="px-4 py-3">Бег 100 м</th>
                                     <th className="px-4 py-3">Бег 500/1000 м</th>
+                                    <th className="px-4 py-3">Отжимания</th>
+                                    <th className="px-4 py-3">Подтягивания</th>
+                                    <th className="px-4 py-3">Планка</th>
+                                    <th className="px-4 py-3">Прыжок в длину</th>
+                                    <th className="px-4 py-3">Челночный бег 4x9 м</th>
+                                    <th className="px-4 py-3">Поднимание туловища за 1 минуту</th>
 
                                     {/* <th className="px-4 py-3">
                               <div className="flex items-center">
@@ -379,6 +344,24 @@ export default function Tests() {
                                         </td>
                                       <td className="px-4 py-4 whitespace-nowrap">
                                         {test.running500m1000m || '-'}
+                                      </td>
+                                      <td className="px-4 py-4 whitespace-nowrap">
+                                        {test.pushUps || '-'}
+                                      </td>
+                                      <td className="px-4 py-4 whitespace-nowrap">
+                                        {test.pullUps || '-'}
+                                      </td>
+                                      <td className="px-4 py-4 whitespace-nowrap">
+                                        {test.plank || '-'}
+                                      </td>
+                                      <td className="px-4 py-4 whitespace-nowrap">
+                                        {test.longJump || '-'}
+                                      </td>
+                                      <td className="px-4 py-4 whitespace-nowrap">
+                                        {test.shuttleRun49 || '-'}
+                                      </td>
+                                      <td className="px-4 py-4 whitespace-nowrap">
+                                        {test.sitUps1min || '-'}
                                       </td>
                                       <td className="px-4 py-4 whitespace-nowrap text-right">
                                         <DropdownMenu>
