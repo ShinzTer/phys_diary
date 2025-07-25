@@ -32,16 +32,6 @@ import {
   type InsertPeriod,
   period,
 
-  // Physical state types and schema
-  type PhysicalState,
-  type InsertPhysicalState,
-  physical_state,
-
-  // Physical tests types and schema
-  type PhysicalTest,
-  type InsertPhysicalTest,
-  physical_tests,
-
   // Sport results types and schema
   type SportResult,
   type InsertSportResult,
@@ -67,8 +57,6 @@ type DatabaseSchema = {
   group: typeof group;
   faculty: typeof faculty;
   period: typeof period;
-  physical_state: typeof physical_state;
-  physical_tests: typeof physical_tests;
   sport_results: typeof sport_results;
   result: typeof resultTable;
 };
@@ -139,31 +127,9 @@ export interface IStorage {
   ): Promise<Period | undefined>;
   deletePeriod(id: number): Promise<boolean>;
 
-  // Physical state operations
-  getPhysicalStatesByStudent(studentId: number): Promise<PhysicalState[]>;
-  getPhysicalState(id: number): Promise<PhysicalState | undefined>;
-  createPhysicalState(
-    physicalState: InsertPhysicalState
-  ): Promise<PhysicalState>;
-  updatePhysicalState(
-    id: number,
-    physicalStateData: Partial<PhysicalState>
-  ): Promise<PhysicalState | undefined>;
-  deletePhysicalState(id: number): Promise<boolean>;
-
-  // Physical tests operations
-  getPhysicalTestsByStudent(studentId: number): Promise<PhysicalTest[]>;
-  getPhysicalTest(id: number): Promise<PhysicalTest | undefined>;
-  createPhysicalTest(physicalTest: InsertPhysicalTest): Promise<PhysicalTest>;
-  updatePhysicalTest(
-    id: number,
-    physicalTestData: Partial<PhysicalTest>
-  ): Promise<PhysicalTest | undefined>;
-  deletePhysicalTest(id: number): Promise<boolean>;
-
   // Sport results operations
   getSportResultsByStudent(studentId: number): Promise<SportResult[]>;
-  getSportRgeesult(id: number): Promise<SportResult | undefined>;
+  getSportResult(id: number): Promise<SportResult | undefined>;
   createSportResult(sportResult: InsertSportResult): Promise<SportResult>;
   updateSportResult(
     id: number,
@@ -227,22 +193,27 @@ export class Storage implements IStorage {
       )
     `);
 
-    await this.db.execute(`
-      INSERT INTO period (period_of_study) 
-      VALUES 
-        ('Начало первого курса'),
-        ('1 семестр'),
-        ('2 семестр'),
-        ('Начало второго курса'),
-        ('3 семестр'),
-        ('4 семестр'),
-        ('Начало третьего курса'),
-        ('5 семестр'),
-        ('6 семестр'),
-        ('Начало четвёртого курса'),
-        ('7 семестр'),
-        ('8 семестр')
-    `);
+    // Check if periods already exist
+    const existingPeriods = await this.db.select().from(period);
+    
+    if (existingPeriods.length === 0) {
+      await this.db.execute(`
+        INSERT INTO period (period_of_study) 
+        VALUES 
+          ('Начало первого курса'),
+          ('1 семестр'),
+          ('2 семестр'),
+          ('Начало второго курса'),
+          ('3 семестр'),
+          ('4 семестр'),
+          ('Начало третьего курса'),
+          ('5 семестр'),
+          ('6 семестр'),
+          ('Начало четвёртого курса'),
+          ('7 семестр'),
+          ('8 семестр')
+      `);
+    }
 
     // Check if we have any users, if not, create default users
     const existingUsers = await this.db.select().from(users);
@@ -675,147 +646,6 @@ export class Storage implements IStorage {
     return result.rowCount !== null && result.rowCount > 0;
   }
 
-  // Physical state operations
-  async getPhysicalStatesByStudent(
-    studentId: number
-  ): Promise<PhysicalState[]> {
-    return await this.db
-      .select()
-      .from(physical_state)
-      .where(eq(physical_state.studentId, studentId));
-  }
-
-  async getPhysicalStates(): Promise<PhysicalState[]> {
-    return await this.db
-      .select()
-      .from(physical_state)
-      .orderBy(desc(physical_state.stateId));
-  }
-
-  async getPhysicalTests(): Promise<PhysicalTest[]> {
-    return await this.db
-      .select()
-      .from(physical_tests)
-      .orderBy(desc(physical_tests.testId));
-  }
-
-  async getPhysicalState(id: number): Promise<PhysicalState | undefined> {
-    const [physicalStateRecord] = await this.db
-      .select()
-      .from(physical_state)
-      .where(eq(physical_state.stateId, id));
-    return physicalStateRecord;
-  }
-
-  async createPhysicalState(
-    physicalStateData: InsertPhysicalState
-  ): Promise<PhysicalState> {
-    const [physicalStateRecord] = await this.db
-      .insert(physical_state)
-      .values(physicalStateData)
-      .returning();
-    return physicalStateRecord;
-  }
-
-  async updatePhysicalState(
-    id: number,
-    physicalStateData: Partial<PhysicalState>
-  ): Promise<PhysicalState | undefined> {
-    const [updatedPhysicalState] = await this.db
-      .update(physical_state)
-      .set(physicalStateData)
-      .where(eq(physical_state.stateId, id))
-      .returning();
-    return updatedPhysicalState;
-  }
-
-  async deletePhysicalState(id: number): Promise<boolean> {
-    const result = await this.db
-      .delete(physical_state)
-      .where(eq(physical_state.stateId, id));
-    return result.rowCount !== null && result.rowCount > 0;
-  }
-
-  // Physical tests operations
-  async getPhysicalTestsByStudent(studentId: number): Promise<PhysicalTest[]> {
-    return await this.db
-      .select()
-      .from(physical_tests)
-      .where(eq(physical_tests.studentId, studentId));
-  }
-
-  async getPhysicalTestsByTeacher(teacherId: number): Promise<PhysicalTest[]> {
-    const results = await this.db
-      .select({
-        test: physical_tests,
-      })
-      .from(physical_tests)
-      .innerJoin(student, eq(physical_tests.studentId, student.userId))
-      .innerJoin(group, eq(student.groupId, group.groupId))
-      .where(eq(group.teacherId, teacherId));
-
-    // возвращаем только данные тестов
-    return results.map((r) => r.test);
-  }
-  async getSportResultsByPeriodAndTeacher(
-    teacherId: number,
-    periodId: number
-  ): Promise<SportResult[]> {
-    const results = await this.db
-      .select({
-        test: sport_results,
-      })
-      .from(sport_results)
-      .innerJoin(student, eq(sport_results.studentId, student.userId))
-      .innerJoin(group, eq(student.groupId, group.groupId))
-      .where(
-        and(
-          eq(group.teacherId, teacherId),
-          eq(sport_results.periodId, periodId)
-        )
-      );
-
-    // возвращаем только данные тестов
-    return results.map((r) => r.test);
-  }
-
-  async getPhysicalTest(id: number): Promise<PhysicalTest | undefined> {
-    const [physicalTestRecord] = await this.db
-      .select()
-      .from(physical_tests)
-      .where(eq(physical_tests.testId, id));
-    return physicalTestRecord;
-  }
-
-  async createPhysicalTest(
-    physicalTestData: InsertPhysicalTest
-  ): Promise<PhysicalTest> {
-    const [physicalTestRecord] = await this.db
-      .insert(physical_tests)
-      .values(physicalTestData)
-      .returning();
-    return physicalTestRecord;
-  }
-
-  async updatePhysicalTest(
-    id: number,
-    physicalTestData: Partial<PhysicalTest>
-  ): Promise<PhysicalTest | undefined> {
-    const [updatedPhysicalTest] = await this.db
-      .update(physical_tests)
-      .set(physicalTestData)
-      .where(eq(physical_tests.testId, id))
-      .returning();
-    return updatedPhysicalTest;
-  }
-
-  async deletePhysicalTest(id: number): Promise<boolean> {
-    const result = await this.db
-      .delete(physical_tests)
-      .where(eq(physical_tests.testId, id));
-    return result.rowCount !== null && result.rowCount > 0;
-  }
-
   // Sport results operations
   async getSportResultsByStudent(studentId: number): Promise<SportResult[]> {
     return await this.db
@@ -932,6 +762,7 @@ export class Storage implements IStorage {
     if (!studentData) return undefined;
 
     const profile: StudentProfile = {
+      studentId: studentData.studentId,
       fullName: studentData.fullName,
       gender: studentData.gender as "male" | "female" | "other",
       dateOfBirth: studentData.dateOfBirth,
@@ -950,6 +781,8 @@ export class Storage implements IStorage {
       previousSports: studentData.previousSports || "",
       additionalInfo: studentData.additionalInfo || "",
       phone: studentData.phone,
+      height: studentData.height ?? undefined,
+      weight: studentData.weight ?? undefined,
     };
 
     return profile;
@@ -982,6 +815,8 @@ export class Storage implements IStorage {
         previousSports: data.previousSports,
         additionalInfo: data.additionalInfo,
         phone: data.phone || studentData.phone,
+        height: data.height || studentData.height,
+        weight: data.weight || studentData.weight,
       })
       .where(eq(student.studentId, studentId))
       .returning();

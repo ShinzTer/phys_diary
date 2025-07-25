@@ -36,7 +36,7 @@ export default function MobileNav() {
         <Link href="/tests">
           <a className={cn(
             "flex flex-col items-center py-2 px-4",
-            isActive("/tests") || isActive("/samples") ? "text-primary" : "text-gray-500"
+            isActive("/tests") ? "text-primary" : "text-gray-500"
           )}>
             <Activity size={20} />
             <span className="text-xs mt-1">Тесты</span>

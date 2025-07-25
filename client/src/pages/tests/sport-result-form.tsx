@@ -565,7 +565,13 @@ console.log(testData?.basketballFreethrow)
                         { name: "Плавание 50 м, с", key: "swimming50m" },
                         { name: "Плавание 100 м, с", key: "swimming100m" },
                         { name: "Бег 100 м, с", key: "running100m" },
-                        { name: "Бег 500 (девушки)\n1000 м (юноши), с", key: "running500m1000m" },
+                        { name: "Бег 500 (девушки)/1000 м (юноши), с", key: "running500m1000m" },
+                        { name: "Отжимания", key: "pushUps" },
+                        { name: "Подтягивания", key: "pullUps" },
+                        { name: "Планка", key: "plank" },
+                        { name: "Прыжок в длину", key: "longJump" },
+                        { name: "Челночный бег 4x9 м, с", key: "shuttleRun49" },
+                        { name: "Поднимание туловища за 1 минуту, раз", key: "sitUps1min" },
                       ].map((test) => (
                         <tr key={test.key} className="border-t border-gray-100">
                           <td className="p-2 font-medium">{test.name}</td>
@@ -576,13 +582,12 @@ console.log(testData?.basketballFreethrow)
                               render={({ field }) => (
                                 <Input
                                   type= "number"
-                                  step={test.name.includes(", с") ? "0.01" : "1"}
                                   value={field.value ?? ""}
                                   onChange={(e) => {
                                     const inputValue = e.target.value;
                                     field.onChange(
                                       inputValue === ""
-                                        ? undefined
+                                        ? inputValue
                                         : Number(inputValue)
                                     );
                                   }}

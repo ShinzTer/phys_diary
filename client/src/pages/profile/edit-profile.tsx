@@ -111,47 +111,58 @@ export default function EditProfile() {
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(userProfileSchema),
-    defaultValues: {
-      role: user?.role || "student",
-      fullName: "",
-      dateOfBirth: "",
-      phone: "",
-      nationality: "",
-      educationalDepartment: "",
-      // Student-specific fields
-      ...(user?.role === "student" && {
-        gender: "male",
-        placeOfBirth: "",
-        address: "",
-        schoolGraduated: "",
-        medicalGroup: "basic",
-        medicalDiagnosis: "",
-        previousIllnesses: "",
-        activeSports: "",
-        previousSports: "",
-        additionalInfo: ""
-      }),
-      // Teacher-specific fields
-      ...(user?.role === "teacher" && {
-        position: ""
-      })
-    }
+    defaultValues:
+      user?.role === "student"
+        ? {
+            role: "student",
+            fullName: "",
+            dateOfBirth: "",
+            phone: "",
+            nationality: "",
+            educationalDepartment: "",
+            gender: "male",
+            placeOfBirth: "",
+            address: "",
+            schoolGraduated: "",
+            medicalGroup: "basic",
+            medicalDiagnosis: "",
+            previousIllnesses: "",
+            activeSports: "",
+            previousSports: "",
+            additionalInfo: "",
+            height: undefined,
+            weight: undefined,
+          }
+        : user?.role === "teacher"
+        ? {
+            role: "teacher",
+            fullName: "",
+            dateOfBirth: "",
+            phone: "",
+            nationality: "",
+            educationalDepartment: "",
+            position: "",
+          }
+        : undefined,
   });
 
   // Update form when profile data is loaded
   useEffect(() => {
     if (profile?.profile) {
       // Format date string for date input
-      const formattedProfile = {
+      let formattedProfile: any = {
         ...profile.profile,
         dateOfBirth: profile.profile.dateOfBirth ? new Date(profile.profile.dateOfBirth).toISOString().split('T')[0] : "",
-        role: user?.role
+        role: user?.role,
       };
-      
+      if (user?.role === "student") {
+        formattedProfile.height = profile.profile.height !== undefined && profile.profile.height !== null && profile.profile.height !== '' ? Number(profile.profile.height) : undefined;
+        formattedProfile.weight = profile.profile.weight !== undefined && profile.profile.weight !== null && profile.profile.weight !== '' ? Number(profile.profile.weight) : undefined;
+      }
       // Set each field value
       Object.entries(formattedProfile).forEach(([key, value]) => {
         if (value !== undefined && value !== null) {
-          form.setValue(key as keyof ProfileFormValues, value.toString());
+          form.setValue(key as keyof ProfileFormValues, value as any);
         }
       });
     }
@@ -305,6 +316,37 @@ export default function EditProfile() {
                           )}
                         />
 
+                        {user?.role === "student" && (
+                          <>
+                            <FormField
+                              control={form.control}
+                              name="height"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Рост (см)</FormLabel>
+                                  <FormControl>
+                                    <Input type="number" placeholder="Введите рост" {...field} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={form.control}
+                              name="weight"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Вес (кг)</FormLabel>
+                                  <FormControl>
+                                    <Input type="number" placeholder="Введите вес" {...field} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </>
+                        )}
+                        
                         {user?.role === "student" && (
                           <FormField
                             control={form.control}

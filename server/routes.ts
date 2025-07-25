@@ -10,8 +10,6 @@ import {
   insertTeacherSchema, 
   insertStudentSchema,
   insertPeriodSchema,
-  insertPhysicalStateSchema,
-  insertPhysicalTestsSchema,
   insertSportResultsSchema,
   insertResultSchema,
   insertUserSchema,
@@ -591,233 +589,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Error updating settings" });
     }
   });
-
-  // Physical tests management endpoints
-  app.get("/api/physical-tests/:studentId", async (req, res) => {
-    try {
-      if (!req.isAuthenticated()) {
-        return res.status(401).json({ message: "Not authenticated" });
-      }
-      console.log(req.user);
-      const studentId = parseInt(req.params.studentId);
-      
-      // If not an admin or teacher, only allow access to own physical tests
-      if (req.user?.role !== "admin" && req.user?.role !== "teacher" && req.user?.id !== studentId) {
-        return res.status(403).json({ message: "Access denied" });
-      }
-      
-      const tests = await storage.getPhysicalTestsByStudent(studentId);
-      
-      // If no tests found, return empty array instead of null
-      res.json(tests || []);
-    } catch (error) {
-      console.error('Error fetching physical tests:', error);
-      res.status(500).json({ message: "Error fetching physical tests", error: String(error) });
-    }
-  });
-
-
-   app.get("/api/physical-tests-id/:studentId", async (req, res) => {
-    try {
-      if (!req.isAuthenticated()) {
-        return res.status(401).json({ message: "Not authenticated" });
-      }
-      console.log(req.user);
-      const studentId = parseInt(req.params.studentId);
-      
-      const tests = await storage.getPhysicalTest(studentId);
-      
-      // If no tests found, return empty array instead of null
-      res.json(tests || []);
-    } catch (error) {
-      console.error('Error fetching physical tests:', error);
-      res.status(500).json({ message: "Error fetching physical tests", error: String(error) });
-    }
-  });
-
-  app.post("/api/physical-tests", async (req, res) => {
-    try {
-      if (!req.isAuthenticated()) {
-        return res.status(401).json({ message: "Not authenticated" });
-      }
-      console.log(req.body)
-      console.log(insertPhysicalTestsSchema)
-      const testData = insertPhysicalTestsSchema.parse(req.body);
-      
-      // If student, can only create tests for themselves
-      if (req.user?.role === "student" && testData.studentId !== req.user.id) {
-        console.log(testData)
-        console.log(req.user.id)
-        return res.status(403).json({ message: "Access denied" });
-      }
-      console.log(testData);
-      const test = await storage.createPhysicalTest(testData);
-      res.status(201).json(test);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Invalid physical test data", errors: error.errors });
-      }
-      res.status(500).json({ message: "Error creating physical test" });
-    }
-  });
-
-  app.put("/api/physical-tests/:id", async (req, res) => {
-    try {
-      if (!req.isAuthenticated()) {
-        return res.status(401).json({ message: "Not authenticated" });
-      }
-
-      const id = parseInt(req.params.id);
-      const testData = req.body;
-      
-      const existingTest = await storage.getPhysicalTest(id);
-      if (!existingTest) {
-        return res.status(404).json({ message: "Physical test not found" });
-      }
-      
-      // Students can only update their own tests
-      if (req.user?.role === "student" && existingTest.studentId !== req.user.id) {
-        return res.status(403).json({ message: "Access denied" });
-      }
-      
-      const updatedTest = await storage.updatePhysicalTest(id, testData);
-      res.json(updatedTest);
-    } catch (error) {
-      res.status(500).json({ message: "Error updating physical test" });
-    }
-  });
-
-  // Physical state management endpoints
-  app.get("/api/physical-states/:studentId", async (req, res) => {
-    try {
-      if (!req.isAuthenticated()) {
-        return res.status(401).json({ message: "Not authenticated" });
-      }
-
-      const studentId = parseInt(req.params.studentId);
-      
-      const states = await storage.getPhysicalStatesByStudent(studentId);
-      res.json(states);
-    } catch (error) {
-      res.status(500).json({ message: "Error fetching physical states" });
-    }
-  });
-
-   app.get("/api/physical-states-by-id/:sampleId", async (req, res) => {
-    try {
-      if (!req.isAuthenticated()) {
-        return res.status(401).json({ message: "Not authenticated" });
-      }
-
-      const sampleId = parseInt(req.params.sampleId);
-      
-      const states = await storage.getPhysicalState(sampleId);
-      res.json(states);
-    } catch (error) {
-      res.status(500).json({ message: "Error fetching physical states" });
-    }
-  });
-
-  app.get("/api/samples/all", async (req, res) => {
-    try {
-      if (!req.isAuthenticated()) {
-        return res.status(401).json({ message: "Not authenticated" });
-      }
-      if (req.user?.role !== "admin" && req.user?.role !== "teacher" ) {
-        return res.status(403).json({ message: "Access denied" });
-      }
-      
-      const states = await storage.getPhysicalStates();
-      
-      res.json(states);
-    } catch (error) {
-      res.status(500).json({ message: "Error fetching physical states" });
-    }
-  });
-
-
-    app.get("/api/tests/all/:teacherId", async (req, res) => {
-    try {
-      if (!req.isAuthenticated()) {
-        return res.status(401).json({ message: "Not authenticated" });
-      }
-      if (req.user?.role !== "admin" && req.user?.role !== "teacher" ) {
-        return res.status(403).json({ message: "Access denied" });
-      }
-      const teacherId = parseInt(req.params.teacherId);
-      const states = req.user?.role !== "teacher" ? await storage.getPhysicalTests() : await storage.getPhysicalTestsByTeacher(teacherId) ;
-  
-      res.json(states);
-    } catch (error) {
-      res.status(500).json({ message: "Error fetching physical tests" });
-    }
-  });
-
-
-      app.get("/api/tests/all", async (req, res) => {
-    try {
-      if (!req.isAuthenticated()) {
-        return res.status(401).json({ message: "Not authenticated" });
-      }
-      if (req.user?.role !== "admin" && req.user?.role !== "teacher" ) {
-        return res.status(403).json({ message: "Access denied" });
-      }
-      const states = await storage.getPhysicalTests();
-  
-      res.json(states);
-    } catch (error) {
-      res.status(500).json({ message: "Error fetching physical tests" });
-    }
-  });
-
-  app.post("/api/physical-states", async (req, res) => {
-    try {
-      if (!req.isAuthenticated()) {
-        return res.status(401).json({ message: "Not authenticated" });
-      }
-
-      const stateData = insertPhysicalStateSchema.parse(req.body);
-      
-      // If student, can only create physical states for themselves
-      if (req.user?.role === "student" && stateData.studentId !== req.user.id) {
-        return res.status(403).json({ message: "Access denied" });
-      }
-      
-      const state = await storage.createPhysicalState(stateData);
-      res.status(201).json(state);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Invalid physical state data", errors: error.errors });
-      }
-      res.status(500).json({ message: "Error creating physical state" });
-    }
-  });
-
-  app.put("/api/physical-states/:id", async (req, res) => {
-    try {
-      if (!req.isAuthenticated()) {
-        return res.status(401).json({ message: "Not authenticated" });
-      }
-
-      const id = parseInt(req.params.id);
-      const stateData = req.body;
-      
-      const existingState = await storage.getPhysicalState(id);
-      if (!existingState) {
-        return res.status(404).json({ message: "Physical state not found" });
-      }
-      
-      // Students can only update their own physical states
-      if (req.user?.role === "student" && existingState.studentId !== req.user.studentId) {
-        return res.status(403).json({ message: "Access denied" });
-      }
-      
-      const updatedState = await storage.updatePhysicalState(id, stateData);
-      res.json(updatedState);
-    } catch (error) {
-      res.status(500).json({ message: "Error updating physical state" });
-    }
-  });
   
   // Sport results management endpoints
   app.get("/api/sport-results/:studentId", async (req, res) => {
@@ -882,14 +653,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Not authenticated" });
       }
 
-      const studentId = parseInt(req.params.periodId);
+      const periodId = parseInt(req.params.periodId); // Исправлено: periodId
       
       // If not an admin or teacher, only allow access to own sport results
-      if (req.user?.role !== "admin" && req.user?.role !== "teacher" ) { //тут беда
+      if (req.user?.role !== "admin" && req.user?.role !== "teacher") {
         return res.status(403).json({ message: "Access denied" });
       }
       
-      const results = await storage.getSportResultsByPeriod(studentId);
+      const results = await storage.getSportResultsByPeriod(periodId); // Исправлено: periodId
       res.json(results);
     } catch (error) {
       res.status(500).json({ message: "Error fetching sport results" });
@@ -1040,7 +811,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const studentId = parseInt(req.params.studentId);
       
       // If not an admin or teacher, only allow access to own results
-      if (req.user?.role !== "admin" && req.user?.role !== "teacher" && req.user?.studentId !== studentId) { //тут беда
+      if (req.user?.role !== "admin" && req.user?.role !== "teacher" && req.user?.id !== studentId) { //тут беда
         return res.status(403).json({ message: "Access denied" });
       }
       
@@ -1208,7 +979,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Check if user is admin or the teacher themselves
-      if (req.user?.role !== "admin" && req.user?.teacherId !== parseInt(req.params.id)) { //тут беда
+      if (req.user?.role !== "admin" && req.user?.id !== parseInt(req.params.id)) { //тут беда
         return res.status(403).json({ message: "Access denied" });
       }
       
@@ -1414,7 +1185,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Check if user is admin, teacher, or the student themselves
-      if (req.user?.role !== "admin" && req.user?.role !== "teacher" && req.user?.studentId !== parseInt(req.params.id)) { //тут беда
+      if (req.user?.role !== "admin" && req.user?.role !== "teacher" && req.user?.id !== parseInt(req.params.id)) { //тут беда
         return res.status(403).json({ message: "Access denied" });
       }
       
@@ -1448,55 +1219,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (!success) {
         return res.status(404).json({ message: "Student not found" });
-      }
-      
-      res.status(204).send();
-    } catch (error) {
-      res.status(500).json({ message: "Error deleting student" });
-    }
-  });
-
-
-    app.delete("/api/physical-states/:id", async (req, res) => {
-    try {
-      if (!req.isAuthenticated()) {
-        return res.status(401).json({ message: "Not authenticated" });
-      }
-      
-      // Check if user is admin
-      if (req.user?.role !== "admin") {
-        return res.status(403).json({ message: "Access denied. Admin role required." });
-      }
-      
-      const id = parseInt(req.params.id);
-      const success = await storage.deletePhysicalState(id);
-      
-      if (!success) {
-        return res.status(404).json({ message: "Physical state not found" });
-      }
-      
-      res.status(204).send();
-    } catch (error) {
-      res.status(500).json({ message: "Error deleting student" });
-    }
-  });
-
-   app.delete("/api/physical-tests/:id", async (req, res) => {
-    try {
-      if (!req.isAuthenticated()) {
-        return res.status(401).json({ message: "Not authenticated" });
-      }
-      
-      // Check if user is admin
-      if (req.user?.role !== "admin") {
-        return res.status(403).json({ message: "Access denied. Admin role required." });
-      }
-      
-      const id = parseInt(req.params.id);
-      const success = await storage.deletePhysicalTest(id);
-      
-      if (!success) {
-        return res.status(404).json({ message: "Physical state not found" });
       }
       
       res.status(204).send();

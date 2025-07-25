@@ -172,37 +172,10 @@ export default function Reports() {
     queryKey: ["/api/periods"],
     enabled: user?.role !== "student",
   });
-  // Fetch all tests and samples
-  const { data: tests, isLoading: isLoadingTests } = useQuery<PhysicalTest[]>({
-    queryKey: ["/api/physical-tests/", selectedUser],
-    enabled: selectedUser !== "" && selectedUser !== "all",
-    queryFn: async () => {
-      const res = await fetch(`/api/physical-tests/${selectedUser}`, {
-        credentials: "include",
-      });
-      if (!res.ok) throw new Error("Не удалось получить тесты");
-      return res.json();
-    },
-  });
-
-
-const filteredTests = tests?.filter(test => test.periodId === Number(selectedDateRange));
-
-  const { data: samples, isLoading: isLoadingSamples } = useQuery<Sample[]>({
-    queryKey: ["/api/samples", selectedUser],
-    enabled: selectedUser !== "",
-    queryFn: async () => {
-      const res = await fetch(`/api/samples/${selectedUser}`, {
-        credentials: "include",
-      });
-      if (!res.ok) throw new Error("Не удалось получить пробы");
-      return res.json();
-    },
-  });
 
   // Get data for selected student
   const { data: userData } = useQuery<UserData>({
-    queryKey: [`/api/profile/studen/${selectedUser}`],
+    queryKey: [`/api/profile/student/${selectedUser}`],
     enabled: selectedUser !== "" && selectedUser !== "all",
   });
 
@@ -220,8 +193,6 @@ const filteredTests = tests?.filter(test => test.periodId === Number(selectedDat
   });
 
   const isLoading =
-    isLoadingTests ||
-    isLoadingSamples ||
     isLoadingSportResults ||
     (selectedUser !== "" && selectedUser !== "all" && !userData);
 
@@ -396,95 +367,6 @@ const filteredTests = tests?.filter(test => test.periodId === Number(selectedDat
       { name: "Подготовительная", value: counts.preparatory },
       { name: "Специальная", value: counts.special },
     ];
-  };
-
-  // Generate progress data based on tests
-  const getProgressData = () => {
-    if (!tests) return [];
-
-    // Group by date (month/year) and count average performance
-    const groupedByDate: Record<string, { count: number; total: number }> = {};
-
-    tests.forEach((test) => {
-      if (!test.date) return;
-
-      // Format date as month/year
-      const date = new Date(test.date);
-      const dateKey = format(date, "MMM yyyy");
-
-      // Convert test grade to numeric value if possible
-      let score = 0;
-      // if (test.grade) {
-      //   if (["A", "EXCELLENT", "5"].includes(test.grade.toUpperCase()))
-      //     score = 5;
-      //   else if (["B", "GOOD", "4"].includes(test.grade.toUpperCase()))
-      //     score = 4;
-      //   else if (["C", "SATISFACTORY", "3"].includes(test.grade.toUpperCase()))
-      //     score = 3;
-      //   else if (["D", "POOR", "2"].includes(test.grade.toUpperCase()))
-      //     score = 2;
-      //   else score = 3; // Default score
-      // } else {
-      //   score = 3; // Default for ungraded tests
-      // }
-
-      if (!groupedByDate[dateKey]) {
-        groupedByDate[dateKey] = { count: 0, total: 0 };
-      }
-
-      groupedByDate[dateKey].count++;
-      groupedByDate[dateKey].total += score;
-    });
-
-    // Convert to array and calculate averages
-    return Object.entries(groupedByDate)
-      .map(([date, data]) => ({
-        date,
-        performance: Math.round((data.total / data.count) * 20), // Scale to percentage (1-5 -> 20-100)
-      }))
-      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-  };
-
-  // Generate mock data for sample trends
-  const getSampleTrendData = () => {
-    if (!samples || samples.length === 0) {
-      // Generate some placeholder data
-      return Array.from({ length: 6 }, (_, i) => ({
-        date: format(subDays(new Date(), 30 * (5 - i)), "MMM yyyy"),
-        value: Math.floor(Math.random() * 20) + 70, // Random value between 70-90
-      }));
-    }
-
-    // Group samples by date for the selected sample type
-    const samplesByDate: Record<string, number[]> = {};
-    samples.forEach((sample) => {
-      if (!sample.date) return;
-
-      // Format date as month/year
-      const date = new Date(sample.date);
-      const dateKey = format(date, "MMM yyyy");
-
-      if (!samplesByDate[dateKey]) {
-        samplesByDate[dateKey] = [];
-      }
-
-      // Try to extract numeric value
-      const numericValue = parseFloat(sample.value.replace(/[^\d.-]/g, ""));
-      if (!isNaN(numericValue)) {
-        samplesByDate[dateKey].push(numericValue);
-      }
-    });
-
-    // Convert to array and calculate averages
-    return Object.entries(samplesByDate)
-      .map(([date, values]) => {
-        const avg = values.reduce((sum, val) => sum + val, 0) / values.length;
-        return {
-          date,
-          value: Math.round(avg * 100) / 100, // Round to 2 decimal places
-        };
-      })
-      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   };
 
   // For the pie chart colors
@@ -667,16 +549,13 @@ const filteredTests = tests?.filter(test => test.periodId === Number(selectedDat
                     <div className="flex items-center">
                       <Users className="h-5 w-5 mr-2 text-primary" />
                       {userData.fullName || userData.username}
-                      <span className="ml-2 text-sm text-gray-500">
-                        (ID: {userData.id})
-                      </span>
                     </div>
                   ) : (
-                    "Report Results"
+                    "Результаты отчета"
                   )}
                 </CardTitle>
                 <CardDescription>
-                  Test performance analysis across different exercises
+                  Аналитика результатов тестов и контрольных упражнений
                 </CardDescription>
               </CardHeader>
               <CardContent>
