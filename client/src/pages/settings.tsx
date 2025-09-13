@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
+import { useLocalSettingsContext } from "@/components/providers/local-settings-provider";
 import { queryClient } from "@/lib/queryClient";
 import MainLayout from "@/components/layout/main-layout";
 import { 
@@ -69,7 +70,7 @@ type VisualSettingsValues = z.infer<typeof visualSettingsSchema>;
 
 interface UserData {
   id: string;
-  visualSettings?: string;
+  // Remove visualSettings from user data since we're using local storage
   // Add other user data fields as needed
 }
 
@@ -77,6 +78,9 @@ export default function Settings() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("appearance");
+  
+  // Use local settings context
+  const { settings: localSettings, isLoaded: settingsLoaded, saveSettings } = useLocalSettingsContext();
   
   // Form for password change
   const passwordForm = useForm<PasswordFormValues>({
@@ -88,52 +92,23 @@ export default function Settings() {
     }
   });
 
-  // Get existing settings from user data
+  // Get existing user data (without visual settings)
   const { data: userData, isLoading } = useQuery<UserData>({
     queryKey: [`/api/profile/${user?.id}`],
   });
- 
-
-  // Parse visual settings from user data or use defaults
-  const defaultVisualSettings: VisualSettingsValues = {
-    theme: "light",
-    colorScheme: "blue",
-    fontSize: "medium",
-    reduceMotion: false,
-    contrastMode: "normal",
-  };
-
-  // Try to parse existing visual settings from user data
-  const parseVisualSettings = () => {
-    if (userData?.visualSettings) {
-      try {
-        const settings = JSON.parse(userData.visualSettings);
-        return {
-          theme: settings.theme || defaultVisualSettings.theme,
-          colorScheme: settings.colorScheme || defaultVisualSettings.colorScheme,
-          fontSize: settings.fontSize || defaultVisualSettings.fontSize,
-          reduceMotion: settings.reduceMotion || defaultVisualSettings.reduceMotion,
-          contrastMode: settings.contrastMode || defaultVisualSettings.contrastMode,
-        };
-      } catch (e) {
-        return defaultVisualSettings;
-      }
-    }
-    return defaultVisualSettings;
-  };
 
   // Form for visual settings
   const visualSettingsForm = useForm<VisualSettingsValues>({
     resolver: zodResolver(visualSettingsSchema),
-    defaultValues: defaultVisualSettings,
+    defaultValues: localSettings,
   });
 
-  // Update form values when user data is loaded
+  // Update form values when local settings are loaded
   useEffect(() => {
-    if (userData) {
-      visualSettingsForm.reset(parseVisualSettings());
+    if (settingsLoaded) {
+      visualSettingsForm.reset(localSettings);
     }
-  }, [userData]);
+  }, [settingsLoaded, localSettings]);
 
   // Password change mutation
   const changePasswordMutation = useMutation({
@@ -159,33 +134,6 @@ export default function Settings() {
     }
   });
 
-  // Visual settings mutation
-  const updateVisualSettingsMutation = useMutation({
-    mutationFn: async (data: VisualSettingsValues) => {
-      // Convert settings to JSON string for storage
-      const visualSettings = JSON.stringify(data);
-      await apiRequest("PUT", `/api/settings/${user?.id}`, { visualSettings });
-      return true;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/profile/${user?.id}`] });
-      toast({
-        title: "Настройки обновлены",
-        description: "Выбор визуальных настроек сохранён."
-      });
-
-      // Apply visual settings to the application
-      applyVisualSettings(visualSettingsForm.getValues());
-    },
-    onError: (error) => {
-      toast({
-        title: "Ошибка",
-        description: error.message || "Ошибка в сохранении настроек",
-        variant: "destructive"
-      });
-    }
-  });
-
   // Handle password change form submission
   function onPasswordSubmit(data: PasswordFormValues) {
     changePasswordMutation.mutate(data);
@@ -193,122 +141,14 @@ export default function Settings() {
 
   // Handle visual settings form submission
   function onVisualSettingsSubmit(data: VisualSettingsValues) {
-     localStorage.setItem("visualSettings", JSON.stringify(data));
-    updateVisualSettingsMutation.mutate(data);
+    saveSettings(data);
+    toast({
+      title: "Настройки обновлены",
+      description: "Визуальные настройки сохранены локально на вашем устройстве."
+    });
   }
 
-  // Apply visual settings to the application
-  function applyVisualSettings(settings: VisualSettingsValues) {
-    const htmlElement = document.documentElement;
-    
-    function setThemeClass(isDark: boolean) {
-      if (isDark) {
-        htmlElement.classList.add("dark");
-        // Apply dark mode CSS variables
-        htmlElement.style.setProperty('--background', '240 10% 3.9%');
-        htmlElement.style.setProperty('--foreground', '0 0% 98%');
-        htmlElement.style.setProperty('--card', '240 10% 3.9%');
-        htmlElement.style.setProperty('--card-foreground', '0 0% 98%');
-        htmlElement.style.setProperty('--popover', '240 10% 3.9%');
-        htmlElement.style.setProperty('--popover-foreground', '0 0% 98%');
-        htmlElement.style.setProperty('--muted', '240 3.7% 15.9%');
-        htmlElement.style.setProperty('--muted-foreground', '240 5% 64.9%');
-        htmlElement.style.setProperty('--border', '240 3.7% 15.9%');
-        htmlElement.style.setProperty('--input', '240 3.7% 15.9%');
-      } else {
-        htmlElement.classList.remove("dark");
-        // Apply light mode CSS variables
-        htmlElement.style.setProperty('--background', '0 0% 100%');
-        htmlElement.style.setProperty('--foreground', '240 10% 3.9%');
-        htmlElement.style.setProperty('--card', '0 0% 100%');
-        htmlElement.style.setProperty('--card-foreground', '240 10% 3.9%');
-        htmlElement.style.setProperty('--popover', '0 0% 100%');
-        htmlElement.style.setProperty('--popover-foreground', '240 10% 3.9%');
-        htmlElement.style.setProperty('--muted', '240 4.8% 95.9%');
-        htmlElement.style.setProperty('--muted-foreground', '240 3.8% 46.1%');
-        htmlElement.style.setProperty('--border', '240 5.9% 90%');
-        htmlElement.style.setProperty('--input', '240 5.9% 90%');
-      }
-    }
-
-    // Remove any existing media query listeners
-    const existingListener = window.matchMedia("(prefers-color-scheme: dark)").removeEventListener('change', () => {});
-
-    // Theme (light/dark/system)
-    if (settings.theme === "dark") {
-      setThemeClass(true);
-    } else if (settings.theme === "light") {
-      setThemeClass(false);
-    } else {
-      // System theme
-      const systemThemeMedia = window.matchMedia("(prefers-color-scheme: dark)");
-      setThemeClass(systemThemeMedia.matches);
-      
-      // Add listener for system theme changes
-      systemThemeMedia.addEventListener('change', (e) => {
-        setThemeClass(e.matches);
-      });
-    }
-
-    // Apply color scheme
-    const colorSchemes = {
-      blue: {
-        primary: '221.2 83.2% 53.3%',
-        'primary-foreground': '210 40% 98%',
-      },
-      green: {
-        primary: '142.1 76.2% 36.3%',
-        'primary-foreground': '355.7 100% 97.3%',
-      },
-      purple: {
-        primary: '262.1 83.3% 57.8%',
-        'primary-foreground': '210 40% 98%',
-      },
-      orange: {
-        primary: '24.6 95% 53.1%',
-        'primary-foreground': '60 9.1% 97.8%',
-      },
-      red: {
-        primary: '0 84.2% 60.2%',
-        'primary-foreground': '355.7 100% 97.3%',
-      },
-    };
-
-    const selectedScheme = colorSchemes[settings.colorScheme as keyof typeof colorSchemes];
-    if (selectedScheme) {
-      Object.entries(selectedScheme).forEach(([key, value]) => {
-        htmlElement.style.setProperty(`--${key}`, value);
-      });
-    }
-    
-    // Reduced motion
-    if (settings.reduceMotion) {
-      htmlElement.classList.add("motion-reduce");
-    } else {
-      htmlElement.classList.remove("motion-reduce");
-    }
-    
-    // High contrast
-    if (settings.contrastMode === "high") {
-      // Increase contrast by adjusting the foreground colors
-      const contrastAdjustment = (isDark: boolean) => {
-        if (isDark) {
-          htmlElement.style.setProperty('--foreground', '0 0% 100%');
-          htmlElement.style.setProperty('--muted-foreground', '240 5% 84.9%');
-        } else {
-          htmlElement.style.setProperty('--foreground', '240 10% 0%');
-          htmlElement.style.setProperty('--muted-foreground', '240 3.8% 26.1%');
-        }
-      };
-      
-      contrastAdjustment(htmlElement.classList.contains("dark"));
-      htmlElement.classList.add("high-contrast");
-    } else {
-      htmlElement.classList.remove("high-contrast");
-    }
-  }
-
-  if (isLoading) {
+  if (isLoading || !settingsLoaded) {
     return (
       <MainLayout>
         <div className="flex items-center justify-center min-h-screen">
@@ -343,7 +183,7 @@ export default function Settings() {
               <CardHeader>
                 <CardTitle>Визуальные предпочтения</CardTitle>
                 <CardDescription>
-                  Изменение внешнего вида приложения
+                  Изменение внешнего вида приложения. Настройки сохраняются локально на вашем устройстве.
                 </CardDescription>
               </CardHeader>
               <Form {...visualSettingsForm}>
@@ -355,7 +195,7 @@ export default function Settings() {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Тема</FormLabel>
-                          <div className="flex flex-wrap gap-4">
+                          <div className="flex space-x-4">
                             <RadioGroup 
                               onValueChange={field.onChange} 
                               defaultValue={field.value}
@@ -496,19 +336,10 @@ export default function Settings() {
                   <CardFooter>
                     <Button 
                       type="submit" 
-                      disabled={updateVisualSettingsMutation.isPending}
+                      disabled={false}
                     >
-                      {updateVisualSettingsMutation.isPending ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Сохранение...
-                        </>
-                      ) : (
-                        <>
-                          <Save className="mr-2 h-4 w-4" />
-                          Сохранить настройки
-                        </>
-                      )}
+                      <Save className="mr-2 h-4 w-4" />
+                      Сохранить настройки
                     </Button>
                   </CardFooter>
                 </form>

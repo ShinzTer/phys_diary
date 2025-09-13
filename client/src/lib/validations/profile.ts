@@ -28,4 +28,6 @@ export const studentProfileSchema = z.object({
   activeSports: z.string().optional(),
   previousSports: z.string().optional(),
   additionalInfo: z.string().optional(),
+  height: z.number().optional(),
+  weight: z.number().optional(),
 }); 

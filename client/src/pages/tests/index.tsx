@@ -45,7 +45,6 @@ import {
   CONTROL_EXERCISE_TYPES,
   TEST_TYPES_CAMEL,
   CONTROL_EXERCISE_TYPES_CAMEL,
-  PhysicalTest,
   Student,
   Period,
   SportResult,
@@ -62,38 +61,21 @@ export default function Tests() {
   const [periodFilter, setPeriodFilter] = useState<string>("all");
   const [activeTab, setActiveTab] = useState<string>("tests");
   const { data: teacherProfile, isLoading: isLoadingTeacherProfile } =
-    useQuery<Teacher>({
+    useQuery<{ profile: Teacher; teacherId: number }>({
       queryKey: [`/api/profile/teacher/${user?.id}`],
       enabled: user?.role === "teacher",
     });
-  const { data: tests, isLoading } = useQuery<PhysicalTest[]>({
-    queryKey: [
-      user?.role === "student"
-        ? `/api/physical-tests/${user.id}`
-        : user?.role === "teacher"
-        ? `/api/tests/all/${teacherProfile?.teacherId}`
-        : "api/tests/all",
-    ],
-    enabled: user?.role !== "teacher" || !!teacherProfile?.teacherId,
-  });
-  const filteredTests = tests?.filter(
-    (test) => test.periodId === Number(periodFilter) || periodFilter === "all"
-  );
   const { data: sport_results, isLoading: isLoadingResults } = useQuery<
     SportResult[]
   >({
     queryKey: [
       user?.role === "student"
         ? `/api/sport-results/${user.id}`
-        : user?.role === "teacher"
-        ? `/api/sport-results-teacher/${teacherProfile?.teacherId}/period/${periodFilter}`
         : `/api/sport-results-period/${periodFilter}`,
     ],
-    enabled: (user?.role !== "teacher" || !!teacherProfile?.teacherId) && periodFilter !== "all",
+    enabled: !!user && periodFilter !== "all",
   });
 
-  console.log(user?.id);
-  console.log(teacherProfile);
   console.log("periodFilter:", periodFilter);
   console.log("sport_results:", sport_results);
   const filteredSportResults = sport_results?.filter(
@@ -103,7 +85,7 @@ export default function Tests() {
     Student[]
   >({
     queryKey: ["/api/students"],
-    enabled: user?.role !== "student",
+    enabled: !!user && user?.role !== "student",
   });
 
   const { data: periods = [], isLoading: isLoadingPeriods } = useQuery<
@@ -134,36 +116,6 @@ export default function Tests() {
       .join(" ");
   };
 
-  // Get grade badge
-  const getGradeBadge = (grade?: string) => {
-    if (!grade) return <Badge variant="outline">Не назначен</Badge>;
-
-    let badgeClass = "";
-    switch (grade.toUpperCase()) {
-      case "10":
-      case "9":
-      case "EXCELENT":
-        return <Badge className="bg-green-100 text-green-800">{grade}</Badge>;
-      case "8":
-      case "7":
-      case "GOOD":
-        return <Badge className="bg-blue-100 text-blue-800">{grade}</Badge>;
-      case "6":
-      case "5":
-      case "4":
-      case "SATISFACTORY":
-        return <Badge className="bg-amber-100 text-amber-800">{grade}</Badge>;
-      case "3":
-      case "2":
-      case "1":
-      case "POOR":
-        return <Badge className="bg-red-100 text-red-800">{grade}</Badge>;
-      default:
-        return <Badge>{grade}</Badge>;
-    }
-  };
-
-
   const deleteTestMutation = useMutation({
         mutationFn: async (id: number) => {
     
@@ -173,7 +125,7 @@ export default function Tests() {
           queryClient.invalidateQueries({
             queryKey: [user?.role === "student"
           ? `/api/physical-tests/${user.id}`
-          : "/api/tests/all",],
+          : "api/tests/all",],
           });
           toast({
             title: "Физический тест удален",
@@ -199,8 +151,6 @@ export default function Tests() {
           queryClient.invalidateQueries({
             queryKey: [user?.role === "student"
         ? `/api/sport-results/${user.id}`
-        : user?.role === "teacher"
-        ? `/api/sport-results-teacher/${teacherProfile?.teacherId}/period/${periodFilter}`
         : `/api/sport-results-period/${periodFilter}`,],
           });
           toast({
@@ -225,9 +175,9 @@ export default function Tests() {
       <div className="container mx-auto px-4 py-6">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
           <div>
-            <h2 className="text-2xl font-semibold">Физические тесты</h2>
+            <h2 className="text-2xl font-semibold">Контрольные упражнения</h2>
             <p className="text-gray-500">
-              Просмотр и управление результатами физических тестов
+              Просмотр и управление результатами контрольных упражнений
             </p>
           </div>
           <div className="mt-4 md:mt-0 flex flex-col sm:flex-row gap-3">
@@ -240,29 +190,19 @@ export default function Tests() {
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-            {activeTab === "tests" ? (
-              <Link href="/tests/new">
-                {" "}
-                <Button>
-                  <Plus className="mr-2 h-4 w-4" />
-                  Записать тест
-                </Button>
-              </Link>
-            ) : (
-              <Link href="/sport_results/new">
-                <Button>
-                  <Plus className="mr-2 h-4 w-4" />
-                  Записать контрольное упражнение
-                </Button>
-              </Link>
-            )}
+            <Link href="/sport_results/new">
+              <Button>
+                <Plus className="mr-2 h-4 w-4" />
+                Записать контрольное упражнение
+              </Button>
+            </Link>
           </div>
         </div>
 
         <Card>
           <CardHeader className="pb-3">
             <div className="flex justify-between items-center">
-              <CardTitle className="text-lg">Записи тестов</CardTitle>
+              <CardTitle className="text-lg">Записи контрольных упражнений</CardTitle>
               <div className="flex gap-2">
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Период</label>
@@ -289,17 +229,7 @@ export default function Tests() {
               </div>
             </div>
           </CardHeader>
-          <Tabs
-            defaultValue="tests"
-            value={activeTab}
-            onValueChange={setActiveTab}
-          >
-            <TabsList>
-              <TabsTrigger value="tests">Физические тесты</TabsTrigger>
-              <TabsTrigger value="exercises">Контрольные упражнения</TabsTrigger>
-            </TabsList>
-            <TabsContent value="tests" className="m-0">
-              {periodFilter === "all" ? (
+          {periodFilter === "all" ? (
                 <div className="text-center py-12">
                   <h3 className="text-lg font-medium text-gray-900 mb-2">
                     Выберите период
@@ -312,183 +242,7 @@ export default function Tests() {
                 <>
                   <div className="text-center py-16">
                     <CardContent>
-                      {isLoading ? (
-                        <div className="flex justify-center items-center h-64">
-                          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                        </div>
-                      ) : (
-                        <>
-                          {!filteredTests || filteredTests.length === 0 ? (
-                            <div className="text-center py-12">
-                              <p className="text-gray-500 mb-4">
-                                Не найдено записей тестов.
-                              </p>
-                              <Link href="/tests/new">
-                                <Button>
-                                  <Plus className="mr-2 h-4 w-4" />
-                                  Записать новый тест
-                                </Button>
-                              </Link>
-                            </div>
-                          ) : (
-                            <div className="overflow-x-auto">
-                              <table className="w-full">
-                                <thead>
-                                  <tr className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    <th className="px-4 py-3">Студент</th>
-                                    <th className="px-4 py-3">Дата</th>
-                                    <th className="px-4 py-3">Период</th>
-                                    <th className="px-4 py-3">Отжимания</th>
-                                    <th className="px-4 py-3">Подтягивания</th>
-                                    <th className="px-4 py-3">
-                                      Удержание ног над полом
-                                    </th>
-                                    <th className="px-4 py-3">Теппинг–тест</th>
-                                    <th className="px-4 py-3">Бег на месте</th>
-                                    <th className="px-4 py-3">Планка</th>
-                                    <th className="px-4 py-3">
-                                      Наклон вперед из положения сидя
-                                    </th>
-                                    <th className="px-4 py-3">Прыжок в длину</th>
-
-                                    {/* <th className="px-4 py-3">
-                              <div className="flex items-center">
-                                Grade
-                                <ArrowUpDown className="ml-2 h-3 w-3" />
-                              </div>
-                            </th>
-                            <th className="px-4 py-3">Notes</th> */}
-                                    <th className="px-4 py-3 text-right">
-                                      Действия
-                                    </th>
-                                  </tr>
-                                </thead>
-                                <tbody className="divide-y divide-gray-200">
-                                  {filteredTests?.map((test) => (
-                                    <tr key={test.testId}>
-                                      <td className="px-4 py-4 whitespace-nowrap font-medium">
-                                        {user?.role === "student"
-                                          ? user?.username
-                                          : students.find(
-                                              (student) =>
-                                                student.userId === test.studentId
-                                            )?.fullName || "Unknown"}
-                                      </td>
-                                      <td className="px-4 py-4 whitespace-nowrap">
-                                        {test.date
-                                          ? format(
-                                              new Date(test.date),
-                                              "dd.MM.yyyy"
-                                            )
-                                          : "-"}
-                                      </td>
-                                      <td className="px-4 py-4 whitespace-nowrap text-sm">
-                                        {periods.find(
-                                          (period) =>
-                                            period.periodId === test.periodId
-                                        )?.periodOfStudy || "-"}
-                                      </td>
-                                      <td className="px-4 py-4 whitespace-nowrap">
-                                        {test.pushUps || "-"}
-                                      </td>
-                                      <td className="px-4 py-4 whitespace-nowrap">
-                                        {test.pullUps || "-"}
-                                      </td>
-                                      <td className="px-4 py-4 whitespace-nowrap">
-                                        {test.legHold || "-"}
-                                      </td>
-                                      <td className="px-4 py-4 whitespace-nowrap">
-                                        {test.tappingTest || "-"}
-                                      </td>
-                                      <td className="px-4 py-4 whitespace-nowrap">
-                                        {test.runningInPlace || "-"}
-                                      </td>
-                                      <td className="px-4 py-4 whitespace-nowrap">
-                                        {test.forwardBend || "-"}
-                                      </td>
-                                      <td className="px-4 py-4 whitespace-nowrap">
-                                        {test.plank || "-"}
-                                      </td>
-                                      <td className="px-4 py-4 whitespace-nowrap">
-                                        {test.longJump || "-"}
-                                      </td>
-
-                                      <td className="px-4 py-4 whitespace-nowrap text-right">
-                                        <DropdownMenu>
-                                          <DropdownMenuTrigger asChild>
-                                            <Button
-                                              variant="ghost"
-                                              size="sm"
-                                              className="h-8 w-8 p-0"
-                                            >
-                                              <MoreHorizontal className="h-4 w-4" />
-                                            </Button>
-                                          </DropdownMenuTrigger>
-                                          <DropdownMenuContent align="end">
-                                            <DropdownMenuLabel>
-                                              Действия
-                                            </DropdownMenuLabel>
-                                            <DropdownMenuItem
-                                              onClick={() =>
-                                                navigate(
-                                                  `/tests/edit/${test.testId}`
-                                                )
-                                              }
-                                            >
-                                              <Pencil className="mr-2 h-4 w-4" />
-                                              Редактировать
-                                            </DropdownMenuItem>
-                                            <DropdownMenuItem
-                                              onClick={() =>
-                                                deleteTestMutation.mutate(test.testId)
-                                              }
-                                            >
-                                              <Trash className="mr-2 h-4 w-4" />
-                                              Удалить
-                                            </DropdownMenuItem>
-                                            {user?.role === "teacher" && (
-                                              <DropdownMenuItem
-                                                onClick={() =>
-                                                  navigate(
-                                                    `/tests/edit/${test.testId}?grade=true`
-                                                  )
-                                                }
-                                              >
-                                                <Star className="mr-2 h-4 w-4" />
-                                                Выставить оценку
-                                              </DropdownMenuItem>
-                                            )}
-                                          </DropdownMenuContent>
-                                        </DropdownMenu>
-                                      </td>
-                                    </tr>
-                                  ))}
-                                </tbody>
-                              </table>
-                            </div>
-                          )}
-                        </>
-                      )}
-                    </CardContent>
-                  </div>
-                </>
-              )}
-            </TabsContent>
-            <TabsContent value="exercises" className="m-0">
-              {periodFilter === "all" ? (
-                <div className="text-center py-12">
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">
-                    Выберите период
-                  </h3>
-                  <p className="text-gray-500 max-w-md mx-auto">
-                    Пожалуйста, выберите период из фильтров для просмотра записей.
-                  </p>
-                </div>
-              ) : (
-                <>
-                  <div className="text-center py-16">
-                    <CardContent>
-                      {isLoading ? (
+                      {isLoadingResults ? (
                         <div className="flex justify-center items-center h-64">
                           <Loader2 className="h-8 w-8 animate-spin text-primary" />
                         </div>
@@ -525,6 +279,12 @@ export default function Tests() {
                                     <th className="px-4 py-3">Плавание 100 м</th>
                                     <th className="px-4 py-3">Бег 100 м</th>
                                     <th className="px-4 py-3">Бег 500/1000 м</th>
+                                    <th className="px-4 py-3">Отжимания</th>
+                                    <th className="px-4 py-3">Подтягивания</th>
+                                    <th className="px-4 py-3">Планка</th>
+                                    <th className="px-4 py-3">Прыжок в длину</th>
+                                    <th className="px-4 py-3">Челночный бег 4x9 м</th>
+                                    <th className="px-4 py-3">Поднимание туловища за 1 минуту</th>
 
                                     {/* <th className="px-4 py-3">
                               <div className="flex items-center">
@@ -540,7 +300,9 @@ export default function Tests() {
                                   {filteredSportResults?.map((test) => (
                                     <tr key={test.sportResultId}>
                                       <td className="px-4 py-4 whitespace-nowrap font-medium">
-                                        {students.find((student) => student.userId === test.studentId)?.fullName || 'Unknown'}
+                                        {user?.role === "student"
+                                          ? user?.username
+                                          : students.find((student) => student.userId === test.studentId)?.fullName || 'Unknown'}
                                       </td>
                                     
                                       <td className="px-4 py-4 whitespace-nowrap text-sm">
@@ -582,6 +344,24 @@ export default function Tests() {
                                       <td className="px-4 py-4 whitespace-nowrap">
                                         {test.running500m1000m || '-'}
                                       </td>
+                                      <td className="px-4 py-4 whitespace-nowrap">
+                                        {test.pushUps || '-'}
+                                      </td>
+                                      <td className="px-4 py-4 whitespace-nowrap">
+                                        {test.pullUps || '-'}
+                                      </td>
+                                      <td className="px-4 py-4 whitespace-nowrap">
+                                        {test.plank || '-'}
+                                      </td>
+                                      <td className="px-4 py-4 whitespace-nowrap">
+                                        {test.longJump || '-'}
+                                      </td>
+                                      <td className="px-4 py-4 whitespace-nowrap">
+                                        {test.shuttleRun49 || '-'}
+                                      </td>
+                                      <td className="px-4 py-4 whitespace-nowrap">
+                                        {test.sitUps1min || '-'}
+                                      </td>
                                       <td className="px-4 py-4 whitespace-nowrap text-right">
                                         <DropdownMenu>
                                           <DropdownMenuTrigger asChild>
@@ -603,12 +383,6 @@ export default function Tests() {
                                               <Trash className="mr-2 h-4 w-4" />
                                               Удалить
                                             </DropdownMenuItem>
-                                            {user?.role === "teacher"  && (
-                                              <DropdownMenuItem onClick={() => navigate(`/sport_resutls/edit/${test.sportResultId}?grade=true`)}>
-                                                <Star className="mr-2 h-4 w-4" />
-                                                Выставить оценку
-                                              </DropdownMenuItem>
-                                            )}
                                           </DropdownMenuContent>
                                         </DropdownMenu>
                                       </td>
@@ -624,8 +398,6 @@ export default function Tests() {
                   </div>
                 </>
               )}
-            </TabsContent>
-          </Tabs>
         </Card>
       </div>
     </MainLayout>

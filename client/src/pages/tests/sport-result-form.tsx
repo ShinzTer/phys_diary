@@ -6,7 +6,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import {
-  TEST_TYPES,
   CONTROL_EXERCISE_TYPES,
   Period,
   SportResult,
@@ -66,16 +65,22 @@ interface ResultData {
   studentId: number;
   basketballFreethrow?: number;
   basketballDribble?: number;
-  basketballLeading?: number;
+  basketballLeading?: string;
   volleyballSoloPass?: number;
   volleyballUpperPass?: number;
   volleyballLowerPass?: number;
   volleyballServe?: number;
-  swimming25m?: number;
-  swimming50m?: number;
-  swimming100m?: number;
-  running100m?: number;
-  running500m1000m?: number;
+  swimming25m?: string;
+  swimming50m?: string;
+  swimming100m?: string;
+  running100m?: string;
+  running500m1000m?: string;
+  pushUps?: number;
+  pullUps?: number;
+  plank?: string;
+  longJump?: string;
+  shuttleRun49?: string;
+  sitUps1min?: number;
   periodId: number;
 }
 
@@ -95,26 +100,17 @@ const testFormSchema = z.object({
   swimming100m: z.number().optional(),
   running100m: z.number().optional(),
   running500m1000m: z.number().optional(),
+  pushUps: z.number().optional(),
+  pullUps: z.number().optional(),
+  plank: z.number().optional(),
+  longJump: z.number().optional(),
+  shuttleRun49: z.number().optional(),
+  sitUps1min: z.number().optional(),
   // grade: z.string().optional(),
   // notes: z.string().optional(),
 });
-console.log(testFormSchema)
 
 type TestFormValues = z.infer<typeof testFormSchema>;
-
-// Функция преобразования времени в миллисекунды
-function parseTimeToMs(value: string): number | undefined {
-  if (!value) return undefined;
-  // Ожидается формат мм.сс,ддд или мм.сс
-  const [minPart, secPartRaw] = value.split(".");
-  if (!minPart || !secPartRaw) return undefined;
-  // Секунды могут быть с запятой (дробные)
-  const secPart = secPartRaw.replace(",", ".");
-  const minutes = parseInt(minPart, 10);
-  const seconds = parseFloat(secPart);
-  if (isNaN(minutes) || isNaN(seconds)) return undefined;
-  return Math.round((minutes * 60 + seconds) * 1000);
-}
 
 export default function SportResultForm() {
   const { user } = useAuth();
@@ -169,16 +165,22 @@ console.log(testData?.basketballFreethrow)
       periodId: testData?.periodId ?? 0,
       basketballFreethrow: testData?.basketballFreethrow ?? 0,
       basketballDribble: testData?.basketballDribble ?? 0,
-      basketballLeading: testData?.basketballLeading ?? 0,
+      basketballLeading: Number(testData?.basketballLeading ?? 0),
       volleyballSoloPass: testData?.volleyballSoloPass ?? 0,
       volleyballUpperPass: testData?.volleyballUpperPass ?? 0,
       volleyballLowerPass: testData?.volleyballLowerPass ?? 0,
       volleyballServe: testData?.volleyballServe ?? 0,
-      swimming25m: testData?.swimming25m ?? 0,
-      swimming50m: testData?.swimming50m ?? 0,
-      swimming100m: testData?.swimming100m ?? 0,
-      running100m: testData?.running100m ?? 0,
-      running500m1000m: testData?.running500m1000m ?? 0,
+      swimming25m: Number(testData?.swimming25m ?? 0),
+      swimming50m: Number(testData?.swimming50m ?? 0),
+      swimming100m: Number(testData?.swimming100m ?? 0),
+      running100m: Number(testData?.running100m ?? 0),
+      running500m1000m: Number(testData?.running500m1000m ?? 0),
+      pushUps: testData?.pushUps ?? 0,
+      pullUps: testData?.pullUps ?? 0,
+      plank: Number(testData?.plank ?? 0),
+      longJump: Number(testData?.longJump ?? 0),
+      shuttleRun49: Number(testData?.shuttleRun49 ?? 0),
+      sitUps1min: testData?.sitUps1min ?? 0,
     },
   });
 
@@ -199,23 +201,29 @@ console.log(testData?.basketballFreethrow)
           periodId: testData.periodId,
         basketballFreethrow: testData?.basketballFreethrow ?? 0,
         basketballDribble: testData?.basketballDribble ?? 0,
-        basketballLeading: testData?.basketballLeading ?? 0,
+        basketballLeading: Number(testData?.basketballLeading ?? 0),
         volleyballSoloPass: testData?.volleyballSoloPass ?? 0,
         volleyballUpperPass: testData?.volleyballUpperPass ?? 0,
         volleyballLowerPass: testData?.volleyballLowerPass ?? 0,
         volleyballServe: testData?.volleyballServe ?? 0,
-        swimming25m: testData?.swimming25m ?? 0,
-        swimming50m: testData?.swimming50m ?? 0,
-        swimming100m: testData?.swimming100m ?? 0,
-        running100m: testData?.running100m ?? 0,
-        running500m1000m: testData?.running500m1000m ?? 0,
+        swimming25m: Number(testData?.swimming25m ?? 0),
+        swimming50m: Number(testData?.swimming50m ?? 0),
+        swimming100m: Number(testData?.swimming100m ?? 0),
+        running100m: Number(testData?.running100m ?? 0),
+        running500m1000m: Number(testData?.running500m1000m ?? 0),
+        pushUps: testData?.pushUps ?? 0,
+        pullUps: testData?.pullUps ?? 0,
+        plank: Number(testData?.plank ?? 0),
+        longJump: Number(testData?.longJump ?? 0),
+        shuttleRun49: Number(testData?.shuttleRun49 ?? 0),
+        sitUps1min: testData?.sitUps1min ?? 0,
         });
       }
     }
   }, [isEdit, testData, form, user?.role, studentProfile]);
 
   // All test types (physical tests + control exercises)
-  const allTestTypes = [...TEST_TYPES, ...CONTROL_EXERCISE_TYPES];
+  const allTestTypes = [...CONTROL_EXERCISE_TYPES];
 
   // Get formatted test type display name
   const formatTestType = (type: string) => {
@@ -266,16 +274,22 @@ console.log(testData?.basketballFreethrow)
         
       basketballFreethrow: data?.basketballFreethrow ?? 0,
       basketballDribble: data?.basketballDribble ?? 0,
-      basketballLeading: data?.basketballLeading ?? 0,
+      basketballLeading: String(data?.basketballLeading ?? 0),
       volleyballSoloPass: data?.volleyballSoloPass ?? 0,
       volleyballUpperPass: data?.volleyballUpperPass ?? 0,
       volleyballLowerPass: data?.volleyballLowerPass ?? 0,
       volleyballServe: data?.volleyballServe ?? 0,
-      swimming25m: data?.swimming25m ?? 0,
-      swimming50m: data?.swimming50m ?? 0,
-      swimming100m: data?.swimming100m ?? 0,
-      running100m: data?.running100m ?? 0,
-      running500m1000m: data?.running500m1000m ?? 0,
+      swimming25m: String(data?.swimming25m ?? 0),
+      swimming50m: String(data?.swimming50m ?? 0),
+      swimming100m: String(data?.swimming100m ?? 0),
+      running100m: String(data?.running100m ?? 0),
+      running500m1000m: String(data?.running500m1000m ?? 0),
+      pushUps: data?.pushUps ?? 0,
+      pullUps: data?.pullUps ?? 0,
+      plank: String(data?.plank ?? 0),
+      longJump: String(data?.longJump ?? 0),
+      shuttleRun49: String(data?.shuttleRun49 ?? 0),
+      sitUps1min: data?.sitUps1min ?? 0,
       };
 
       await apiRequest("POST", "/api/sport-results", resultData);
@@ -285,10 +299,35 @@ console.log(testData?.basketballFreethrow)
         user?.role === "student"
           ? user?.id
           : form.getValues("studentId");
+      
+      // Invalidate all possible query keys for sport results
       queryClient.invalidateQueries({
         queryKey: [`/api/sport-results/${studentId}`],
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/sport-results"] });
+      queryClient.invalidateQueries({ 
+        queryKey: ["/api/sport-results"] 
+      });
+      
+      // Invalidate teacher-specific queries if user is teacher
+      if (user?.role === "teacher") {
+        queryClient.invalidateQueries({
+          queryKey: [`/api/sport-results-teacher/${user.id}`],
+        });
+      }
+      
+      // Invalidate period-specific queries
+      const periodId = form.getValues("periodId");
+      if (periodId) {
+        queryClient.invalidateQueries({
+          queryKey: [`/api/sport-results-period/${periodId}`],
+        });
+        if (user?.role === "teacher") {
+          queryClient.invalidateQueries({
+            queryKey: [`/api/sport-results-teacher/${user.id}/period/${periodId}`],
+          });
+        }
+      }
+      
       toast({
         title: "Тест записан",
         description: "Результат теста был успешно записан.",
@@ -327,16 +366,22 @@ console.log(testData?.basketballFreethrow)
         periodId: data.periodId,
         basketballFreethrow: data?.basketballFreethrow ?? 0,
         basketballDribble: data?.basketballDribble ?? 0,
-        basketballLeading: data?.basketballLeading ?? 0,
+        basketballLeading: String(data?.basketballLeading ?? 0),
         volleyballSoloPass: data?.volleyballSoloPass ?? 0,
         volleyballUpperPass: data?.volleyballUpperPass ?? 0,
         volleyballLowerPass: data?.volleyballLowerPass ?? 0,
         volleyballServe: data?.volleyballServe ?? 0,
-        swimming25m: data?.swimming25m ?? 0,
-        swimming50m: data?.swimming50m ?? 0,
-        swimming100m: data?.swimming100m ?? 0,
-        running100m: data?.running100m ?? 0,
-        running500m1000m: data?.running500m1000m ?? 0,
+        swimming25m: String(data?.swimming25m ?? 0),
+        swimming50m: String(data?.swimming50m ?? 0),
+        swimming100m: String(data?.swimming100m ?? 0),
+        running100m: String(data?.running100m ?? 0),
+        running500m1000m: String(data?.running500m1000m ?? 0),
+        pushUps: data?.pushUps ?? 0,
+        pullUps: data?.pullUps ?? 0,
+        plank: String(data?.plank ?? 0),
+        longJump: String(data?.longJump ?? 0),
+        shuttleRun49: String(data?.shuttleRun49 ?? 0),
+        sitUps1min: data?.sitUps1min ?? 0,
       };
 
       await apiRequest("PUT", `/api/sport-results/${testId}`, resultData);
@@ -346,10 +391,35 @@ console.log(testData?.basketballFreethrow)
         user?.role === "student"
           ? studentProfile?.studentId
           : form.getValues("studentId");
+      
+      // Invalidate all possible query keys for sport results
       queryClient.invalidateQueries({
         queryKey: [`/api/sport-results/${studentId}`],
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/sport-results"] });
+      queryClient.invalidateQueries({ 
+        queryKey: ["/api/sport-results"] 
+      });
+      
+      // Invalidate teacher-specific queries if user is teacher
+      if (user?.role === "teacher") {
+        queryClient.invalidateQueries({
+          queryKey: [`/api/sport-results-teacher/${user.id}`],
+        });
+      }
+      
+      // Invalidate period-specific queries
+      const periodId = form.getValues("periodId");
+      if (periodId) {
+        queryClient.invalidateQueries({
+          queryKey: [`/api/sport-results-period/${periodId}`],
+        });
+        if (user?.role === "teacher") {
+          queryClient.invalidateQueries({
+            queryKey: [`/api/sport-results-teacher/${user.id}/period/${periodId}`],
+          });
+        }
+      }
+      
       toast({
         title: isGrading ? "Тест оценен" : "Тест обновлён",
         description: isGrading
@@ -369,17 +439,12 @@ console.log(testData?.basketballFreethrow)
 
   // Handle form submission
   function onSubmit(data: TestFormValues) {
-    // Клонируем данные, чтобы не мутировать оригинал
-    const newData = { ...data };
     if (isEdit) {
-      updateTestMutation.mutate(newData);
+      updateTestMutation.mutate(data);
     } else {
-      createTestMutation.mutate(newData);
+      createTestMutation.mutate(data);
     }
   }
-
-  // Новый стейт для выбора категории
-  const [category, setCategory] = useState<'physical' | 'sport'>('sport');
 
   if (isEdit && isLoadingTest && isLoadingStudents) {
     return (
@@ -477,7 +542,6 @@ console.log(testData?.basketballFreethrow)
                 />
               )}
 
-              {/* Период теперь после выбора категории */}
               <FormField 
                 control={form.control}
                 name="periodId"
@@ -513,63 +577,65 @@ console.log(testData?.basketballFreethrow)
                 )}
               />
 
-              {/* Табличный ввод для контрольных упражнений */}
-              {category === 'sport' && (
-                <CardContent className="space-y-4 py-2">
-                  <div className="overflow-x-auto">
-                    <table className="w-full table-auto border border-gray-200 text-sm">
-                      <thead className="bg-muted">
-                        <tr>
-                          <th className="p-2 text-left">Название теста</th>
-                          <th className="p-2 text-left">Результат</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {/* Каждое поле с нужным форматом и названием */}
-                        {[ 
-                          { name: "Штрафные броски (кол-во попаданий из 5 попыток)", key: "basketballFreethrow", inputProps: { type: "number", min: 1, max: 5, step: 1 } },
-                          { name: "Двухшажная техника (кол-во попаданий из 5 попыток)", key: "basketballDribble", inputProps: { type: "number", min: 1, max: 5, step: 1 } },
-                          { name: "Техника быстрого ведения мяча, с", key: "basketballLeading", inputProps: { type: "number", step: 0.1, min: 0 } },
-                          { name: "Передача мяча двумя руками над собой (кол-во раз)", key: "volleyballSoloPass", inputProps: { type: "number", step: 1, min: 1 } },
-                          { name: "Верхняя передача мяча в парах (кол-во передач)", key: "volleyballUpperPass", inputProps: { type: "number", step: 1, min: 1 } },
-                          { name: "Нижняя передача мяча в парах (кол-во передач)", key: "volleyballLowerPass", inputProps: { type: "number", step: 1, min: 1 } },
-                          { name: "Верхняя подача мяча через сетку (юноши), Верхняя, нижняя, боковая подача мяча через сетку (девушки) (кол-во подач через сетку)", key: "volleyballServe", inputProps: { type: "number", min: 1, max: 5, step: 1 } },
-                          { name: "Плавание 25 м, с", key: "swimming25m", inputProps: { type: "number", step: 0.1, min: 0 } },
-                          { name: "Плавание 50 м, с", key: "swimming50m", inputProps: { type: "number", step: 0.1, min: 0 } },
-                          { name: "Плавание 100 м", key: "swimming100m", inputProps: { type: "number", step: 0.1, min: 0 } },
-                          { name: "Бег 100 м, с", key: "running100m", inputProps: { type: "number", step: 0.1, min: 0 } },
-                          { name: "Бег 500 (девушки)/1000 м (юноши)", key: "running500m1000m", inputProps: { type: "number", step: 0.1, min: 0 } },
-                        ].map((test) => (
-                          <tr key={test.key} className="border-t border-gray-100">
-                            <td className="p-2 font-medium">{test.name}</td>
-                            <td className="p-2">
-                              <FormField
-                                control={form.control}
-                                name={test.key as keyof TestFormValues}
-                                render={({ field }) => (
-                                  <Input
-                                    {...test.inputProps}
-                                    value={field.value ?? ""}
-                                    onChange={(e) => {
-                                      const inputValue = e.target.value;
-                                      field.onChange(
-                                        inputValue === ""
-                                        ? String(inputValue)
+              <CardContent className="space-y-4 py-2">
+                {/* Табличный ввод */}
+                <div className="overflow-x-auto">
+                  <table className="w-full table-auto border border-gray-200 text-sm">
+                    <thead className="bg-muted">
+                      <tr>
+                        <th className="p-2 text-left">Название теста</th>
+                        <th className="p-2 text-left">Результат</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {[
+                        { name: "Штрафные броски", key: "basketballFreethrow" },
+                        { name: "Двухшажная техника", key: "basketballDribble" },
+                        { name: "Техника быстрого ведения мяча, с", key: "basketballLeading" },
+                        { name: "Передача мяча двумя руками над собой", key: "volleyballSoloPass" },
+                        { name: "Верхняя передача мяча в парах", key: "volleyballUpperPass" },
+                        { name: "Нижняя передача мяча в парах", key: "volleyballLowerPass" },
+                        { name: "Верхняя подача мяча через сетку (юноши).\nВерхняя, нижняя, боковая подача мяча через сетку (девушки)", key: "volleyballServe" },
+                        { name: "Плавание 25 м, с", key: "swimming25m" },
+                        { name: "Плавание 50 м, с", key: "swimming50m" },
+                        { name: "Плавание 100 м, с", key: "swimming100m" },
+                        { name: "Бег 100 м, с", key: "running100m" },
+                        { name: "Бег 500 (девушки)/1000 м (юноши), с", key: "running500m1000m" },
+                        { name: "Отжимания", key: "pushUps" },
+                        { name: "Подтягивания", key: "pullUps" },
+                        { name: "Планка", key: "plank" },
+                        { name: "Прыжок в длину", key: "longJump" },
+                        { name: "Челночный бег 4x9 м, с", key: "shuttleRun49" },
+                        { name: "Поднимание туловища за 1 минуту, раз", key: "sitUps1min" },
+                      ].map((test) => (
+                        <tr key={test.key} className="border-t border-gray-100">
+                          <td className="p-2 font-medium">{test.name}</td>
+                          <td className="p-2">
+                            <FormField
+                              control={form.control}
+                              name={test.key as keyof TestFormValues}
+                              render={({ field }) => (
+                                <Input
+                                  type= "number"
+                                  value={field.value ?? ""}
+                                  onChange={(e) => {
+                                    const inputValue = e.target.value;
+                                    field.onChange(
+                                      inputValue === ""
+                                        ? inputValue
                                         : Number(inputValue)
-                                      );
-                                    }}
-                                  />
-                                )}
-                              />
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </CardContent>
-              )}
-              {/* Здесь можно добавить аналогичный блок для физ. тестов, если потребуется */}
+                                    );
+                                  }}
+                                />
+                              )}
+                            />
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
 
               <CardFooter className="flex justify-between">
                 <Button

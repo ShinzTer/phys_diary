@@ -118,42 +118,16 @@ export default function Sidebar({ isMobileSidebarOpen }: SidebarProps) {
             )}
             
             <li>
-              <Accordion type="single" collapsible className="w-full">
-                <AccordionItem value="tests" className="border-none">
-                  <AccordionTrigger className="py-3 px-4 hover:bg-accent hover:text-accent-foreground hover:no-underline text-sm font-medium">
-                    <div className="flex items-center space-x-3">
-                      <Activity size={18} className="text-muted-foreground" />
-                      <span>Тесты и пробы</span>
-                    </div>
-                  </AccordionTrigger>
-                  <AccordionContent className="pt-0 pb-1">
-                    <ul className="pl-8">
-                      <li>
-                        <Link 
-                          to="/tests"
-                          className={cn(
-                            "flex items-center py-2 px-4 text-sm hover:bg-accent hover:text-accent-foreground transition-colors rounded-md",
-                            isActive("/tests") && "text-primary bg-accent"
-                          )}
-                        >
-                          Физические тесты
-                        </Link>
-                      </li>
-                      <li>
-                        <Link 
-                          to="/samples"
-                          className={cn(
-                            "flex items-center py-2 px-4 text-sm hover:bg-accent hover:text-accent-foreground transition-colors rounded-md",
-                            isActive("/samples") && "text-primary bg-accent"
-                          )}
-                        >
-                          Физические пробы
-                        </Link>
-                      </li>
-                    </ul>
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
+              <Link 
+                to="/tests"
+                className={cn(
+                  "flex items-center space-x-3 px-4 py-3 text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors",
+                  isActive("/tests") && "text-primary bg-accent"
+                )}
+              >
+                <Activity size={18} className="text-muted-foreground" />
+                <span>Контрольные упражнения</span>
+              </Link>
             </li>
             
             {(user?.role === "admin" || user?.role === "teacher") && (

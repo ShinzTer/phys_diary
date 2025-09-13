@@ -4,6 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import NotFound from "@/pages/not-found";
 import { AuthProvider } from "./hooks/use-auth";
+import { LocalSettingsProvider } from "./components/providers/local-settings-provider";
 import AuthPage from "./pages/auth-page";
 import { ProtectedRoute } from "./lib/protected-route";
 import Dashboard from "./pages/dashboard";
@@ -13,8 +14,6 @@ import Students from "./pages/students";
 import StudentDetail from "./pages/students/student-detail";
 import Tests from "./pages/tests";
 import TestForm from "./pages/tests/test-form";
-import Samples from "./pages/samples";
-import SampleForm from "./pages/samples/sample-form";
 import UserManagement from "./pages/admin/user-management";
 import FacultyManagement from "./pages/admin/faculty-management";
 import GroupManagement from "./pages/admin/group-management";
@@ -53,9 +52,6 @@ function Router() {
       <ProtectedRoute path="/sport_results/new" component={SportResultForm} />
       <ProtectedRoute path="/sport_results/edit/:id" component={SportResultForm} />
       {/* Sample routes */}
-      <ProtectedRoute path="/samples" component={Samples} />
-      <ProtectedRoute path="/samples/new" component={SampleForm} />
-      <ProtectedRoute path="/samples/edit/:id" component={SampleForm} />
 
       {/* Admin routes */}
       <ProtectedRoute
@@ -93,10 +89,12 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <Router />
-        <Toaster />
-      </AuthProvider>
+      <LocalSettingsProvider>
+        <AuthProvider>
+          <Router />
+          <Toaster />
+        </AuthProvider>
+      </LocalSettingsProvider>
     </QueryClientProvider>
   );
 }

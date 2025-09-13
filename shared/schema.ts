@@ -60,52 +60,14 @@ export const student = pgTable("student", {
   address: text("address"),
   schoolGraduated: text("school_graduated"),
   educationalDepartment: text("educational_department"),
+  height: integer("height"),
+  weight: integer("weight"),
 });
 
 // Period table
 export const period = pgTable("period", {
   periodId: serial("period_id").primaryKey(),
   periodOfStudy: text("period_of_study").notNull(),
-});
-
-// Physical state table
-export const physical_state = pgTable("physical_state", {
-  stateId: serial("state_id").primaryKey(),
-  studentId: integer("student_id").notNull().references(() => users.id),
-  date: date("date").notNull(),
-  height: integer("height"),
-  weight: integer("weight"),
-  ketleIndex: numeric("ketle_index", { precision: 10, scale: 2 }),
-  chestCircumference: numeric("chest_circumference", { precision: 10, scale: 2 }),
-  waistCircumference: numeric("waist_circumference", { precision: 10, scale: 2 }),
-  posture: varchar("posture", { length: 50 }),
-  vitalCapacity: integer("vital_capacity"),
-  handStrength: integer("hand_strength"),
-  orthostaticTest: numeric("orthostatic_test", { precision: 10, scale: 2 }),
-  shtangeTest: integer("shtange_test"),
-  genchiTest: integer("genchi_test"),
-  martineTest: integer("martine_test"),
-  heartRate: integer("heart_rate"),
-  bloodPressure: integer("blood_pressure"),
-  pulsePressure: integer("pulse_pressure"),
-  periodId: integer("period_id").notNull().references(() => period.periodId),
-});
-
-// Physical tests table
-export const physical_tests = pgTable("physical_tests", {
-  testId: serial("test_id").primaryKey(),
-  studentId: integer("student_id").notNull().references(() => users.id),
-  date: date("date").notNull(),
-  periodId: integer("period_id").notNull().references(() => period.periodId),
-  pushUps: integer("push_ups"),
-  legHold: integer("leg_hold"),
-  tappingTest: integer("tapping_test"),   
-  runningInPlace: integer("running_in_place"),
-  halfSquat: integer("half_squat"),
-  pullUps: integer("pull_ups"),
-  plank: integer("plank"),
-  forwardBend: integer("forward_bend"),
-  longJump: integer("long_jump"),
 });
 
 // Sport results table
@@ -124,6 +86,12 @@ export const sport_results = pgTable("sport_results", {
   swimming100m: numeric("swimming_100m", { precision: 10, scale: 2 }),
   running100m: numeric("running_100m", { precision: 10, scale: 2 }),
   running500m1000m: numeric("running_500m_1000m", { precision: 10, scale: 2 }),
+  pushUps: integer("push_ups"),
+  pullUps: integer("pull_ups"),
+  plank: numeric("plank", { precision: 10, scale: 2 }),
+  longJump: numeric("long_jump", { precision: 10, scale: 2 }),
+  shuttleRun49: numeric("shuttle_run_4x9", { precision: 10, scale: 2 }),
+  sitUps1min: integer("sit_ups_1min"),
   periodId: integer("period_id").notNull().references(() => period.periodId),
 });
 
@@ -133,8 +101,6 @@ export const result = pgTable("result", {
   studentId: integer("student_id").notNull().references(() => student.studentId),
   groupId: integer("group_id").notNull().references(() => group.groupId),
   periodId: integer("period_id").notNull().references(() => period.periodId),
-  testId: integer("test_id").references(() => physical_tests.testId),
-  stateId: integer("state_id").references(() => physical_state.stateId),
   sportResultId: integer("sport_result_id").references(() => sport_results.sportResultId),
   finalGrade: numeric("final_grade", { precision: 10, scale: 2 }),
 }); 
@@ -165,14 +131,6 @@ export const insertPeriodSchema = createInsertSchema(period).omit({
   periodId: true,
 });
 
-export const insertPhysicalStateSchema = createInsertSchema(physical_state).omit({
-  stateId: true,
-});
-
-export const insertPhysicalTestsSchema = createInsertSchema(physical_tests).omit({
-  testId: true,
-});
-
 export const insertSportResultsSchema = createInsertSchema(sport_results).omit({
   sportResultId: true,
 });
@@ -201,10 +159,6 @@ export type Student = typeof student.$inferSelect;
 export type InsertStudent = z.infer<typeof insertStudentSchema>;
 export type Period = typeof period.$inferSelect;
 export type InsertPeriod = z.infer<typeof insertPeriodSchema>;
-export type PhysicalState = typeof physical_state.$inferSelect;
-export type InsertPhysicalState = z.infer<typeof insertPhysicalStateSchema>;
-export type PhysicalTest = typeof physical_tests.$inferSelect;
-export type InsertPhysicalTest = z.infer<typeof insertPhysicalTestsSchema>;
 export type SportResult = typeof sport_results.$inferSelect;
 export type InsertSportResult = z.infer<typeof insertSportResultsSchema>;
 export type Result = typeof result.$inferSelect;
@@ -273,7 +227,13 @@ export const CONTROL_EXERCISE_TYPES = [
   "swimming_50m",
   "swimming_100m",
   "running_100m",
-  "running_500m_1000m"
+  "running_500m_1000m",
+  "push_ups",
+  "pull_ups",
+  "plank",
+  "long_jump",
+  "shuttle_run_4x9",
+  "sit_ups_1min"
 ] as const;
 
 export const CONTROL_EXERCISE_TYPES_CAMEL = [
@@ -288,7 +248,13 @@ export const CONTROL_EXERCISE_TYPES_CAMEL = [
   "swimming50m",
   "swimming100m",
   "running100m",
-  "running500m1000m"
+  "running500m1000m",
+  "pushUps",
+  "pullUps",
+  "plank",
+  "longJump",
+  "shuttleRun49",
+  "sitUps1min"
 ] as const;
 
 // Sample types (physical measurements)
@@ -354,6 +320,8 @@ export const studentProfileSchema = baseProfileSchema.extend({
   activeSports: z.string().optional(),
   previousSports: z.string().optional(),
   additionalInfo: z.string().optional(),
+  height: z.number().optional(),
+  weight: z.number().optional(),
 });
 
 // Generic user profile schema for the frontend

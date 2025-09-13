@@ -103,27 +103,6 @@ export default function StudentDashboard() {
               <CardContent className="p-6">
                 <div className="flex justify-between items-start">
                   <div>
-                    <p className="text-sm text-gray-500">Физические пробы</p>
-                    <p className="text-2xl font-semibold">{samples?.length || 0}</p>
-                  </div>
-                  <div className="p-2 bg-green-100 rounded-md">
-                    <Heart className="h-5 w-5 text-green-600" />
-                  </div>
-                </div>
-                <div className="mt-4">
-                  <Link href="/samples">
-                    <Button size="sm" variant="link" className="p-0 h-auto text-primary">
-                      Посмотреть все пробы <ArrowUpRight className="ml-1 h-3 w-3" />
-                    </Button>
-                  </Link>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex justify-between items-start">
-                  <div>
                     <p className="text-sm text-gray-500">Мед. группа</p>
                     <p className="text-2xl font-semibold capitalize">{profile?.medicalGroup || "Не установлено"}</p>
                   </div>
@@ -171,12 +150,6 @@ export default function StudentDashboard() {
                     <Button className="w-full">
                       <Activity className="mr-2 h-4 w-4" />
                       Записать тест
-                    </Button>
-                  </Link>
-                  <Link href="/samples/new">
-                    <Button variant="outline" className="w-full">
-                      <Heart className="mr-2 h-4 w-4" />
-                      Записать пробу
                     </Button>
                   </Link>
                   <Link href="/profile/edit">
@@ -337,11 +310,6 @@ export default function StudentDashboard() {
                 <Link href="/tests">
                   <Button variant="outline" size="sm">
                     Все тесты
-                  </Button>
-                </Link>
-                <Link href="/samples">
-                  <Button variant="outline" size="sm">
-                    Все пробы
                   </Button>
                 </Link>
                 <Link href="/tests/new">

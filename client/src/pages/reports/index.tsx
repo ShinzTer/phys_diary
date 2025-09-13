@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import MainLayout from "@/components/layout/main-layout";
@@ -36,7 +36,6 @@ import {
   MEDICAL_GROUP_TYPES,
   PERIODS_OF_STUDY,
   Group,
-  PhysicalTest,
   TEST_TYPES_CAMEL,
   Period,
   CONTROL_EXERCISE_TYPES_CAMEL,
@@ -106,6 +105,12 @@ const CONTROL_EXERCISE_LABELS = [
   { name: "Плавание 100 м", shortName: "Плав. 100м", key: "swimming100m" },
   { name: "Бег 100 м", shortName: "Бег 100м", key: "running100m" },
   { name: "Бег 500 (девушки)\n1000 м (юноши)", shortName: "Бег 500/1000м", key: "running500m1000m" },
+  { name: "Отжимания", shortName: "Отжимания", key: "pushUps" },
+  { name: "Подтягивания", shortName: "Подтягивания", key: "pullUps" },
+  { name: "Планка", shortName: "Планка", key: "plank" },
+  { name: "Прыжок в длину", shortName: "Прыжок в длину", key: "longJump" },
+  { name: "Челночный бег 4x9 м", shortName: "Челночный бег", key: "shuttleRun49" },
+  { name: "Поднимание туловища за 1 минуту", shortName: "Поднимание туловища", key: "sitUps1min" },
 ];
 
 export default function Reports() {
@@ -172,37 +177,10 @@ export default function Reports() {
     queryKey: ["/api/periods"],
     enabled: user?.role !== "student",
   });
-  // Fetch all tests and samples
-  const { data: tests, isLoading: isLoadingTests } = useQuery<PhysicalTest[]>({
-    queryKey: ["/api/physical-tests/", selectedUser],
-    enabled: selectedUser !== "" && selectedUser !== "all",
-    queryFn: async () => {
-      const res = await fetch(`/api/physical-tests/${selectedUser}`, {
-        credentials: "include",
-      });
-      if (!res.ok) throw new Error("Не удалось получить тесты");
-      return res.json();
-    },
-  });
-
-
-const filteredTests = tests?.filter(test => test.periodId === Number(selectedDateRange));
-
-  const { data: samples, isLoading: isLoadingSamples } = useQuery<Sample[]>({
-    queryKey: ["/api/samples", selectedUser],
-    enabled: selectedUser !== "",
-    queryFn: async () => {
-      const res = await fetch(`/api/samples/${selectedUser}`, {
-        credentials: "include",
-      });
-      if (!res.ok) throw new Error("Не удалось получить пробы");
-      return res.json();
-    },
-  });
 
   // Get data for selected student
   const { data: userData } = useQuery<UserData>({
-    queryKey: [`/api/sport-results/${selectedUser}`],
+    queryKey: [`/api/profile/student/${selectedUser}`],
     enabled: selectedUser !== "" && selectedUser !== "all",
     queryFn: async () => {
       const res = await fetch(`/api/sport-results/${selectedUser}`, {
@@ -226,11 +204,9 @@ const filteredTests = tests?.filter(test => test.periodId === Number(selectedDat
     },
   });
 
-  const isLoading =
-    isLoadingTests ||
-    isLoadingSamples ||
-    isLoadingSportResults ||
-    (selectedUser !== "" && selectedUser !== "all" && !userData);
+  // const isLoading =
+  //   isLoadingSportResults ||
+  //   (selectedUser !== "" && selectedUser !== "all" && !userData);
 
   // Format test type display name
   const formatTestType = (type: string) => {
@@ -349,7 +325,78 @@ const filteredTests = tests?.filter(test => test.periodId === Number(selectedDat
       if (num <= 330.2) return 2;
       return 1;
     }
-    
+    if (key === "pushUps") {
+      if (num >= 42) return 10;
+      if (num >= 40) return 9;
+      if (num >= 37) return 8;
+      if (num >= 33) return 7;
+      if (num >= 30) return 6;
+      if (num >= 27) return 5;
+      if (num >= 24) return 4;
+      if (num >= 20) return 3;
+      if (num >= 15) return 2;
+      return 1;
+    }
+    if (key === "pullUps") {
+      if (num >= 17) return 10;
+      if (num >= 14) return 9;
+      if (num >= 11) return 8;
+      if (num >= 8) return 7;
+      if (num >= 7) return 6;
+      if (num >= 6) return 5;
+      if (num >= 5) return 4;
+      if (num >= 4) return 3;
+      if (num >= 3) return 2;
+      return 1;
+    }
+    if (key === "plank") {
+      if (num >= 180) return 10;
+      if (num >= 165) return 9;
+      if (num >= 150) return 8;
+      if (num >= 135) return 7;
+      if (num >= 120) return 6;
+      if (num >= 110) return 5;
+      if (num >= 80) return 4;
+      if (num >= 60) return 3;
+      if (num >= 45) return 2;
+      return 1;
+    }
+    if (key === "longJump") {
+      if (num >= 260) return 10;
+      if (num >= 250) return 9;
+      if (num >= 245) return 8;
+      if (num >= 240) return 7;
+      if (num >= 235) return 6;
+      if (num >= 230) return 5;
+      if (num >= 225) return 4;
+      if (num >= 220) return 3;
+      if (num >= 215) return 2;
+      return 1;
+    }
+    if (key === "shuttleRun49") {
+      if (num <= 8.6) return 10;
+      if (num <= 8.8) return 9;
+      if (num <= 8.9) return 8;
+      if (num <= 9.0) return 7;
+      if (num <= 9.1) return 6;
+      if (num <= 9.3) return 5;
+      if (num <= 9.5) return 4;
+      if (num <= 9.7) return 3;
+      if (num <= 9.9) return 2;
+      return 1;
+    }
+    if (key === "sitUps1min") {
+      if (num >= 57) return 10;
+      if (num >= 55) return 9;
+      if (num >= 53) return 8;
+      if (num >= 52) return 7;
+      if (num >= 50) return 6;
+      if (num >= 47) return 5;
+      if (num >= 44) return 4;
+      if (num >= 41) return 3;
+      if (num >= 38) return 2;
+      return 1;
+    }
     // Для остальных упражнений (передача мяча двумя руками над собой, техника быстрого ведения мяча)
     // используем старую логику - больше = лучше
     return Math.max(1, Math.min(10, Math.round(num / 2)));
@@ -357,7 +404,6 @@ const filteredTests = tests?.filter(test => test.periodId === Number(selectedDat
 
   // Новый getPerformanceData для sport results
   const getPerformanceData = () => {
-    console.log("sportResults:", sportResults);
     if (!sportResults || sportResults.length === 0)
       return CONTROL_EXERCISE_LABELS.map(({ name, shortName }) => ({ name, shortName, value: 0 }));
 
@@ -365,12 +411,10 @@ const filteredTests = tests?.filter(test => test.periodId === Number(selectedDat
     const filteredSportResults = sportResults.filter(
       (result) => result.periodId === Number(selectedDateRange)
     );
-    console.log("filteredSportResults:", filteredSportResults);
     if (!filteredSportResults.length)
       return CONTROL_EXERCISE_LABELS.map(({ name, shortName }) => ({ name, shortName, value: 0 }));
 
     const lastResult = filteredSportResults[filteredSportResults.length - 1];
-    console.log("lastResult:", lastResult);
     return CONTROL_EXERCISE_LABELS.map(({ name, shortName, key }) => {
       const value = lastResult?.[key] ?? null;
       if (!(key in lastResult)) {
@@ -411,95 +455,6 @@ const filteredTests = tests?.filter(test => test.periodId === Number(selectedDat
     ];
   };
 
-  // Generate progress data based on tests
-  const getProgressData = () => {
-    if (!tests) return [];
-
-    // Group by date (month/year) and count average performance
-    const groupedByDate: Record<string, { count: number; total: number }> = {};
-
-    tests.forEach((test) => {
-      if (!test.date) return;
-
-      // Format date as month/year
-      const date = new Date(test.date);
-      const dateKey = format(date, "MMM yyyy");
-
-      // Convert test grade to numeric value if possible
-      let score = 0;
-      // if (test.grade) {
-      //   if (["A", "EXCELLENT", "5"].includes(test.grade.toUpperCase()))
-      //     score = 5;
-      //   else if (["B", "GOOD", "4"].includes(test.grade.toUpperCase()))
-      //     score = 4;
-      //   else if (["C", "SATISFACTORY", "3"].includes(test.grade.toUpperCase()))
-      //     score = 3;
-      //   else if (["D", "POOR", "2"].includes(test.grade.toUpperCase()))
-      //     score = 2;
-      //   else score = 3; // Default score
-      // } else {
-      //   score = 3; // Default for ungraded tests
-      // }
-
-      if (!groupedByDate[dateKey]) {
-        groupedByDate[dateKey] = { count: 0, total: 0 };
-      }
-
-      groupedByDate[dateKey].count++;
-      groupedByDate[dateKey].total += score;
-    });
-
-    // Convert to array and calculate averages
-    return Object.entries(groupedByDate)
-      .map(([date, data]) => ({
-        date,
-        performance: Math.round((data.total / data.count) * 20), // Scale to percentage (1-5 -> 20-100)
-      }))
-      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-  };
-
-  // Generate mock data for sample trends
-  const getSampleTrendData = () => {
-    if (!samples || samples.length === 0) {
-      // Generate some placeholder data
-      return Array.from({ length: 6 }, (_, i) => ({
-        date: format(subDays(new Date(), 30 * (5 - i)), "MMM yyyy"),
-        value: Math.floor(Math.random() * 20) + 70, // Random value between 70-90
-      }));
-    }
-
-    // Group samples by date for the selected sample type
-    const samplesByDate: Record<string, number[]> = {};
-    samples.forEach((sample) => {
-      if (!sample.date) return;
-
-      // Format date as month/year
-      const date = new Date(sample.date);
-      const dateKey = format(date, "MMM yyyy");
-
-      if (!samplesByDate[dateKey]) {
-        samplesByDate[dateKey] = [];
-      }
-
-      // Try to extract numeric value
-      const numericValue = parseFloat(sample.value.replace(/[^\d.-]/g, ""));
-      if (!isNaN(numericValue)) {
-        samplesByDate[dateKey].push(numericValue);
-      }
-    });
-
-    // Convert to array and calculate averages
-    return Object.entries(samplesByDate)
-      .map(([date, values]) => {
-        const avg = values.reduce((sum, val) => sum + val, 0) / values.length;
-        return {
-          date,
-          value: Math.round(avg * 100) / 100, // Round to 2 decimal places
-        };
-      })
-      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-  };
-
   // For the pie chart colors
   const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884d8"];
 
@@ -528,16 +483,6 @@ const filteredTests = tests?.filter(test => test.periodId === Number(selectedDat
     pdf.addImage(imgData, "PNG", 0, 0, canvas.width, canvas.height);
     pdf.save("report.pdf");
   };
-
-  // Логирование выбранного студента и периода
-  useEffect(() => {
-    console.log("Selected user:", selectedUser);
-  }, [selectedUser]);
-
-  useEffect(() => {
-    console.log("Selected period:", selectedDateRange);
-  }, [selectedDateRange]);
-
   return (
     <MainLayout>
       <div className="container mx-auto px-4 py-6">
@@ -687,25 +632,17 @@ const filteredTests = tests?.filter(test => test.periodId === Number(selectedDat
                   {selectedUser && userData ? (
                     <div className="flex items-center">
                       <Users className="h-5 w-5 mr-2 text-primary" />
-                      {(user.fullName || userData.username)}
-                      <span className="ml-2 text-sm text-gray-500">
-                        (ID: {userData.id})
-                      </span>
+                      {userData.fullName || userData.username}
                     </div>
                   ) : (
-                    "Report Results"
+                    "Результаты отчета"
                   )}
                 </CardTitle>
                 <CardDescription>
-                  Test performance analysis across different exercises
+                  Аналитика результатов тестов и контрольных упражнений
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                {isLoading ? (
-                  <div className="flex justify-center items-center h-64">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                  </div>
-                ) : (
                   <>
                     {!selectedUser || selectedUser === "all" ? (
                       <div className="text-center py-12">
@@ -767,7 +704,6 @@ const filteredTests = tests?.filter(test => test.periodId === Number(selectedDat
                       </div>
                     )}
                   </>
-                )}
               </CardContent>
             </div>
           </Card>

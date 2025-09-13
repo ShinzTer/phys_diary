@@ -45,11 +45,13 @@ interface Student {
 interface Faculty {
   id: number;
   name: string;
+  facultyId: number;
 }
 
 interface Group {
   id: number;
   name: string;
+  groupId: number;
 }
 
 // Add proper loading states
@@ -126,7 +128,7 @@ export default function Students() {
 
   const getGroupName = (groupId?: number) => {
     if (!groupId) return "Не назначен";
-    const group = groups.find((g: Group) => g.groupId === groupId); //.data
+    const group = groups.find((g: Group) => g.groupId === groupId);
     return group ? group.name : "Не найден";
   };
 
@@ -223,7 +225,6 @@ export default function Students() {
                         <th className="px-4 py-3">Студент</th>
                         <th className="px-4 py-3">Факультет / Группа</th>
                         <th className="px-4 py-3">Медицинская группа</th>
-                        <th className="px-4 py-3">Завершение профиля</th>
                         <th className="px-4 py-3 text-right">Действия</th>
                       </tr>
                     </thead>
@@ -254,19 +255,6 @@ export default function Students() {
                                 {student.diagnosis.length > 20 ? `${student.diagnosis.substring(0, 20)}...` : student.diagnosis}
                               </div>
                             )}
-                          </td>
-                          <td className="px-4 py-4 whitespace-nowrap">
-                            <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden">
-                              <div 
-                                className="h-full bg-primary" 
-                                style={{ 
-                                  width: `${calculateProfileCompletion(student)}%` 
-                                }}
-                              ></div>
-                            </div>
-                            <div className="text-xs text-gray-500 mt-1 text-center">
-                              {calculateProfileCompletion(student)}%
-                            </div>
                           </td>
                           <td className="px-4 py-4 whitespace-nowrap text-right">
                             <DropdownMenu>

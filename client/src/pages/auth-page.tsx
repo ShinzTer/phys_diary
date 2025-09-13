@@ -43,7 +43,7 @@ export default function AuthPage() {
   return (
     <div className="min-h-screen flex flex-col lg:flex-row">
       {/* Left side - Auth forms */}
-      <div className="flex-1 flex items-center justify-center p-6 bg-white">
+      <div className="flex-1 flex items-center justify-center p-6 bg-background">
         <Card className="w-full max-w-md">
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl font-bold">Добро пожаловать</CardTitle>
@@ -99,7 +99,7 @@ export default function AuthPage() {
           </CardContent>
 
           <CardFooter className="flex flex-col space-y-2">
-            <div className="text-sm text-center text-gray-500 mt-2">
+            <div className="text-sm text-center text-muted-foreground mt-2">
               <p>
                 Стандартные пользователи для разработки:<br />
                 admin/admin123, teacher/teacher123, student/student123
