@@ -182,6 +182,13 @@ export default function Reports() {
   const { data: userData } = useQuery<UserData>({
     queryKey: [`/api/profile/student/${selectedUser}`],
     enabled: selectedUser !== "" && selectedUser !== "all",
+    queryFn: async () => {
+      const res = await fetch(`/api/sport-results/${selectedUser}`, {
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Не удалось получить профиль студента");
+      return res.json();
+    },
   });
 
   // Добавляю запрос sport results для выбранного студента
@@ -410,6 +417,9 @@ export default function Reports() {
     const lastResult = filteredSportResults[filteredSportResults.length - 1];
     return CONTROL_EXERCISE_LABELS.map(({ name, shortName, key }) => {
       const value = lastResult?.[key] ?? null;
+      if (!(key in lastResult)) {
+        console.warn(`Ключ '${key}' отсутствует в lastResult`, lastResult);
+      }
       return {
         name,
         shortName,
@@ -473,7 +483,6 @@ export default function Reports() {
     pdf.addImage(imgData, "PNG", 0, 0, canvas.width, canvas.height);
     pdf.save("report.pdf");
   };
-
   return (
     <MainLayout>
       <div className="container mx-auto px-4 py-6">
@@ -546,7 +555,6 @@ export default function Reports() {
                   <SelectContent>
                     <SelectItem value="all">Все группы</SelectItem>
                     {groups?.map((group) => {
-                      //.data
                       if (!group?.groupId) return null; // Skip if no valid ID
                       return (
                         <SelectItem
@@ -595,7 +603,7 @@ export default function Reports() {
                   </SelectTrigger>
                   <SelectContent>
                     {periods.map((period) => (
-                      <SelectItem value={String(period.periodId)}>
+                      <SelectItem key={period.periodId} value={String(period.periodId)}>
                         {formatTestType(period.periodOfStudy)}
                       </SelectItem>
                     ))}

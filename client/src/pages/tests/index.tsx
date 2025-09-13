@@ -65,7 +65,6 @@ export default function Tests() {
       queryKey: [`/api/profile/teacher/${user?.id}`],
       enabled: user?.role === "teacher",
     });
-  
   const { data: sport_results, isLoading: isLoadingResults } = useQuery<
     SportResult[]
   >({
