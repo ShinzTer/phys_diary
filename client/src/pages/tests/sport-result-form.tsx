@@ -6,7 +6,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import {
-  TEST_TYPES,
   CONTROL_EXERCISE_TYPES,
   Period,
   SportResult,
@@ -76,6 +75,12 @@ interface ResultData {
   swimming100m?: string;
   running100m?: string;
   running500m1000m?: string;
+  pushUps?: number;
+  pullUps?: number;
+  plank?: string;
+  longJump?: string;
+  shuttleRun49?: string;
+  sitUps1min?: number;
   periodId: number;
 }
 
@@ -95,6 +100,12 @@ const testFormSchema = z.object({
   swimming100m: z.number().optional(),
   running100m: z.number().optional(),
   running500m1000m: z.number().optional(),
+  pushUps: z.number().optional(),
+  pullUps: z.number().optional(),
+  plank: z.number().optional(),
+  longJump: z.number().optional(),
+  shuttleRun49: z.number().optional(),
+  sitUps1min: z.number().optional(),
   // grade: z.string().optional(),
   // notes: z.string().optional(),
 });
@@ -164,6 +175,12 @@ console.log(testData?.basketballFreethrow)
       swimming100m: Number(testData?.swimming100m ?? 0),
       running100m: Number(testData?.running100m ?? 0),
       running500m1000m: Number(testData?.running500m1000m ?? 0),
+      pushUps: testData?.pushUps ?? 0,
+      pullUps: testData?.pullUps ?? 0,
+      plank: Number(testData?.plank ?? 0),
+      longJump: Number(testData?.longJump ?? 0),
+      shuttleRun49: Number(testData?.shuttleRun49 ?? 0),
+      sitUps1min: testData?.sitUps1min ?? 0,
     },
   });
 
@@ -194,13 +211,19 @@ console.log(testData?.basketballFreethrow)
         swimming100m: Number(testData?.swimming100m ?? 0),
         running100m: Number(testData?.running100m ?? 0),
         running500m1000m: Number(testData?.running500m1000m ?? 0),
+        pushUps: testData?.pushUps ?? 0,
+        pullUps: testData?.pullUps ?? 0,
+        plank: Number(testData?.plank ?? 0),
+        longJump: Number(testData?.longJump ?? 0),
+        shuttleRun49: Number(testData?.shuttleRun49 ?? 0),
+        sitUps1min: testData?.sitUps1min ?? 0,
         });
       }
     }
   }, [isEdit, testData, form, user?.role, studentProfile]);
 
   // All test types (physical tests + control exercises)
-  const allTestTypes = [...TEST_TYPES, ...CONTROL_EXERCISE_TYPES];
+  const allTestTypes = [...CONTROL_EXERCISE_TYPES];
 
   // Get formatted test type display name
   const formatTestType = (type: string) => {
@@ -261,6 +284,12 @@ console.log(testData?.basketballFreethrow)
       swimming100m: String(data?.swimming100m ?? 0),
       running100m: String(data?.running100m ?? 0),
       running500m1000m: String(data?.running500m1000m ?? 0),
+      pushUps: data?.pushUps ?? 0,
+      pullUps: data?.pullUps ?? 0,
+      plank: String(data?.plank ?? 0),
+      longJump: String(data?.longJump ?? 0),
+      shuttleRun49: String(data?.shuttleRun49 ?? 0),
+      sitUps1min: data?.sitUps1min ?? 0,
       };
 
       await apiRequest("POST", "/api/sport-results", resultData);
@@ -347,6 +376,12 @@ console.log(testData?.basketballFreethrow)
         swimming100m: String(data?.swimming100m ?? 0),
         running100m: String(data?.running100m ?? 0),
         running500m1000m: String(data?.running500m1000m ?? 0),
+        pushUps: data?.pushUps ?? 0,
+        pullUps: data?.pullUps ?? 0,
+        plank: String(data?.plank ?? 0),
+        longJump: String(data?.longJump ?? 0),
+        shuttleRun49: String(data?.shuttleRun49 ?? 0),
+        sitUps1min: data?.sitUps1min ?? 0,
       };
 
       await apiRequest("PUT", `/api/sport-results/${testId}`, resultData);
