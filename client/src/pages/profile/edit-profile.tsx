@@ -332,7 +332,15 @@ export default function EditProfile() {
                                 <FormItem>
                                   <FormLabel>Рост (см)</FormLabel>
                                   <FormControl>
-                                    <Input type="number" placeholder="Введите рост" {...field} />
+                                    <Input
+                                      type="number"
+                                      placeholder="Введите рост"
+                                      value={field.value ?? ""}
+                                      onChange={(e) => {
+                                        const value = e.target.value;
+                                        field.onChange(value === "" ? undefined : Number(value));
+                                      }}
+                                    />
                                   </FormControl>
                                   <FormMessage />
                                 </FormItem>
@@ -345,7 +353,15 @@ export default function EditProfile() {
                                 <FormItem>
                                   <FormLabel>Вес (кг)</FormLabel>
                                   <FormControl>
-                                    <Input type="number" placeholder="Введите вес" {...field} />
+                                    <Input
+                                      type="number"
+                                      placeholder="Введите вес"
+                                      value={field.value ?? ""}
+                                      onChange={(e) => {
+                                        const value = e.target.value;
+                                        field.onChange(value === "" ? undefined : Number(value));
+                                      }}
+                                    />
                                   </FormControl>
                                   <FormMessage />
                                 </FormItem>
