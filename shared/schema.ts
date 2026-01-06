@@ -166,9 +166,9 @@ export type InsertResult = z.infer<typeof insertResultSchema>;
 
 // Medical Group Types (kept for compatibility)
 export const MEDICAL_GROUP_TYPES = [
-  "основная",
-  "подготовительная", 
-  "специальная"
+  "basic",
+  "preparatory", 
+  "special"
 ] as const;
 
 export type MedicalGroupType = typeof MEDICAL_GROUP_TYPES[number];

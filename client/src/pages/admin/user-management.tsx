@@ -146,7 +146,7 @@ console.log(groupsResponse)
       await apiRequest("POST", "/api/register", data);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/users/manage"] });
       toast({
         title: "Пользователь создан",
         description: "Пользователь успешно создан."

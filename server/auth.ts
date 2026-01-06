@@ -241,6 +241,14 @@ export async function setupAuth(app: Express) {
         }
       }
 
+      // If текущий запрос идёт от уже аутентифицированного администратора,
+      // просто создаём пользователя, НЕ меняя активную сессию.
+      if (req.isAuthenticated() && (req.user as SelectUser | undefined)?.role === "admin") {
+        const { password, ...userWithoutPassword } = user;
+        return res.status(201).json(userWithoutPassword);
+      }
+      
+      // Иначе (самостоятельная регистрация) автоматически логиним нового пользователя
       req.login(user, (err) => {
         if (err) return next(err);
         // Don't send the password hash back to the client

@@ -55,6 +55,13 @@ export default function EditProfile() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("personal");
+
+  // Отображаемые русские названия для медицинских групп
+  const MEDICAL_GROUP_LABELS: Record<(typeof MEDICAL_GROUP_TYPES)[number], string> = {
+    basic: "Основная",
+    preparatory: "Подготовительная",
+    special: "Специальная",
+  };
   
   // Redirect admin users away from profile page
   useEffect(() => {
@@ -434,11 +441,11 @@ export default function EditProfile() {
                                     </SelectTrigger>
                                   </FormControl>
                                   <SelectContent>
-                                    {MEDICAL_GROUP_TYPES.map(type => (
-                                      <SelectItem key={type} value={type} className="capitalize">
-                                        {type}
-                                      </SelectItem>
-                                    ))}
+                                  {MEDICAL_GROUP_TYPES.map(type => (
+                                    <SelectItem key={type} value={type}>
+                                      {MEDICAL_GROUP_LABELS[type]}
+                                    </SelectItem>
+                                  ))}
                                   </SelectContent>
                                 </Select>
                                 <FormDescription>Ваша медицинская группа</FormDescription>
