@@ -76,12 +76,15 @@ const studentCreationSchema = z.object({
 });
 
 // Teacher creation schema
+// Для административного создания преподавателя через /api/register
+// делаем дату рождения и образовательное подразделение необязательными,
+// так как они не заполняются в текущей форме.
 const teacherCreationSchema = z.object({
   userId: z.number(),
   fullName: z.string().min(1, "Full name is required"),
   position: z.string().min(1, "Position is required"),
-  dateOfBirth: z.string().min(1, "Date of birth is required"),
-  educationalDepartment: z.string().min(1, "Educational department is required"),
+  dateOfBirth: z.string().optional(),
+  educationalDepartment: z.string().optional(),
   phone: z.string()
     .regex(/^\+375\d{9}$/, "Phone number must be in format: +375*********"),
   nationality: z.string().optional(),

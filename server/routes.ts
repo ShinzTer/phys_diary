@@ -450,18 +450,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const teacherId = parseInt(req.params.teacherId);
       
-      // Get the teacher record to check permissions
-      const teacher = await storage.getTeacherByUserId(teacherId);
+      // Получаем запись преподавателя по его teacherId
+      const teacher = await storage.getTeacher(teacherId);
       if (!teacher) {
         return res.status(404).json({ message: "Teacher not found" });
       }
 
-      // Only allow teachers to access their own profile unless they're an admin
+      // Разрешаем доступ только самому преподавателю или администратору
       if (req.user?.role === "teacher" && req.user?.id !== teacher.userId) {
         return res.status(403).json({ message: "Access denied" });
       }
 
-      const profileData = await storage.getTeacherProfileByUserId(teacherId);
+      const profileData = await storage.getTeacherProfile(teacherId);
       const user = await storage.getUser(teacher.userId);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
